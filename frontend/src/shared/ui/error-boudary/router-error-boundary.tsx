@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { CodeFrame } from "./code-frame";
 import { pickHints } from "@/shared/errors/error-hints";
-import { APP_NAME, APP_VERSION, API_BASE_URL, LS_KEY_ERR_THEME } from "@/shared/config/app.config";
+import { APP_NAME, APP_VERSION, API_BASE_URL, LS_KEY_ERR_THEME } from "@/app/config/app.config.ts";
 
 // ─── types ───────────────────────────────────────────────────────────────────
 type Theme = "dark" | "light";

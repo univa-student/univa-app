@@ -1,5 +1,5 @@
-import { authStore } from "../../entities/user/model/auth-store";
-import { API_BASE_URL, LS_KEY_AUTH_TOKEN } from "../config/app.config";
+import { authStore } from "@/entities/user/model/auth-store.ts";
+import { API_BASE_URL, LS_KEY_AUTH_TOKEN } from "@/app/config/app.config.ts";
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     const token = authStore.getState().token ?? localStorage.getItem(LS_KEY_AUTH_TOKEN);

@@ -1,4 +1,4 @@
-import { LS_KEY_AUTH_TOKEN } from "../../../shared/config/app.config";
+import { LS_KEY_AUTH_TOKEN } from "../../../app/config/app.config.ts";
 
 type AuthState = {
     isAuthenticated: boolean;

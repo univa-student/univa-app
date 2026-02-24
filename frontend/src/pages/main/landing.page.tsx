@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
 import { Link } from "react-router-dom"
 import usePageTitle from "@/shared/hooks/usePageTitle"
-import { GOOGLE_FONTS_URL } from "@/shared/config/app.config"
+import { GOOGLE_FONTS_URL } from "@/app/config/app.config.ts"
 import { Button } from "@/shared/shadcn/ui/button"
 import logoConfig from "@/app/config/logo.config"
 import {

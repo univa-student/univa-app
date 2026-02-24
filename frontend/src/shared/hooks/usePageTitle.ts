@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { APP_NAME } from "../config/app.config";
+import { APP_NAME } from "../../app/config/app.config.ts";
 
 type Options = {
     suffix?: boolean; // додавати "| Univa"
