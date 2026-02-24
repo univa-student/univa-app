@@ -1,34 +1,44 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useSignIn } from "@/features/auth/sign-in/use-sign-in";
+import { useNavigate } from "react-router-dom";
+import { useSignUp } from "@/features/auth/sign-up/use-sign-up";
 import { ApiError } from "@/shared/types/api";
 import { useToast } from "@/shared/providers/toast-provider";
 import usePageTitle from "@/shared/hooks/usePageTitle";
 
 import { OrbitHero } from "@/shared/ui/animations/orbit-hero.animations";
-import { LoginForm } from "@/shared/shadcn/components/auth/login-form";
+import { RegisterForm, type RegisterFormData } from "@/shared/shadcn/components/auth/register-form";
 import logoConfig from "@/app/config/logo.config";
 
-export function LoginPage() {
-    usePageTitle("Вхід");
+export function RegisterPage() {
+    usePageTitle("Реєстрація");
 
     const nav = useNavigate();
-    const loc = useLocation() as { state?: { from?: string } };
-    const { mutateAsync, isPending } = useSignIn();
+    const { mutateAsync, isPending } = useSignUp();
     const { toast } = useToast();
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [form, setForm] = useState<RegisterFormData>({
+        first_name: "",
+        last_name: "",
+        middle_name: "",
+        email: "",
+        password: "",
+        password_confirmation: "",
+    });
+
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    function onFieldChange(field: keyof RegisterFormData, value: string) {
+        setForm((prev) => ({ ...prev, [field]: value }));
+    }
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
         setErrors({});
 
         try {
-            await mutateAsync({ email, password });
-            toast({ variant: "success", message: "Ви успішно увійшли!" });
-            nav(loc.state?.from ?? "/dashboard", { replace: true });
+            await mutateAsync(form);
+            toast({ variant: "success", message: "Акаунт створено! Ласкаво просимо." });
+            nav("/dashboard", { replace: true });
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.isValidation && err.body.errors) {
@@ -58,11 +68,9 @@ export function LoginPage() {
                 </div>
                 <div className="flex flex-1 items-center justify-center">
                     <div className="w-full">
-                        <LoginForm
-                            email={email}
-                            password={password}
-                            onEmailChange={setEmail}
-                            onPasswordChange={setPassword}
+                        <RegisterForm
+                            form={form}
+                            onFieldChange={onFieldChange}
                             onSubmit={onSubmit}
                             isPending={isPending}
                             errors={errors}

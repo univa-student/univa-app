@@ -17,12 +17,9 @@ import {
     GraduationCapIcon,
     UsersIcon,
     StarIcon,
-    ClockIcon,
-    FileTextIcon,
-    BrainIcon,
     ChevronDownIcon,
-    type LucideIcon,
 } from "lucide-react"
+import {OrbitHero} from "@/shared/ui/animations/orbit-hero.animations.tsx";
 
 /* ═══════════════════════════════════════════════════════════════
    TOKENS  — all palette values live here so the page works
@@ -39,128 +36,6 @@ const T = {
     accentLight: "#ede9fe",  // violet-50
     accentMid: "#c4b5fd",    // violet-300
     gradient: "linear-gradient(135deg,#7c3aed,#6366f1,#3b82f6)",
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   ORBIT  — pure CSS animation (one element per icon, no canvas,
-   no RAF, no duplicate render loops = buttery smooth).
-   ═══════════════════════════════════════════════════════════ */
-interface OrbitIconData {
-    Icon: LucideIcon
-    label: string
-    color: string
-    bg: string
-    border: string
-    radius: number   // orbit radius px
-    duration: number  // seconds per revolution
-    startAngle: number // degrees
-    size: number      // box px
-}
-
-const orbitIcons: OrbitIconData[] = [
-    { Icon: CalendarDaysIcon, label: "Розклад", color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", radius: 155, duration: 20, startAngle: 0, size: 46 },
-    { Icon: BotIcon, label: "AI", color: "#7c3aed", bg: "#f5f3ff", border: "#c4b5fd", radius: 130, duration: 24, startAngle: 45, size: 50 },
-    { Icon: MessagesSquareIcon, label: "Чати", color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", radius: 175, duration: 28, startAngle: 90, size: 42 },
-    { Icon: ListChecksIcon, label: "Органайзер", color: "#e11d48", bg: "#fff1f2", border: "#fecdd3", radius: 140, duration: 22, startAngle: 135, size: 44 },
-    { Icon: FolderOpenIcon, label: "Файли", color: "#d97706", bg: "#fffbeb", border: "#fde68a", radius: 165, duration: 26, startAngle: 180, size: 42 },
-    { Icon: ClockIcon, label: "Дедлайни", color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", radius: 185, duration: 30, startAngle: 225, size: 40 },
-    { Icon: FileTextIcon, label: "Конспекти", color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", radius: 145, duration: 18, startAngle: 270, size: 42 },
-    { Icon: BrainIcon, label: "Навчання", color: "#db2777", bg: "#fdf2f8", border: "#fbcfe8", radius: 160, duration: 32, startAngle: 315, size: 44 },
-]
-
-function OrbitHero() {
-    return (
-        <div className="relative" style={{ width: 420, height: 420 }}>
-            {/* Decorative rings */}
-            {[120, 160, 200].map(r => (
-                <div
-                    key={r}
-                    className="absolute rounded-full"
-                    style={{
-                        width: r * 2, height: r * 2,
-                        top: 210 - r, left: 210 - r,
-                        border: `1px dashed ${T.faint}`,
-                        opacity: 0.5,
-                    }}
-                />
-            ))}
-
-            {/* Subtle glow */}
-            <div className="absolute" style={{
-                width: 200, height: 200, top: 110, left: 110,
-                borderRadius: "50%",
-                background: "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)",
-                filter: "blur(20px)",
-            }} />
-
-            {/* Center logo */}
-            <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.6, type: "spring", bounce: 0.3 }}
-                className="absolute z-10 flex items-center justify-center"
-                style={{
-                    width: 80, height: 80,
-                    top: 170, left: 170,
-                    borderRadius: 20,
-                    background: T.card,
-                    border: `1px solid ${T.border}`,
-                    boxShadow: "0 8px 40px rgba(124,58,237,0.15), 0 2px 12px rgba(0,0,0,0.06)",
-                }}
-            >
-                <img src={logoConfig["logo-white-no-bg"]} alt="Univa" style={{ height: 38 }} />
-            </motion.div>
-
-            {/* Orbiting icons — each is a single div with CSS animation */}
-            <style>{`
-                @keyframes orbit { from { transform: rotate(var(--start)) translateX(var(--r)) rotate(calc(-1 * var(--start))); }
-                                    to   { transform: rotate(calc(var(--start) + 360deg)) translateX(var(--r)) rotate(calc(-1 * (var(--start) + 360deg))); } }
-            `}</style>
-
-            {orbitIcons.map((item, i) => (
-                <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 + i * 0.08, duration: 0.4 }}
-                    className="absolute group"
-                    style={{
-                        width: item.size, height: item.size,
-                        top: 210 - item.size / 2, left: 210 - item.size / 2,
-                        "--r": `${item.radius}px`,
-                        "--start": `${item.startAngle}deg`,
-                        animation: `orbit ${item.duration}s linear infinite`,
-                        zIndex: 5,
-                    } as React.CSSProperties}
-                >
-                    <div
-                        className="flex items-center justify-center rounded-xl shadow-sm transition-transform group-hover:scale-110"
-                        style={{
-                            width: "100%", height: "100%",
-                            background: item.bg,
-                            border: `1px solid ${item.border}`,
-                        }}
-                    >
-                        <item.Icon style={{ width: 18, height: 18, color: item.color }} />
-                    </div>
-                    {/* Tooltip */}
-                    <span
-                        className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
-                        style={{
-                            background: T.card,
-                            border: `1px solid ${T.border}`,
-                            borderRadius: 6, padding: "2px 8px",
-                            fontSize: 10, fontWeight: 600,
-                            color: item.color,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                        }}
-                    >
-                        {item.label}
-                    </span>
-                </motion.div>
-            ))}
-        </div>
-    )
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -405,14 +280,7 @@ export function LandingPage() {
                         </div>
 
                         {/* Right — orbit */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.85 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
-                            className="hidden lg:flex flex-shrink-0"
-                        >
-                            <OrbitHero />
-                        </motion.div>
+                        <OrbitHero />
                     </div>
                 </motion.div>
 

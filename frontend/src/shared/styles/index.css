@@ -89,6 +89,22 @@
     --sidebar-accent-foreground: var(--foreground);
     --sidebar-border: var(--border);
     --sidebar-ring: var(--ring);
+
+    --u-bg: #fafbfc;
+    --u-card: #ffffff;
+    --u-text: #111827;
+    --u-muted: #6b7280;
+    --u-faint: #d1d5db;
+    --u-border: #e5e7eb;
+
+    --u-accent: #7c3aed;
+    --u-accent-light: #ede9fe;
+    --u-accent-mid: #c4b5fd;
+
+    --u-gradient: linear-gradient(135deg,#7c3aed,#6366f1,#3b82f6);
+
+    /* для glow в OrbitHero */
+    --u-orbit-glow: rgba(124,58,237,0.12);
 }
 
 .dark {
@@ -136,6 +152,21 @@
     --sidebar-accent: #151b23;
     --sidebar-accent-foreground: #e6edf3;
     --sidebar-border: #1f2630;
+
+    --u-bg: #0b1220;
+    --u-card: #0f172a;
+    --u-text: #f3f4f6;
+    --u-muted: #9ca3af;
+    --u-faint: #334155;
+    --u-border: #1f2937;
+
+    --u-accent: #8b5cf6;
+    --u-accent-light: #312e81;
+    --u-accent-mid: #6366f1;
+
+    --u-gradient: linear-gradient(135deg,#7c3aed,#4f46e5,#2563eb);
+
+    --u-orbit-glow: rgba(139,92,246,0.16);
 }
 
 @layer base {

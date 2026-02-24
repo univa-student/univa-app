@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 
 import { router } from "./router/router.tsx";
 import { queryClient } from "@/shared/api/query-client";
+import { AuthProvider } from "./providers/auth-provider";
 import { AppProviders } from "./providers/providers";
 
 import "@/shared/styles/index.css";
@@ -12,9 +13,11 @@ import "@/shared/styles/index.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <QueryClientProvider client={queryClient}>
-            <AppProviders>
-                <RouterProvider router={router} />
-            </AppProviders>
+            <AuthProvider>
+                <AppProviders>
+                    <RouterProvider router={router} />
+                </AppProviders>
+            </AuthProvider>
         </QueryClientProvider>
     </React.StrictMode>
 );

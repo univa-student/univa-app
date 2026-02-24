@@ -8,6 +8,9 @@ import { HomePage } from "@/pages/main/home.page.tsx";
 import { LandingPage } from "@/pages/main/landing.page.tsx";
 import { SettingsPage } from "@/pages/settings/settings.page.tsx";
 import { DashboardLayout } from "@/widgets/layouts/app/dashboard.layout.tsx";
+import { LoginPage } from "@/pages/auth/login.page.tsx";
+import { RegisterPage } from "@/pages/auth/register.page.tsx";
+import { AuthGuard } from "@/processes/auth-guard/auth-guard.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -19,17 +22,41 @@ export const router = createBrowserRouter([
         ),
         errorElement: <RouterErrorPage />
     },
+
+    // ── Auth (public) ────────────────────────────────────────────────────────
+    {
+        path: "/login",
+        element: (
+            <LazyBoundary>
+                <LoginPage />
+            </LazyBoundary>
+        ),
+        errorElement: <RouterErrorPage />
+    },
+    {
+        path: "/register",
+        element: (
+            <LazyBoundary>
+                <RegisterPage />
+            </LazyBoundary>
+        ),
+        errorElement: <RouterErrorPage />
+    },
+
+    // ── Dashboard (protected) ────────────────────────────────────────────────
     {
         path: "/dashboard",
 
         element: (
             <LazyBoundary>
-                <DashboardLayout breadcrumbs={[
-                    { label: "Головна", href: "/dashboard" },
-                    { label: "Дашборд" },
-                ]}>
-                    <HomePage />
-                </DashboardLayout>
+                <AuthGuard>
+                    <DashboardLayout breadcrumbs={[
+                        { label: "Головна", href: "/dashboard" },
+                        { label: "Дашборд" },
+                    ]}>
+                        <HomePage />
+                    </DashboardLayout>
+                </AuthGuard>
             </LazyBoundary>
         ),
 
@@ -39,12 +66,14 @@ export const router = createBrowserRouter([
         path: "/dashboard/settings",
         element: (
             <LazyBoundary>
-                <DashboardLayout breadcrumbs={[
-                    { label: "Головна", href: "/dashboard" },
-                    { label: "Налаштування" },
-                ]}>
-                    <SettingsPage />
-                </DashboardLayout>
+                <AuthGuard>
+                    <DashboardLayout breadcrumbs={[
+                        { label: "Головна", href: "/dashboard" },
+                        { label: "Налаштування" },
+                    ]}>
+                        <SettingsPage />
+                    </DashboardLayout>
+                </AuthGuard>
             </LazyBoundary>
         ),
         errorElement: <RouterErrorPage />
