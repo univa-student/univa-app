@@ -1,0 +1,169 @@
+x-common-env: &common-env
+  TZ: Europe/Kyiv
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+
+  # ── NGINX (точка входа) ─────────────────────────────────────────────────────
+  nginx:
+    build:
+      context: ./gateway/docker/development/nginx
+      dockerfile: Dockerfile
+    container_name: gateway_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./gateway/docker/development/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ${APP_PATH:-./api}:/var/www/app:ro
+    depends_on:
+      - php-fpm
+      - node
+    networks:
+      - frontend_net
+      - backend_net
+    environment:
+      <<: *common-env
+    logging: *default-logging
+
+  # ── PHP-FPM (обработка запросов) ────────────────────────────────────────────
+  php-fpm:
+    build:
+      context: ./gateway/docker/development/php-fpm
+      dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: gateway_php_fpm
+    restart: unless-stopped
+    volumes:
+      - ${APP_PATH:-./api}:/var/www/app:cached
+      - ./gateway/docker/development/php-fpm/conf.d/php.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
+      - ./gateway/docker/development/php-fpm/conf.d/timeouts.ini:/usr/local/etc/php/conf.d/98-timeouts.ini:ro
+    environment:
+      <<: *common-env
+      PHP_OPCACHE_ENABLE: 0
+      COMPOSER_HOME: /var/www/.composer
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend_net
+    logging: *default-logging
+
+  # ── PHP-CLI (artisan, composer, миграции) ───────────────────────────────────
+  php-cli:
+    build:
+      context: ./gateway/docker/development/php-cli
+      dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: gateway_php_cli
+    restart: "no"
+    volumes:
+      - ${APP_PATH:-./api}:/var/www/app:cached
+      - ./gateway/docker/development/php-cli/config:/var/www/.config:cached
+      - composer_cache:/var/www/.composer
+    environment:
+      <<: *common-env
+      PHP_OPCACHE_ENABLE: 0
+      COMPOSER_HOME: /var/www/.composer
+    working_dir: /var/www/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend_net
+    stdin_open: true
+    tty: true
+    logging: *default-logging
+
+  # ── NODE (Vite dev server) ───────────────────────────────────────────────────
+  node:
+    build:
+      context: ./gateway/docker/development/node
+      dockerfile: Dockerfile
+    container_name: gateway_node
+    restart: unless-stopped
+    volumes:
+      - ${FRONTEND_PATH:-./frontend}:/app:cached
+      - node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      <<: *common-env
+      CHOKIDAR_USEPOLLING: "true"
+    networks:
+      - frontend_net
+    logging: *default-logging
+
+  # ── REDIS ───────────────────────────────────────────────────────────────────
+  redis:
+    build:
+      context: ./gateway/docker/development/redis
+      dockerfile: Dockerfile
+    container_name: gateway_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend_net
+    logging: *default-logging
+
+  # ── POSTGRESQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: gateway_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./gateway/docker/development/postgres/init:/docker-entrypoint-initdb.d:ro
+    environment:
+      <<: *common-env
+      POSTGRES_DB: ${DB_DATABASE:-app}
+      POSTGRES_USER: ${DB_USERNAME:-app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-app} -d ${DB_DATABASE:-app}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - backend_net
+    logging: *default-logging
+
+# ─── ТОМА ──────────────────────────────────────────────────────────────────────
+volumes:
+  redis_data:
+  postgres_data:
+  composer_cache:
+  node_modules:
+
+    # ─── СЕТИ ──────────────────────────────────────────────────────────────────────
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
