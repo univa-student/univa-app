@@ -18,7 +18,7 @@ import { userQueries } from "../../entities/user/api/queries";
  */
 export const routesLoaders = {
     guestOnly: async () => {
-        if (authStore.getState().isAuthenticated) return redirect("/dashboard");
+        if (authStore.getState().user !== null) return redirect("/dashboard");
         return null;
     },
 
@@ -26,7 +26,7 @@ export const routesLoaders = {
         const url = new URL(request.url);
         const pathname = url.pathname;
 
-        const isAuthed = authStore.getState().isAuthenticated;
+        const isAuthed = authStore.getState().user !== null;
         if (!isAuthed) {
             // дозволяємо зайти на /login, але всі інші — редірект
             if (pathname !== "/login") throw redirect("/login");

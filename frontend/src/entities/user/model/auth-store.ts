@@ -1,29 +1,45 @@
-import { LS_KEY_AUTH_TOKEN } from "../../../app/config/app.config.ts";
+import type { User } from "./types";
 
-type AuthState = {
-    isAuthenticated: boolean;
-    token: string | null;
-    activeSpaceId: string | null;
-    setToken: (t: string | null) => void;
-    signOut: () => void;
+// ─── Simple reactive auth store ──────────────────────────────────────────────
+
+type Listener = () => void;
+
+interface AuthState {
+    user: User | null;
+    isReady: boolean;
+}
+
+let state: AuthState = {
+    user: null,
+    isReady: false,
 };
 
-const state: AuthState = {
-    isAuthenticated: false,
-    token: null,
-    activeSpaceId: null,
-    setToken: (t) => {
-        state.token = t;
-        state.isAuthenticated = Boolean(t);
-        if (t) localStorage.setItem(LS_KEY_AUTH_TOKEN, t);
-        else localStorage.removeItem(LS_KEY_AUTH_TOKEN);
-    },
-    signOut: () => {
-        state.setToken(null);
-        state.activeSpaceId = null;
-    },
-};
+const listeners = new Set<Listener>();
+
+function notify() {
+    listeners.forEach((fn) => fn());
+}
 
 export const authStore = {
-    getState: () => state,
+    getState: (): Readonly<AuthState> => state,
+
+    setUser(user: User | null) {
+        state = { ...state, user };
+        notify();
+    },
+
+    setReady(isReady: boolean) {
+        state = { ...state, isReady };
+        notify();
+    },
+
+    reset() {
+        state = { user: null, isReady: true };
+        notify();
+    },
+
+    subscribe(listener: Listener): () => void {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+    },
 };

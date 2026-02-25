@@ -1,6 +1,6 @@
 import { Button } from "@/shared/shadcn/ui/button.tsx";
 import { useToast } from "@/shared/providers/toast-provider.tsx";
-import logoConfig from "@/app/config/logo.config.ts";
+import { themedLogo } from "@/app/config/logo.config";
 
 export function UiKitPage() {
     const { toast, clear } = useToast();
@@ -9,7 +9,7 @@ export function UiKitPage() {
         <div className="p-10 flex gap-2">
             <header>
                 <img
-                    src={logoConfig["full-logo-white-no-bg"]}
+                    src={themedLogo("full-no-bg")}
                     alt="Univa Logo"
                     className="h-10"
                 />
