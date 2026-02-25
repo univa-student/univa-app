@@ -21,4 +21,3 @@ Route::group(['prefix' => '/v1'], function () {
     Route::post('/register', [RegisterController::class, 'store']);
     Route::post('/login', [LoginController::class, 'store']);
 });
-
