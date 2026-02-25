@@ -1,4 +1,5 @@
 import usePageTitle from "@/shared/hooks/usePageTitle.ts";
+import { useAuthUser } from "@/entities/user/model/useAuthUser";
 import { motion } from "framer-motion";
 import {
     CalendarDaysIcon,
@@ -33,11 +34,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/ui/avatar.t
 import { Separator } from "@/shared/shadcn/ui/separator.tsx";
 
 // ── Mock data ───────────────────────────────────────────────
-
-const user = {
-    name: "Anastasiia",
-    avatar: "/avatars/default.jpg",
-};
 
 const stats = [
     { label: "Дедлайни тижня", value: "6", icon: AlertCircleIcon, color: "text-red-500", bg: "bg-red-500/10" },
@@ -140,6 +136,10 @@ const itemVariants = {
 export function HomePage() {
     usePageTitle("Головна", { suffix: true });
 
+    const authUser = useAuthUser();
+    const userName = authUser?.first_name ?? authUser?.full_name ?? "";
+    const userAvatar = authUser?.avatar_path ?? "";
+
     const progressPct = Math.round((weeklyProgress.done / weeklyProgress.total) * 100);
     const maxTasks = Math.max(...weekActivity.map(d => d.tasks));
 
@@ -153,14 +153,14 @@ export function HomePage() {
             {/* ─── Greeting ─── */}
             <motion.section variants={itemVariants} className="flex items-center gap-4">
                 <Avatar className="h-14 w-14">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={userAvatar} alt={userName} />
                     <AvatarFallback className="text-lg font-semibold">
-                        {user.name.slice(0, 2).toUpperCase()}
+                        {userName.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                 </Avatar>
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">
-                        {getGreeting()}, {user.name} 👋
+                        {getGreeting()}{userName ? `, ${userName}` : ""} 👋
                     </h1>
                     <p className="text-muted-foreground text-sm capitalize">
                         {getFormattedDate()}
