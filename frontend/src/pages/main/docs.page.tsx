@@ -303,7 +303,7 @@ export function DocsPage() {
                 <div className="flex h-16 items-center justify-between px-6 max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-6">
                         <Link to="/" style={{ textDecoration: "none" }}>
-                            <img src={logoConfig["full-logo-black-no-bg"]} alt="Univa" style={{ height: 32 }} />
+                            <img src={logoConfig['full-logo-white-no-bg']} alt="Univa" style={{ height: 32 }} />
                         </Link>
                         <div style={{
                             width: 1, height: 24, background: "rgba(255,255,255,0.1)",

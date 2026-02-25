@@ -13,6 +13,7 @@ import { DashboardLayout } from "@/widgets/layouts/app/dashboard.layout.tsx";
 import { LoginPage } from "@/pages/auth/login.page.tsx";
 import { RegisterPage } from "@/pages/auth/register.page.tsx";
 import { AuthGuard } from "@/processes/auth-guard/auth-guard.tsx";
+import { GuestGuard } from "@/processes/guest-guard/guest-guard.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -45,12 +46,14 @@ export const router = createBrowserRouter([
         errorElement: <RouterErrorPage />
     },
 
-    // ── Auth (public) ────────────────────────────────────────────────────────
+    // ── Auth (guest-only) ────────────────────────────────────────────────────
     {
         path: "/login",
         element: (
             <LazyBoundary>
-                <LoginPage />
+                <GuestGuard>
+                    <LoginPage />
+                </GuestGuard>
             </LazyBoundary>
         ),
         errorElement: <RouterErrorPage />
@@ -59,7 +62,9 @@ export const router = createBrowserRouter([
         path: "/register",
         element: (
             <LazyBoundary>
-                <RegisterPage />
+                <GuestGuard>
+                    <RegisterPage />
+                </GuestGuard>
             </LazyBoundary>
         ),
         errorElement: <RouterErrorPage />

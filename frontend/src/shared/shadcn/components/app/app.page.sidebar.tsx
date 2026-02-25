@@ -22,67 +22,69 @@ import {
     Settings2Icon,
 } from "lucide-react"
 
-const data = {
-    user: {
-        name: "Anastasiia",
-        email: "a@example.com",
-        avatar: "/avatars/default.jpg",
-    },
+import { useAuthUser } from "@/entities/user/model/useAuthUser"
 
-    navMain: [
-        {
-            title: "Дашборд",
-            url: "/dashboard",
-            icon: <LayoutDashboardIcon />,
-            isActive: true,
-            items: [],
-        },
-        {
-            title: "Розклад",
-            url: "/dashboard/schedule",
-            icon: <CalendarDaysIcon />,
-            items: [
-                { title: "Тиждень", url: "/dashboard/schedule/week" },
-                { title: "Дедлайни", url: "/dashboard/schedule/deadlines" },
-            ],
-        },
-        {
-            title: "Файли",
-            url: "/dashboard/files",
-            icon: <FolderOpenIcon />,
-            items: [],
-        },
-        {
-            title: "Чати",
-            url: "/dashboard/chats",
-            icon: <MessagesSquareIcon />,
-            items: [],
-        },
-        {
-            title: "AI-помічник",
-            url: "/dashboard/ai",
-            icon: <BotIcon />,
-            items: [],
-        },
-        {
-            title: "Органайзер",
-            url: "/dashboard/organizer",
-            icon: <ListChecksIcon />,
-            items: [
-                { title: "To-do", url: "/dashboard/organizer/todo" },
-                { title: "Нотатки", url: "/dashboard/organizer/notes" },
-            ],
-        },
-        {
-            title: "Налаштування",
-            url: "/dashboard/settings",
-            icon: <Settings2Icon />,
-            items: [],
-        },
-    ],
-}
+const navMain = [
+    {
+        title: "Дашборд",
+        url: "/dashboard",
+        icon: <LayoutDashboardIcon />,
+        isActive: true,
+        items: [],
+    },
+    {
+        title: "Розклад",
+        url: "/dashboard/schedule",
+        icon: <CalendarDaysIcon />,
+        items: [
+            { title: "Тиждень", url: "/dashboard/schedule/week" },
+            { title: "Дедлайни", url: "/dashboard/schedule/deadlines" },
+        ],
+    },
+    {
+        title: "Файли",
+        url: "/dashboard/files",
+        icon: <FolderOpenIcon />,
+        items: [],
+    },
+    {
+        title: "Чати",
+        url: "/dashboard/chats",
+        icon: <MessagesSquareIcon />,
+        items: [],
+    },
+    {
+        title: "AI-помічник",
+        url: "/dashboard/ai",
+        icon: <BotIcon />,
+        items: [],
+    },
+    {
+        title: "Органайзер",
+        url: "/dashboard/organizer",
+        icon: <ListChecksIcon />,
+        items: [
+            { title: "To-do", url: "/dashboard/organizer/todo" },
+            { title: "Нотатки", url: "/dashboard/organizer/notes" },
+        ],
+    },
+    {
+        title: "Налаштування",
+        url: "/dashboard/settings",
+        icon: <Settings2Icon />,
+        items: [],
+    },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const user = useAuthUser()
+
+    const navUser = {
+        name: user?.full_name ?? user?.first_name ?? "...",
+        email: user?.email ?? "",
+        avatar: user?.avatar_path ?? "",
+    }
+
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
@@ -90,10 +92,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarHeader>
             <SidebarContent>
                 <SidebarCalendar />
-                <AppPageNavMain items={data.navMain} />
+                <AppPageNavMain items={navMain} />
             </SidebarContent>
             <SidebarFooter>
-                <AppPageNavUser user={data.user} />
+                <AppPageNavUser user={navUser} />
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>

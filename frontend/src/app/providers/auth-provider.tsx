@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { apiFetch } from "@/shared/api/http";
+import { fetchCsrfToken } from "@/shared/api/csrf";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { authStore } from "@/entities/user/model/auth-store";
 import type { User } from "@/entities/user/model/types";
@@ -30,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fetchMe = useCallback(async () => {
         try {
+            await fetchCsrfToken();
             const data = await apiFetch<User>(ENDPOINTS.auth.me);
             setUser(data);
             authStore.setUser(data);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import logoConfig from "@/app/config/logo.config"
+import { themedLogo } from "@/app/config/logo.config"
 import { MenuIcon, XIcon } from "lucide-react"
 import { T } from "./tokens"
 
@@ -39,7 +39,7 @@ export function LandingHeader() {
                     >
                         <div className="flex h-16 items-center justify-between px-6 lg:px-8">
                             <Link to="/" className="flex items-center gap-2.5" style={{ textDecoration: "none" }}>
-                                <img src={logoConfig["full-logo-white-no-bg"]} alt="Univa" style={{ height: 32 }} />
+                                <img src={themedLogo("full-no-bg")} alt="Univa" style={{ height: 32 }} />
                             </Link>
 
                             {/* Desktop Nav */}

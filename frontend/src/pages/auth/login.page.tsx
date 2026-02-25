@@ -7,7 +7,7 @@ import usePageTitle from "@/shared/hooks/usePageTitle";
 
 import { OrbitHero } from "@/shared/ui/animations/orbit-hero.animations";
 import { LoginForm } from "@/shared/shadcn/components/auth/login-form";
-import logoConfig from "@/app/config/logo.config";
+import { themedLogo } from "@/app/config/logo.config";
 
 export function LoginPage() {
     usePageTitle("Вхід");
@@ -52,7 +52,7 @@ export function LoginPage() {
                 <div className="flex justify-center gap-2 md:justify-center">
                     <a href="#" className="flex items-center gap-2 font-medium">
                         <div className="flex w-full h-16 items-center">
-                            <img src={logoConfig['full-logo-black-no-bg']} alt="" className="w-48" />
+                            <img src={themedLogo('full-no-bg')} alt="" className="w-48" />
                         </div>
                     </a>
                 </div>
@@ -70,8 +70,10 @@ export function LoginPage() {
                     </div>
                 </div>
             </div>
-            <div className="bg-muted relative hidden lg:flex items-center justify-center">
-                <OrbitHero size={500} />
+            <div className="bg-muted relative hidden lg:block h-svh">
+                <div className="sticky top-0 h-svh flex items-center justify-center pointer-events-none">
+                    <OrbitHero size={600} />
+                </div>
             </div>
         </div>
     );

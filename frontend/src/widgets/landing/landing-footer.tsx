@@ -52,7 +52,7 @@ export function LandingFooter() {
                 }}>
                     <div style={{ maxWidth: 280 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                            <img src={logoConfig["full-logo-black-no-bg"]} alt="Univa" style={{ height: 32 }} />
+                            <img src={logoConfig['full-logo-white-no-bg']} alt="Univa" style={{ height: 32 }} />
                         </div>
                         <p style={{ fontSize: 14, lineHeight: 1.7, color: T.darkMuted }}>
                             Єдина екосистема для студентів. Розклад, файли, чати, AI — все в одному місці.

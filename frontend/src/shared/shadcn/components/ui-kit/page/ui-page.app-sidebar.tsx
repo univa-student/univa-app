@@ -16,16 +16,16 @@ import {
   SidebarMenuItem,
 } from "@/shared/shadcn/ui/sidebar.tsx"
 import {
-    BotIcon,
-    BookOpenIcon,
-    Settings2Icon,
-    LifeBuoyIcon,
-    SendIcon,
-    FrameIcon,
-    PieChartIcon,
-    MapIcon, Globe
+  BotIcon,
+  BookOpenIcon,
+  Settings2Icon,
+  LifeBuoyIcon,
+  SendIcon,
+  FrameIcon,
+  PieChartIcon,
+  MapIcon, Globe
 } from "lucide-react"
-import logoConfig from "@/app/config/logo.config.ts";
+import { themedLogo } from "@/app/config/logo.config";
 
 const data = {
   user: {
@@ -194,17 +194,17 @@ export function UiPageAppSidebar({ ...props }: React.ComponentProps<typeof Sideb
             <SidebarMenuButton size="lg" asChild>
               <a href="/ui-kit-page">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
-                    <img
-                        src={logoConfig["logo-white-no-bg"]}
-                        alt="Univa logo"
-                    />
+                  <img
+                    src={themedLogo("logo-no-bg")}
+                    alt="Univa logo"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                      Univa
+                    Univa
                   </span>
                   <span className="truncate text-xs">
-                      UI Kit page
+                    UI Kit page
                   </span>
                 </div>
               </a>

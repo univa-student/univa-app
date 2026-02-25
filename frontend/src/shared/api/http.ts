@@ -24,19 +24,26 @@ export async function apiFetch<T>(
 ): Promise<T> {
     const xsrf = getXsrfToken();
 
+    const body = init?.body as any;
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
     const res = await fetch(`${API_BASE_URL}${path}`, {
         ...init,
         credentials: "include",
         headers: {
             "Accept": "application/json",
             "X-Requested-With": "XMLHttpRequest",
-            ...(hasBody(init) ? { "Content-Type": "application/json" } : {}),
+
+            // IMPORTANT: тільки для НЕ-FormData
+            ...(hasBody(init) && !isFormData ? { "Content-Type": "application/json" } : {}),
+
             ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
+
+            // якщо хтось передав headers ззовні
             ...(init?.headers ?? {}),
         },
     });
 
-    // Non-2xx → throw normalized ApiError
     if (!res.ok) {
         const body = await res.json().catch(() => ({
             message: `HTTP ${res.status}`,
@@ -48,12 +55,9 @@ export async function apiFetch<T>(
         });
     }
 
-    // 204 No Content
     if (res.status === 204) return undefined as T;
 
     const json = await res.json();
-
-    // Laravel ApiResponse wraps payload in `data`
     return (json.data !== undefined ? json.data : json) as T;
 }
 

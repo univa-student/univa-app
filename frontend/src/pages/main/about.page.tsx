@@ -8,7 +8,7 @@ import {
     ArrowRightIcon, HeartIcon, TargetIcon, EyeIcon, ShieldCheckIcon,
     SparklesIcon, UsersIcon, RocketIcon,
 } from "lucide-react"
-import {LandingFooter} from "@/widgets/landing";
+import { LandingFooter } from "@/widgets/landing";
 
 const T = {
     bg: "#fafbfc", card: "#ffffff", text: "#111827", muted: "#6b7280",
@@ -49,7 +49,7 @@ export function AboutPage() {
             {/* Header */}
             <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,10,15,0.92)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="flex h-16 items-center justify-between px-6 max-w-7xl mx-auto">
-                    <Link to="/" style={{ textDecoration: "none" }}><img src={logoConfig["full-logo-black-no-bg"]} alt="Univa" style={{ height: 32 }} /></Link>
+                    <Link to="/" style={{ textDecoration: "none" }}><img src={logoConfig['full-logo-white-no-bg']} alt="Univa" style={{ height: 32 }} /></Link>
                     <div className="flex items-center gap-3">
                         <Button variant="ghost" size="sm" asChild className="text-white/60 hover:text-white hover:bg-white/5"><Link to="/">← На головну</Link></Button>
                         <Button size="sm" asChild style={{ background: T.gradient, border: "none" }}><Link to="/dashboard">Почати <ArrowRightIcon className="size-3.5 ml-1" /></Link></Button>
@@ -174,7 +174,7 @@ export function AboutPage() {
             </section>
 
             {/* Footer */}
-           <LandingFooter />
+            <LandingFooter />
         </div>
     )
 }

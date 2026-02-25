@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared/shadcn/ui/sidebar"
-
-import logoConfig from "@/app/config/logo.config"
+import { useThemeLogo } from "@/shared/hooks/useThemeLogo"
 
 export function AppPageSidebarLogo() {
+    const logoSrc = useThemeLogo("logo-no-bg")
+
     return (
         <SidebarMenu>
             <SidebarMenuItem>
@@ -15,14 +16,9 @@ export function AppPageSidebarLogo() {
                     <Link to="/dashboard" className="flex items-center gap-3">
                         <div className="flex size-8 shrink-0 items-center justify-center">
                             <img
-                                src={logoConfig["logo-white-no-bg"]}
+                                src={logoSrc}
                                 alt="Univa"
-                                className="h-7 w-auto object-contain dark:hidden"
-                            />
-                            <img
-                                src={logoConfig["logo-black-no-bg"]}
-                                alt="Univa"
-                                className="h-7 w-auto object-contain hidden dark:block"
+                                className="h-7 w-auto object-contain"
                             />
                         </div>
 

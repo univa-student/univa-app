@@ -7,7 +7,7 @@ import usePageTitle from "@/shared/hooks/usePageTitle";
 
 import { OrbitHero } from "@/shared/ui/animations/orbit-hero.animations";
 import { RegisterForm, type RegisterFormData } from "@/shared/shadcn/components/auth/register-form";
-import logoConfig from "@/app/config/logo.config";
+import { themedLogo } from "@/app/config/logo.config";
 
 export function RegisterPage() {
     usePageTitle("Реєстрація");
@@ -17,17 +17,46 @@ export function RegisterPage() {
     const { toast } = useToast();
 
     const [form, setForm] = useState<RegisterFormData>({
-        first_name: "",
+        // Персональні
         last_name: "",
+        first_name: "",
         middle_name: "",
+
+        // Акаунт
+        username: "",
         email: "",
+        phone: "",
+
+        // Навчання (опційно)
+        university: "",
+        faculty: "",
+        specialty: "",
+        group: "",
+        course: "",
+
+        // Налаштування (опційно)
+        language: "uk",
+        timezone: "Europe/Zaporozhye",
+
+        // Додатково
+        referral_code: "",
+        avatar: null,
+
+        // Безпека
         password: "",
         password_confirmation: "",
+
+        // Згоди
+        agree_terms: false,
+        marketing_opt_in: false,
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    function onFieldChange(field: keyof RegisterFormData, value: string) {
+    function onFieldChange<K extends keyof RegisterFormData>(
+        field: K,
+        value: RegisterFormData[K]
+    ) {
         setForm((prev) => ({ ...prev, [field]: value }));
     }
 
@@ -62,7 +91,7 @@ export function RegisterPage() {
                 <div className="flex justify-center gap-2 md:justify-center">
                     <a href="#" className="flex items-center gap-2 font-medium">
                         <div className="flex w-full h-16 items-center">
-                            <img src={logoConfig['full-logo-black-no-bg']} alt="" className="w-48" />
+                            <img src={themedLogo('full-no-bg')} alt="" className="w-48" />
                         </div>
                     </a>
                 </div>
@@ -78,8 +107,10 @@ export function RegisterPage() {
                     </div>
                 </div>
             </div>
-            <div className="bg-muted relative hidden lg:flex items-center justify-center">
-                <OrbitHero size={500} />
+            <div className="bg-muted relative hidden lg:block">
+                <div className="sticky top-1/2 -translate-y-1/2 flex justify-center">
+                    <OrbitHero size={600} />
+                </div>
             </div>
         </div>
     );

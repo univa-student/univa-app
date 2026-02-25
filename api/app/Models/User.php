@@ -17,6 +17,20 @@ class User extends Authenticatable
         'email',
         'password',
         'full_name',
+        'phone',
+        'role',
+        'avatar_path',
+        'username',
+        'university',
+        'faculty',
+        'specialty',
+        'group',
+        'course',
+        'language',
+        'timezone',
+        'referral_code',
+        'agree_terms',
+        'marketing_opt_in',
     ];
 
     protected $hidden = [
@@ -37,14 +51,8 @@ class User extends Authenticatable
         parent::boot();
 
         static::saving(function (User $user) {
-            $user->update([
-                'full_name' => $user->generateFullName()
-            ]);
+            // Generate full_name before saving (without causing recursion)
+            $user->full_name = trim($user->last_name . ' ' . $user->first_name . ' ' . ($user->middle_name ?? ''));
         });
-    }
-
-    private function generateFullName(): string
-    {
-        return $this->last_name . ' ' . $this->first_name . ' ' . $this->middle_name;
     }
 }
