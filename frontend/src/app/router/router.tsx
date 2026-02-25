@@ -6,6 +6,8 @@ import { RouterErrorPage } from "@/shared/ui/error-boudary/router-error-boundary
 import { UiKitLayout } from "@/widgets/layouts/ui-kit/ui-kit.layout.tsx";
 import { HomePage } from "@/pages/main/home.page.tsx";
 import { LandingPage } from "@/pages/main/landing.page.tsx";
+import { DocsPage } from "@/pages/main/docs.page.tsx";
+import { AboutPage } from "@/pages/main/about.page.tsx";
 import { SettingsPage } from "@/pages/settings/settings.page.tsx";
 import { DashboardLayout } from "@/widgets/layouts/app/dashboard.layout.tsx";
 import { LoginPage } from "@/pages/auth/login.page.tsx";
@@ -18,6 +20,26 @@ export const router = createBrowserRouter([
         element: (
             <LazyBoundary>
                 <LandingPage />
+            </LazyBoundary>
+        ),
+        errorElement: <RouterErrorPage />
+    },
+
+    // ── Public pages ────────────────────────────────────────────────────────
+    {
+        path: "/docs",
+        element: (
+            <LazyBoundary>
+                <DocsPage />
+            </LazyBoundary>
+        ),
+        errorElement: <RouterErrorPage />
+    },
+    {
+        path: "/about",
+        element: (
+            <LazyBoundary>
+                <AboutPage />
             </LazyBoundary>
         ),
         errorElement: <RouterErrorPage />

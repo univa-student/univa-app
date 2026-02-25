@@ -91,7 +91,7 @@ interface OrbitHeroProps {
     className?: string;
 }
 
-export function OrbitHero({ size: maxSize = 720, className }: OrbitHeroProps) {
+export function OrbitHero({ size: maxSize = 520, className }: OrbitHeroProps) {
     const wrapRef       = useRef<HTMLDivElement>(null);
     const canvasRef     = useRef<HTMLCanvasElement>(null);
     const iconsRef      = useRef<HTMLDivElement>(null);
@@ -208,7 +208,7 @@ export function OrbitHero({ size: maxSize = 720, className }: OrbitHeroProps) {
         return () => cancelAnimationFrame(rafRef.current);
     }, []); // runs once — reads everything via refs
 
-    const centerSize = Math.max(48, Math.min(92, Math.round(size * 0.19)));
+    const centerSize = Math.max(28, Math.min(62, Math.round(size * 0.19)));
 
     return (
         <div
@@ -310,9 +310,9 @@ export function OrbitHero({ size: maxSize = 720, className }: OrbitHeroProps) {
                 whileTap={{ scale: 0.92 }}
             >
                 <picture>
-                    <source srcSet={logoConfig["logo-black-no-bg"]} media="(prefers-color-scheme: dark)" />
+                    <source srcSet={logoConfig["logo-white-no-bg"]} media="(prefers-color-scheme: dark)" />
                     <img
-                        src={logoConfig["logo-white-no-bg"]}
+                        src={logoConfig["logo-black-no-bg"]}
                         alt="Univa"
                         style={{ height: Math.round(centerSize * 0.48) }}
                         draggable={false}
