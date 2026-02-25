@@ -1,38 +1,69 @@
-FROM php:8.3-cli-alpine
+# docker/development/php-cli/Dockerfile
+# Наследуем от php-cli Alpine — тот же язык, что в php-fpm, но без FPM-демона.
+# В реальных проектах выносят общую часть в отдельный base-образ.
+ARG PHP_VERSION=8.2
+FROM php:${PHP_VERSION}-cli-alpine AS base
 
-RUN mv $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini
+ARG UID=1000
+ARG GID=1000
 
-COPY ./gateway/docker/development/php/conf.d /usr/local/etc/php/conf.d
-
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/bin --filename=composer --quiet
-
-RUN apk update && apk add autoconf g++ make libzip-dev zip unzip \
-    && docker-php-ext-configure zip \
-    && docker-php-ext-install zip
-
+# Системные зависимости (те же что в fpm + git для composer)
 RUN apk add --no-cache \
-    oniguruma-dev libxml2-dev libpng-dev libjpeg-turbo-dev freetype-dev \
-    && docker-php-ext-install mbstring dom \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd
+    git \
+    unzip \
+    curl \
+    bash \
+    linux-headers \
+    libpq-dev \
+    libzip-dev \
+    icu-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    oniguruma-dev \
+    && apk add --no-cache --virtual .build-deps \
+    $PHPIZE_DEPS \
+    && docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+    pdo_pgsql \
+    pgsql \
+    zip \
+    intl \
+    gd \
+    bcmath \
+    mbstring \
+    pcntl \
+    sockets \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps \
+    && rm -rf /tmp/pear
 
-RUN apk add --no-cache ttf-dejavu ttf-liberation
+# ── Composer ──────────────────────────────────────────────────────────────────
+# Официальный способ: копируем бинарь из образа composer
+# Не устанавливаем глобально через apk — версия может быть устаревшей
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-RUN apk add --no-cache postgresql-dev \
-    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-    && docker-php-ext-install pdo_pgsql
+# ── Пользователь (та же логика, что в php-fpm) ────────────────────────────────
+RUN delgroup www-data 2>/dev/null || true \
+    && deluser www-data 2>/dev/null || true \
+    && addgroup -g ${GID} -S www-data \
+    && adduser -u ${UID} -S -G www-data -H www-data \
+    && mkdir -p /var/www/app /var/www/.composer \
+    && chown -R www-data:www-data /var/www
 
-RUN apk add --no-cache pcre-dev $PHPIZE_DEPS \
-        && pecl install redis \
-        && docker-php-ext-enable redis.so
+# ── Вспомогательные скрипты (entrypoint, wait-for-db, etc.) ───────────────────
+COPY scripts/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh 2>/dev/null || true
 
-COPY ./gateway/docker/development/php-cli/scripts /app/scripts
+WORKDIR /var/www/app
+USER www-data
 
-RUN chmod +x /app/scripts/crontab.sh && sed -i 's/\r$//' /app/scripts/crontab.sh
-
-COPY ./gateway/docker/development/php-cli/config/crontabs /var/spool/cron/crontabs
-
-CMD ["/app/scripts/crontab.sh"]
-
-
-WORKDIR /app/api
+# ── ENTRYPOINT + CMD ───────────────────────────────────────────────────────────
+# ИСПРАВЛЕНО: без CMD контейнер с restart:"no" сразу выходил с кодом 0.
+# entrypoint.sh поддерживает "wait-db" для ожидания БД перед миграциями.
+# CMD tail -f /dev/null держит контейнер живым для docker exec artisan ...
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["tail", "-f", "/dev/null"]
