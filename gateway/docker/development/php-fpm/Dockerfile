@@ -60,7 +60,7 @@ RUN sed -i \
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN apk add --no-cache su-exec
+
 
 WORKDIR /var/www/app
 EXPOSE 9000
