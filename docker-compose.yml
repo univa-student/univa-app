@@ -9,7 +9,7 @@ x-logging: &default-logging
 
 services:
 
-  # ── NGINX (точка входа) ─────────────────────────────────────────────────────
+  # ── NGINX ───────────────────────────────────────────────────────────────────
   nginx:
     build:
       context: ./gateway/docker/development/nginx
@@ -23,8 +23,10 @@ services:
       - ./gateway/docker/development/nginx/conf.d:/etc/nginx/conf.d:ro
       - ${APP_PATH:-./api}:/var/www/app:ro
     depends_on:
-      - php-fpm
-      - node
+      php-fpm:
+        condition: service_started
+      node:
+        condition: service_started
     networks:
       - frontend_net
       - backend_net
@@ -32,7 +34,7 @@ services:
       <<: *common-env
     logging: *default-logging
 
-  # ── PHP-FPM (обработка запросов) ────────────────────────────────────────────
+  # ── PHP-FPM ─────────────────────────────────────────────────────────────────
   php-fpm:
     build:
       context: ./gateway/docker/development/php-fpm
@@ -50,6 +52,12 @@ services:
       <<: *common-env
       PHP_OPCACHE_ENABLE: 0
       COMPOSER_HOME: /var/www/.composer
+      DB_CONNECTION: pgsql
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-app}
+      DB_USERNAME: ${DB_USERNAME:-app}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,7 +67,7 @@ services:
       - backend_net
     logging: *default-logging
 
-  # ── PHP-CLI (artisan, composer, миграции) ───────────────────────────────────
+  # ── PHP-CLI ─────────────────────────────────────────────────────────────────
   php-cli:
     build:
       context: ./gateway/docker/development/php-cli
@@ -68,7 +76,7 @@ services:
         UID: ${UID:-1000}
         GID: ${GID:-1000}
     container_name: gateway_php_cli
-    restart: "no"
+    restart: unless-stopped
     volumes:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-cli/config:/var/www/.config:cached
@@ -77,6 +85,12 @@ services:
       <<: *common-env
       PHP_OPCACHE_ENABLE: 0
       COMPOSER_HOME: /var/www/.composer
+      DB_CONNECTION: pgsql
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-app}
+      DB_USERNAME: ${DB_USERNAME:-app}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
     working_dir: /var/www/app
     depends_on:
       postgres:
@@ -89,7 +103,7 @@ services:
     tty: true
     logging: *default-logging
 
-  # ── NODE (Vite dev server) ───────────────────────────────────────────────────
+  # ── NODE ────────────────────────────────────────────────────────────────────
   node:
     build:
       context: ./gateway/docker/development/node

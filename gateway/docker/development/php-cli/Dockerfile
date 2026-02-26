@@ -1,6 +1,4 @@
 # docker/development/php-cli/Dockerfile
-# Наследуем от php-cli Alpine — тот же язык, что в php-fpm, но без FPM-демона.
-# В реальных проектах выносят общую часть в отдельный base-образ.
 ARG PHP_VERSION=8.2
 FROM php:${PHP_VERSION}-cli-alpine AS base
 
@@ -9,6 +7,7 @@ ARG GID=1000
 
 # Системные зависимости (те же что в fpm + git для composer)
 RUN apk add --no-cache \
+    su-exec \
     git \
     unzip \
     curl \
@@ -42,11 +41,9 @@ RUN apk add --no-cache \
     && rm -rf /tmp/pear
 
 # ── Composer ──────────────────────────────────────────────────────────────────
-# Официальный способ: копируем бинарь из образа composer
-# Не устанавливаем глобально через apk — версия может быть устаревшей
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# ── Пользователь (та же логика, что в php-fpm) ────────────────────────────────
+# ── Пользователь ──────────────────────────────────────────────────────────────
 RUN delgroup www-data 2>/dev/null || true \
     && deluser www-data 2>/dev/null || true \
     && addgroup -g ${GID} -S www-data \
@@ -54,16 +51,16 @@ RUN delgroup www-data 2>/dev/null || true \
     && mkdir -p /var/www/app /var/www/.composer \
     && chown -R www-data:www-data /var/www
 
-# ── Вспомогательные скрипты (entrypoint, wait-for-db, etc.) ───────────────────
+# ── Вспомогательные скрипты ───────────────────────────────────────────────────
 COPY scripts/ /usr/local/bin/
 RUN chmod +x /usr/local/bin/*.sh 2>/dev/null || true
 
 WORKDIR /var/www/app
-USER www-data
+
+# ВАЖНО: запускаем от root чтобы entrypoint мог делать chmod.
+# entrypoint.sh через su-exec переключается на www-data для выполнения команд.
 
 # ── ENTRYPOINT + CMD ───────────────────────────────────────────────────────────
-# ИСПРАВЛЕНО: без CMD контейнер с restart:"no" сразу выходил с кодом 0.
-# entrypoint.sh поддерживает "wait-db" для ожидания БД перед миграциями.
 # CMD tail -f /dev/null держит контейнер живым для docker exec artisan ...
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["tail", "-f", "/dev/null"]
