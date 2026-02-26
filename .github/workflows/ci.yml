@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, develop , feature-workflow]
+    branches: [main, develop]
   pull_request:
-    branches: [main, develop , feature-workflow]
+    branches: [main, develop]
 
 env:
   REGISTRY: ghcr.io
@@ -210,6 +210,29 @@ jobs:
             done
           done
 
+      # Кешируем vendor/ чтобы не качать пакеты при каждом запуске
+      # Ключ привязан к composer.lock — при его изменении кеш сбросится
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ./api/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      # vendor/ не попадает в git — устанавливаем зависимости в контейнере
+      - name: Install Composer dependencies
+        run: |
+          docker compose run --rm php-cli composer install \
+            --no-interaction \
+            --no-progress \
+            --prefer-dist \
+            --optimize-autoloader
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
       # Запускаем php-cli — он зависит от postgres и redis (depends_on прописан в compose)
       - name: Run database migrations
         run: |
@@ -223,7 +246,7 @@ jobs:
       # --parallel — если используешь Pest с параллельным запуском
       - name: Run tests
         run: |
-          docker compose run --rm php-cli php artisan test
+          docker compose run --rm php-cli php artisan test --parallel
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
