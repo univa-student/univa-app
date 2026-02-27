@@ -9,6 +9,9 @@ export const ENDPOINTS = {
         logout: `${API}/logout`,
         me: `${API}/univa-user`,
     },
+    settings: {
+        me: `${API}/settings`,
+    },
     // Готово для розширення:
     // files:  { list: `${API}/files`, upload: `${API}/files`, ... },
     // spaces: { list: `${API}/spaces`, ... },

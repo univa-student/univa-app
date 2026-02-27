@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Application\Settings\UserSettingsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -13,6 +14,9 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' 
     });
 
     Route::post('/logout', [LogoutController::class, 'store']);
+
+    Route::get('/settings', [UserSettingsController::class, 'index']);
+    Route::post('/settings', [UserSettingsController::class, 'store']);
 });
 
 Route::group(['prefix' => '/v1', 'middleware' => ['web']], function () {
