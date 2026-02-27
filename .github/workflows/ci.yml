@@ -22,6 +22,13 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -64,13 +71,18 @@ jobs:
     needs: lint
 
     steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
       # Сбрасываем права на файлы созданные Docker (root) в прошлых запусках
       # Без этого git checkout падает с EACCES permission denied
-      - name: Fix workspace permissions
-        run: docker run --rm -v "${{ github.workspace }}:/workspace" alpine chown -R $(id -u):$(id -g) /workspace
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -170,14 +182,19 @@ jobs:
     needs: build
 
     steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Fix workspace permissions
-        run: docker run --rm -v "${{ github.workspace }}:/workspace" alpine chown -R $(id -u):$(id -g) /workspace
 
       - name: Restore Docker layer cache
         uses: actions/cache@v4
@@ -275,14 +292,19 @@ jobs:
     needs: lint
 
     steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Fix workspace permissions
-        run: docker run --rm -v "${{ github.workspace }}:/workspace" alpine chown -R $(id -u):$(id -g) /workspace
 
       # Билдим только node-образ — не нужна БД
       - name: Build node image
@@ -314,6 +336,13 @@ jobs:
       packages: write
 
     steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
