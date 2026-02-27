@@ -1,5 +1,4 @@
 .idea
-
 # Environment files — do not commit real secrets
 .env
 .env.local
