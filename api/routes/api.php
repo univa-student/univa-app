@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\Application\Settings\UserSettingsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\System\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -15,8 +15,9 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' 
 
     Route::post('/logout', [LogoutController::class, 'store']);
 
-    Route::get('/settings', [UserSettingsController::class, 'index']);
-    Route::post('/settings', [UserSettingsController::class, 'store']);
+    Route::get('/settings', [SettingsController::class, 'index']);
+    Route::patch('/settings/{key}', [SettingsController::class, 'update'])
+        ->where('key', '.+');
 });
 
 Route::group(['prefix' => '/v1', 'middleware' => ['web']], function () {

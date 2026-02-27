@@ -4,29 +4,33 @@ import { SettingsIcon } from "lucide-react"
 import { Badge } from "@/shared/shadcn/ui/badge"
 import { tabs } from "./config/tabs.config"
 
-/* ── Tab components (lazy map) ── */
+/* ── Tab components ── */
 import { AccountTab } from "./tabs/account.tab"
 import { SecurityTab } from "./tabs/security.tab"
 import { NotificationsTab } from "./tabs/notifications.tab"
 import { AppearanceTab } from "./tabs/appearance.tab"
 import { PrivacyTab } from "./tabs/privacy.tab"
 import { AITab } from "./tabs/ai.tab"
-import { CalendarTab } from "./tabs/calendar.tab"
+import { SchedulerTab } from "./tabs/scheduler.tab"
 import { ChatsTab } from "./tabs/chats.tab"
 import { FilesTab } from "./tabs/files.tab"
 import { OrganizerTab } from "./tabs/organizer.tab"
 import { IntegrationsTab } from "./tabs/integrations.tab"
 import { DangerTab } from "./tabs/danger.tab"
-import usePageTitle from "@/shared/hooks/usePageTitle.ts";
+import usePageTitle from "@/shared/hooks/usePageTitle.ts"
+import type { TabDef } from "./settings.types"
 
-const tabComponents: Record<string, React.FC> = {
+/* ── Each tab component receives the full TabDef ── */
+type TabFC = React.FC<{ tab: TabDef }>
+
+const tabComponents: Record<string, TabFC> = {
     account: AccountTab,
     security: SecurityTab,
     notifications: NotificationsTab,
     appearance: AppearanceTab,
     privacy: PrivacyTab,
     ai: AITab,
-    calendar: CalendarTab,
+    scheduler: SchedulerTab,
     chats: ChatsTab,
     files: FilesTab,
     organizer: OrganizerTab,
@@ -112,7 +116,7 @@ export function SettingsPage() {
                             exit={{ opacity: 0, y: -8 }}
                             transition={{ duration: 0.2 }}
                         >
-                            {Content ? <Content /> : null}
+                            {Content ? <Content tab={currentTab} /> : null}
                         </motion.div>
                     </AnimatePresence>
                 </div>

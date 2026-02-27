@@ -2,36 +2,33 @@
 
 namespace App\Models\Application\Settings;
 
-use App\Core\Traits\HasInsertWithId;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ApplicationSetting extends Model
 {
-    use HasInsertWithId, SoftDeletes;
+    use SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'group_id',
         'key',
-        'name',
-        'application_setting_value_id',
-        'application_setting_group_id',
+        'type',
+        'default_value',
+        'value',
+        'label',
+        'description',
+        'enum_options',
+        'constraints',
     ];
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function value(): BelongsTo
-    {
-        return $this->belongsTo(ApplicationSettingValue::class, 'application_setting_value_id');
-    }
+    protected $casts = [
+        'enum_options' => 'array',
+        'constraints'  => 'array',
+    ];
 
     public function group(): BelongsTo
     {
-        return $this->belongsTo(ApplicationSettingGroup::class, 'application_setting_group_id');
+        return $this->belongsTo(ApplicationSettingGroup::class, 'group_id');
     }
 }

@@ -10,10 +10,7 @@ export const ENDPOINTS = {
         me: `${API}/univa-user`,
     },
     settings: {
-        me: `${API}/settings`,
+        group: (groupId: number) => `${API}/settings?group_id=${groupId}`,
+        update: (key: string) => `${API}/settings/${encodeURIComponent(key)}`,
     },
-    // Готово для розширення:
-    // files:  { list: `${API}/files`, upload: `${API}/files`, ... },
-    // spaces: { list: `${API}/spaces`, ... },
-    // tasks:  { list: `${API}/tasks`, ... },
 } as const;

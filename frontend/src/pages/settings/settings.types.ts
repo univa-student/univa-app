@@ -8,6 +8,8 @@ export interface TabDef {
     description: string
     badge?: string
     group?: string
+    /** Backend group ID for settings API — undefined for action-only tabs */
+    groupId?: number
 }
 
 /* ── Toggle-based setting ── */

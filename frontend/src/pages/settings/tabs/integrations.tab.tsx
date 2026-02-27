@@ -7,8 +7,9 @@ import { Separator } from "@/shared/shadcn/ui/separator"
 import { UnplugIcon } from "lucide-react"
 import { itemAnim, containerAnim } from "../settings.animations"
 import { integrations as defaultIntegrations } from "../config/integrations.config"
+import type { TabDef } from "../settings.types"
 
-export function IntegrationsTab() {
+export function IntegrationsTab({ tab: _tab }: { tab: TabDef }) {
     const [items, setItems] = useState(defaultIntegrations)
 
     const toggle = (name: string) =>

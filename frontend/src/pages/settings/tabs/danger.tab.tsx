@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Separator } from "@/shared/shadcn/ui/separator"
 import { itemAnim, containerAnim } from "../settings.animations"
 import { dangerSection, dangerActions } from "../config/danger.config"
+import type { TabDef } from "../settings.types"
 
-export function DangerTab() {
+export function DangerTab({ tab: _tab }: { tab: TabDef }) {
     return (
         <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">
             <motion.div variants={itemAnim}>

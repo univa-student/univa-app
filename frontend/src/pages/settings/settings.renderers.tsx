@@ -1,8 +1,8 @@
-import { useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/shadcn/ui/card"
 import { Separator } from "@/shared/shadcn/ui/separator"
 import { Button } from "@/shared/shadcn/ui/button"
+import { Skeleton } from "@/shared/shadcn/ui/skeleton"
 import { Toggle } from "./settings.toggle"
 import { containerAnim, itemAnim } from "./settings.animations"
 import type { ToggleSetting, SelectorOption, SectionConfig } from "./settings.types"
@@ -104,7 +104,7 @@ export function SelectorSection<T extends string>({
                             if (variant === "compact") {
                                 return (
                                     <button key={opt.id} onClick={() => onChange(opt.id)}
-                                            className={`flex flex-col items-center gap-2 p-4 ${base} ${activeStyle}`}>
+                                        className={`flex flex-col items-center gap-2 p-4 ${base} ${activeStyle}`}>
                                         {opt.icon && (
                                             <div className="flex size-10 items-center justify-center rounded-md bg-secondary">
                                                 <opt.icon className="size-5 text-muted-foreground" />
@@ -228,13 +228,26 @@ export function MultiSelectorSection({ section, groups, values, onChange }: Mult
    TabShell — wraps tab content with animation + save button
    ════════════════════════════════════════════════════════════ */
 
-export function TabShell({ children, showSave = true }: { children: React.ReactNode; showSave?: boolean }) {
+interface TabShellProps {
+    children: React.ReactNode
+    showSave?: boolean
+    onSave?: () => void
+    isSaving?: boolean
+    isDirty?: boolean
+}
+
+export function TabShell({ children, showSave = true, onSave, isSaving, isDirty }: TabShellProps) {
     return (
         <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">
             {children}
             {showSave && (
                 <motion.div variants={itemAnim} className="flex justify-end">
-                    <Button>Зберегти зміни</Button>
+                    <Button
+                        onClick={onSave}
+                        disabled={isSaving || !isDirty}
+                    >
+                        {isSaving ? "Зберігається…" : "Зберегти зміни"}
+                    </Button>
                 </motion.div>
             )}
         </motion.div>
@@ -242,9 +255,39 @@ export function TabShell({ children, showSave = true }: { children: React.ReactN
 }
 
 /* ════════════════════════════════════════════════════════════
+   SettingsLoadingShell — skeleton while API data loads
+   ════════════════════════════════════════════════════════════ */
+
+export function SettingsLoadingShell() {
+    return (
+        <div className="flex flex-col gap-6">
+            {[1, 2].map(i => (
+                <div key={i} className="rounded-xl border p-6 flex flex-col gap-4">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-4 w-64" />
+                    <div className="flex flex-col gap-3 mt-2">
+                        {[1, 2, 3].map(j => (
+                            <div key={j} className="flex items-center justify-between">
+                                <div className="flex flex-col gap-1.5">
+                                    <Skeleton className="h-4 w-32" />
+                                    <Skeleton className="h-3 w-48" />
+                                </div>
+                                <Skeleton className="h-6 w-12 rounded-full" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
+}
+
+/* ════════════════════════════════════════════════════════════
    useToggleState — hook to manage a group of toggle values
    from a config array
    ════════════════════════════════════════════════════════════ */
+
+import { useState } from "react"
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useToggleState(settings: ToggleSetting[]) {

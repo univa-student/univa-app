@@ -1,62 +1,57 @@
 import { useState, useEffect } from "react"
-import { SparklesIcon, BrainIcon, GlobeIcon } from "lucide-react"
+import { CalendarIcon, BellIcon } from "lucide-react"
 import { TabShell, ToggleSection, MultiSelectorSection, SettingsLoadingShell } from "../settings.renderers"
 import { useSettingsGroup } from "@/entities/settings/hooks/use-settings-group"
 import { useUpdateSetting } from "@/entities/settings/hooks/use-update-setting"
 import type { TabDef } from "../settings.types"
 
-const GROUP_ID = 6 // AI_SETTINGS_GROUP_ID
+const GROUP_ID = 7 // SCHEDULER_SETTINGS_GROUP_ID
 
-const AI_SEC = { title: "AI-помічник", icon: SparklesIcon, description: "Вибір моделі та стилю відповідей" }
-const IFACE_SEC = { title: "Поведінка", icon: BrainIcon }
+const CAL_SEC = { title: "Розклад", icon: CalendarIcon, description: "Параметри відображення розкладу" }
+const ALERT_SEC = { title: "Нагадування", icon: BellIcon }
 
 const SELECTOR_GROUPS = [
     {
-        id: "ai.model", label: "Модель AI",
+        id: "scheduler.first_day_of_week", label: "Перший день тижня",
         options: [
-            { id: "fast", label: "Швидка", description: "Швидкі відповіді" },
-            { id: "balanced", label: "Збалансована", description: "Оптимальний вибір" },
-            { id: "advanced", label: "Розширена", description: "Максимальна точність" },
+            { id: "mon", label: "Понеділок" },
+            { id: "sun", label: "Неділя" },
         ],
-        columns: 3 as const, variant: "compact" as const,
+        columns: 2 as const, variant: "compact" as const,
     },
     {
-        id: "ai.creativity", label: "Творчість",
+        id: "scheduler.default_view", label: "Вигляд за замовчуванням",
         options: [
-            { id: "low", label: "Низька", description: "Точні та чіткі відповіді" },
-            { id: "medium", label: "Середня", description: "Збалансований підхід" },
-            { id: "high", label: "Висока", description: "Творчі & нестандартні" },
+            { id: "day", label: "День" },
+            { id: "week", label: "Тиждень" },
         ],
-        columns: 3 as const, variant: "compact" as const,
+        columns: 2 as const, variant: "compact" as const,
     },
     {
-        id: "ai.language", label: "Мова відповідей",
+        id: "scheduler.reminder_minutes", label: "Нагадування перед подією",
         options: [
-            { id: "auto", label: "Автоматично" },
-            { id: "uk", label: "Українська" },
-            { id: "en", label: "English" },
+            { id: "15", label: "15 хв" },
+            { id: "30", label: "30 хв" },
+            { id: "60", label: "1 год" },
         ],
         columns: 3 as const, variant: "compact" as const,
     },
 ]
 
 const TOGGLE_DEFS = [
-    { id: "ai.context_memory", label: "Пам'ять контексту", description: "AI запам'ятовує попередні повідомлення", defaultValue: true },
-    { id: "ai.auto_suggestions", label: "Авто-підказки", description: "Показувати підказки при написанні", defaultValue: true },
+    { id: "scheduler.deadline_alerts", label: "Сповіщення про дедлайни", description: "Отримувати нагадування про наближення дедлайнів", defaultValue: true },
 ]
 
-export function AITab({ tab }: { tab: TabDef }) {
+export function SchedulerTab({ tab }: { tab: TabDef }) {
     const { data, isLoading } = useSettingsGroup(tab.groupId ?? GROUP_ID)
     const { mutate, isPending } = useUpdateSetting(tab.groupId ?? GROUP_ID)
 
     const [selectors, setSelectors] = useState<Record<string, string>>({
-        "ai.model": "balanced",
-        "ai.creativity": "medium",
-        "ai.language": "auto",
+        "scheduler.first_day_of_week": "mon",
+        "scheduler.default_view": "week",
+        "scheduler.reminder_minutes": "15",
     })
-    const [toggles, setToggles] = useState<Record<string, boolean>>(
-        Object.fromEntries(TOGGLE_DEFS.map(s => [s.id, s.defaultValue]))
-    )
+    const [toggles, setToggles] = useState<Record<string, boolean>>({ "scheduler.deadline_alerts": true })
     const [isDirty, setIsDirty] = useState(false)
 
     useEffect(() => {
@@ -85,13 +80,13 @@ export function AITab({ tab }: { tab: TabDef }) {
     return (
         <TabShell showSave onSave={onSave} isSaving={isPending} isDirty={isDirty}>
             <MultiSelectorSection
-                section={AI_SEC}
+                section={CAL_SEC}
                 groups={SELECTOR_GROUPS}
                 values={selectors}
                 onChange={(id, v) => { setSelectors(p => ({ ...p, [id]: v })); setIsDirty(true) }}
             />
             <ToggleSection
-                section={IFACE_SEC}
+                section={ALERT_SEC}
                 settings={TOGGLE_DEFS}
                 values={toggles}
                 onChange={(id, v) => { setToggles(p => ({ ...p, [id]: v })); setIsDirty(true) }}

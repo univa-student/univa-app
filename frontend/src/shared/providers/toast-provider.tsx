@@ -26,11 +26,10 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 /* ── Variant config ───────────────────────────────────────────── */
 
 const VARIANT_MAP: Record<ToastVariant, {
-    // ✅ Добавлен style?: React.CSSProperties — иначе TS ругается на передачу style в иконку
-    icon: React.FC<{ className?: string; size?: number; style?: React.CSSProperties }>;
-    accent: string;
-    bg: string;
-    glow: string;
+    icon: React.FC<{ className?: string; size?: number }>;
+    accent: string;     // border-left + icon color
+    bg: string;         // background
+    glow: string;       // box-shadow glow
 }> = {
     success: {
         icon: CheckCircle2,
@@ -168,7 +167,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}>
-                                    {/* ✅ style теперь принимается корректно */}
                                     <IconComp size={15} style={{ color: v.accent }} />
                                 </div>
 
