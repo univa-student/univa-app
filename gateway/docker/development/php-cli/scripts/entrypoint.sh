@@ -9,7 +9,7 @@ APP_DIR="/var/www/app"
 
 # Ждём postgres через PHP PDO
 wait_for_postgres() {
-    echo "⏳ Waiting for PostgreSQL at ${DB_HOST:-postgres}..."
+    echo "Waiting for PostgreSQL at ${DB_HOST:-postgres}..."
     until su-exec www-data php -r "
         try {
             new PDO('pgsql:host=${DB_HOST:-postgres};port=5432;dbname=${DB_DATABASE:-app}',
@@ -21,7 +21,7 @@ wait_for_postgres() {
     " 2>/dev/null; do
         sleep 2
     done
-    echo "✅ PostgreSQL is ready"
+    echo "PostgreSQL is ready"
 }
 
 # Если первый аргумент — "wait-db", ждём БД затем выполняем остальное

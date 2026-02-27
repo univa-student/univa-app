@@ -22,8 +22,6 @@ class LoginController extends Controller
             );
         }
 
-        $request->session()->regenerate();
-
         return ApiResponse::ok(
             message: __('Ви успішно увійшли!'),
             data: UserResource::make($request->user()),

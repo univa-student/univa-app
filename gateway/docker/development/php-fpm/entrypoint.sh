@@ -82,4 +82,19 @@ echo "🎉 Setup complete! Starting php-fpm..."
 # PHP-FPM мастер-процесс работает от root (читает /proc/self/fd/2, конфиги).
 # Воркеры сами дропают привилегии до www-data через www.conf (user = www-data).
 # su-exec здесь ломает доступ к stderr → Permission denied на /proc/self/fd/2.
+# docker/development/php-fpm/entrypoint.sh
+# Запускается при старте php-fpm контейнера (от root).
+# Использует su-exec для выполнения php-fpm от www-data.
+
+set -e
+
+# Фиксируем права на рабочую директорию (на случай bind-mount)
+chown -R www-data:www-data /var/www/app 2>/dev/null || true
+
+# Если переданы аргументы — выполняем их (docker exec artisan ...)
+if [ "$#" -gt 0 ]; then
+    exec su-exec www-data "$@"
+fi
+
+# По умолчанию — запуск php-fpm
 exec php-fpm

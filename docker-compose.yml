@@ -1,11 +1,19 @@
 x-common-env: &common-env
-  TZ: Europe/Kyiv
+  TZ: ${TZ:-Europe/Kyiv}
 
 x-logging: &default-logging
   driver: json-file
   options:
     max-size: "10m"
     max-file: "3"
+
+# Спільний блок env_file — підключає api/.env до PHP-контейнерів
+# УВAGA: Docker Compose не підтримує змінні у шляхах env_file,
+# тому використовуємо статичні шляхи.
+x-php-env-file: &php-env-file
+  env_file:
+    - .env        # кореневі змінні Docker Compose
+    - ./api/.env  # Laravel .env (DB, Redis, APP_KEY тощо)
 
 services:
 
@@ -17,8 +25,8 @@ services:
     container_name: gateway_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
     volumes:
       - ./gateway/docker/development/nginx/conf.d:/etc/nginx/conf.d:ro
       - ${APP_PATH:-./api}:/var/www/app:ro
@@ -48,16 +56,11 @@ services:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-fpm/conf.d/php.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
       - ./gateway/docker/development/php-fpm/conf.d/timeouts.ini:/usr/local/etc/php/conf.d/98-timeouts.ini:ro
+    <<: *php-env-file
     environment:
       <<: *common-env
       PHP_OPCACHE_ENABLE: 0
       COMPOSER_HOME: /var/www/.composer
-      DB_CONNECTION: pgsql
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: 5432
-      DB_DATABASE: ${DB_DATABASE:-app}
-      DB_USERNAME: ${DB_USERNAME:-app}
-      DB_PASSWORD: ${DB_PASSWORD:-secret}
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,16 +84,11 @@ services:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-cli/config:/var/www/.config:cached
       - composer_cache:/var/www/.composer
+    <<: *php-env-file
     environment:
       <<: *common-env
       PHP_OPCACHE_ENABLE: 0
       COMPOSER_HOME: /var/www/.composer
-      DB_CONNECTION: pgsql
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: 5432
-      DB_DATABASE: ${DB_DATABASE:-app}
-      DB_USERNAME: ${DB_USERNAME:-app}
-      DB_PASSWORD: ${DB_PASSWORD:-secret}
     working_dir: /var/www/app
     depends_on:
       postgres:
@@ -114,7 +112,10 @@ services:
       - ${FRONTEND_PATH:-./frontend}:/app:cached
       - node_modules:/app/node_modules
     ports:
-      - "5173:5173"
+      - "${NODE_PORT:-5173}:5173"
+    env_file:
+      - .env              # кореневі змінні
+      - ./frontend/.env   # Vite змінні (VITE_*)
     environment:
       <<: *common-env
       CHOKIDAR_USEPOLLING: "true"
@@ -130,7 +131,7 @@ services:
     container_name: gateway_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -149,7 +150,7 @@ services:
     container_name: gateway_postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./gateway/docker/development/postgres/init:/docker-entrypoint-initdb.d:ro
@@ -175,7 +176,7 @@ volumes:
   composer_cache:
   node_modules:
 
-    # ─── СЕТИ ──────────────────────────────────────────────────────────────────────
+# ─── СЕТИ ──────────────────────────────────────────────────────────────────────
 networks:
   frontend_net:
     driver: bridge
