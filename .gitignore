@@ -1,5 +1,5 @@
 .idea
-.env.dev
+.env
 
 postgres_data/
 redis_data/
