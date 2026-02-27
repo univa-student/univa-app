@@ -29,36 +29,29 @@ jobs:
       - name: Validate docker-compose syntax
         run: docker compose config --quiet
 
-      # Линтинг всех Dockerfile'ов проекта
-      - name: Lint Dockerfile — nginx
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: gateway/docker/development/nginx/Dockerfile
-          failure-threshold: error
+      # Устанавливаем hadolint как бинарник — работает на любом runner'е (включая self-hosted)
+      - name: Install hadolint
+        run: |
+          HADOLINT_VERSION="v2.12.0"
+          curl -sSL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64" \
+            -o /usr/local/bin/hadolint
+          chmod +x /usr/local/bin/hadolint
+          hadolint --version
 
-      - name: Lint Dockerfile — php-fpm
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: gateway/docker/development/php-fpm/Dockerfile
-          failure-threshold: error
-
-      - name: Lint Dockerfile — php-cli
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: gateway/docker/development/php-cli/Dockerfile
-          failure-threshold: error
-
-      - name: Lint Dockerfile — node
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: gateway/docker/development/node/Dockerfile
-          failure-threshold: error
-
-      - name: Lint Dockerfile — redis
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: gateway/docker/development/redis/Dockerfile
-          failure-threshold: error
+      # Линтинг всех Dockerfile'ов проекта одной командой
+      - name: Lint all Dockerfiles
+        run: |
+          FAILED=0
+          for f in \
+            "gateway/docker/development/nginx/Dockerfile" \
+            "gateway/docker/development/php-fpm/Dockerfile" \
+            "gateway/docker/development/php-cli/Dockerfile" \
+            "gateway/docker/development/node/Dockerfile" \
+            "gateway/docker/development/redis/Dockerfile"; do
+            echo "── Linting $f"
+            hadolint --failure-threshold error "$f" && echo "  ✅ OK" || FAILED=1
+          done
+          exit $FAILED
 
   # ─────────────────────────────────────────────────────────────────────────────
   # JOB 2: Build & smoke-test всех сервисов
