@@ -37,11 +37,8 @@ async function createImage(url: string): Promise<HTMLImageElement> {
     })
 }
 
-function getRadianAngle(deg: number) {
-    return (deg * Math.PI) / 180
-}
+// ✅ getRadianAngle удалена — была объявлена но нигде не использовалась (TS6133)
 
-// тут rotation не використовуємо, але залишив як базу (на майбутнє)
 async function cropToBlob(imageSrc: string, pixelCrop: Area, mime = "image/webp", quality = 0.92) {
     const image = await createImage(imageSrc)
     const canvas = document.createElement("canvas")
@@ -97,7 +94,6 @@ export function AvatarPicker({
     const currentPreview = useMemo(() => {
         if (previewUrl) return previewUrl
         if (!value) return ""
-        // якщо прийшов File ззовні і ми ще не робили локальний preview
         return URL.createObjectURL(value)
     }, [value, previewUrl])
 
@@ -144,7 +140,7 @@ export function AvatarPicker({
         e.preventDefault()
     }
 
-    const onCropComplete = useCallback((_area: any, areaPixels: Area) => {
+    const onCropComplete = useCallback((_area: Area, areaPixels: Area) => {
         setCroppedAreaPixels(areaPixels)
     }, [])
 
@@ -157,7 +153,6 @@ export function AvatarPicker({
         const blob = await cropToBlob(imageSrc, croppedAreaPixels, "image/webp", 0.92)
         const file = new File([blob], "avatar.webp", { type: "image/webp" })
 
-        // оновлюємо прев’ю
         if (previewUrl) URL.revokeObjectURL(previewUrl)
         const nextPreview = URL.createObjectURL(file)
         setPreviewUrl(nextPreview)
