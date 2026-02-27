@@ -1,5 +1,5 @@
 x-common-env: &common-env
-  TZ: Europe/Kyiv
+  TZ: ${TZ:-Europe/Kyiv}
 
 x-logging: &default-logging
   driver: json-file
@@ -7,9 +7,17 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 
+# Спільний блок env_file — підключає api/.env до PHP-контейнерів
+# УВAGA: Docker Compose не підтримує змінні у шляхах env_file,
+# тому використовуємо статичні шляхи.
+x-php-env-file: &php-env-file
+  env_file:
+    - .env        # кореневі змінні Docker Compose
+    - ./api/.env  # Laravel .env (DB, Redis, APP_KEY тощо)
+
 services:
 
-  # ── NGINX (точка входа) ─────────────────────────────────────────────────────
+  # ── NGINX ───────────────────────────────────────────────────────────────────
   nginx:
     build:
       context: ./gateway/docker/development/nginx
@@ -17,14 +25,16 @@ services:
     container_name: gateway_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
     volumes:
       - ./gateway/docker/development/nginx/conf.d:/etc/nginx/conf.d:ro
       - ${APP_PATH:-./api}:/var/www/app:ro
     depends_on:
-      - php-fpm
-      - node
+      php-fpm:
+        condition: service_started
+      node:
+        condition: service_started
     networks:
       - frontend_net
       - backend_net
@@ -32,7 +42,7 @@ services:
       <<: *common-env
     logging: *default-logging
 
-  # ── PHP-FPM (обработка запросов) ────────────────────────────────────────────
+  # ── PHP-FPM ─────────────────────────────────────────────────────────────────
   php-fpm:
     build:
       context: ./gateway/docker/development/php-fpm
@@ -46,6 +56,7 @@ services:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-fpm/conf.d/php.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
       - ./gateway/docker/development/php-fpm/conf.d/timeouts.ini:/usr/local/etc/php/conf.d/98-timeouts.ini:ro
+    <<: *php-env-file
     environment:
       <<: *common-env
       PHP_OPCACHE_ENABLE: 0
@@ -59,7 +70,7 @@ services:
       - backend_net
     logging: *default-logging
 
-  # ── PHP-CLI (artisan, composer, миграции) ───────────────────────────────────
+  # ── PHP-CLI ─────────────────────────────────────────────────────────────────
   php-cli:
     build:
       context: ./gateway/docker/development/php-cli
@@ -68,11 +79,12 @@ services:
         UID: ${UID:-1000}
         GID: ${GID:-1000}
     container_name: gateway_php_cli
-    restart: "no"
+    restart: unless-stopped
     volumes:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-cli/config:/var/www/.config:cached
       - composer_cache:/var/www/.composer
+    <<: *php-env-file
     environment:
       <<: *common-env
       PHP_OPCACHE_ENABLE: 0
@@ -89,7 +101,7 @@ services:
     tty: true
     logging: *default-logging
 
-  # ── NODE (Vite dev server) ───────────────────────────────────────────────────
+  # ── NODE ────────────────────────────────────────────────────────────────────
   node:
     build:
       context: ./gateway/docker/development/node
@@ -100,7 +112,10 @@ services:
       - ${FRONTEND_PATH:-./frontend}:/app:cached
       - node_modules:/app/node_modules
     ports:
-      - "5173:5173"
+      - "${NODE_PORT:-5173}:5173"
+    env_file:
+      - .env              # кореневі змінні
+      - ./frontend/.env   # Vite змінні (VITE_*)
     environment:
       <<: *common-env
       CHOKIDAR_USEPOLLING: "true"
@@ -116,7 +131,7 @@ services:
     container_name: gateway_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -135,7 +150,7 @@ services:
     container_name: gateway_postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./gateway/docker/development/postgres/init:/docker-entrypoint-initdb.d:ro
@@ -161,7 +176,7 @@ volumes:
   composer_cache:
   node_modules:
 
-    # ─── СЕТИ ──────────────────────────────────────────────────────────────────────
+# ─── СЕТИ ──────────────────────────────────────────────────────────────────────
 networks:
   frontend_net:
     driver: bridge

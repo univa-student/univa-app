@@ -7,6 +7,7 @@ ARG GID=1000
 
 # ── Системные зависимости ──────────────────────────────────────────────────────
 RUN apk add --no-cache \
+    su-exec \
     linux-headers \
     libpq-dev \
     libzip-dev \
@@ -55,13 +56,12 @@ RUN sed -i \
     -e "s/^listen.group = .*/listen.group = www-data/" \
     /usr/local/etc/php-fpm.d/www.conf
 
-# ── Entrypoint: composer install + migrations при каждом старте ────────────────
+# ── Entrypoint ────────────────────────────────────────────────────────────────
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+
+
 WORKDIR /var/www/app
-USER www-data
-
 EXPOSE 9000
-
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
