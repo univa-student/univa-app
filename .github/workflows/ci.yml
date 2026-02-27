@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, develop, feature-workflow]
+    branches: [main, develop]
   pull_request:
-    branches: [main, develop, feature-workflow]
+    branches: [main, develop]
 
 env:
   REGISTRY: ghcr.io
@@ -19,7 +19,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   lint:
     name: 🔍 Lint & Validate
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -65,7 +65,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   build:
     name: 🐳 Docker Build & Smoke Test
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: lint
 
     steps:
@@ -166,7 +166,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   backend-tests:
     name: 🧪 Backend Tests (PHP)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build
 
     steps:
@@ -220,6 +220,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
+      # Composer не может сам создать vendor/ если директория не существует —
+      # создаём заранее с правильными правами (UID 1000 = пользователь внутри php-cli)
+      - name: Prepare vendor directory
+        run: |
+          mkdir -p ./api/vendor
+          sudo chown -R 1000:1000 ./api/vendor
+
       # vendor/ не попадает в git — устанавливаем зависимости в контейнере
       - name: Install Composer dependencies
         run: |
@@ -261,7 +268,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   frontend-build:
     name: 🎨 Frontend Build (Vite)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: lint
 
     steps:
@@ -292,7 +299,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   push:
     name: 📦 Push images to GHCR
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [backend-tests, frontend-build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
