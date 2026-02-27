@@ -25,10 +25,9 @@ class ApplicationSettingGroup extends Model
     public const SCHEDULER_SETTINGS_GROUP_ID = 7;
     public const CHAT_SETTINGS_GROUP_ID = 8;
     public const FILE_SETTINGS_GROUP_ID = 9;
-    public const SYSTEM_SETTINGS_GROUP_ID = 10;
-    public const ORGANIZER_SETTINGS_GROUP_ID = 11;
-    public const INTEGRATION_SETTINGS_GROUP_ID = 12;
-    public const DANGER_ZONE_SETTING_GROUP_ID = 13;
+    public const ORGANIZER_SETTINGS_GROUP_ID = 10;
+    public const INTEGRATION_SETTINGS_GROUP_ID = 11;
+    public const DANGER_ZONE_SETTING_GROUP_ID = 12;
 
     public function settings(): HasMany
     {
