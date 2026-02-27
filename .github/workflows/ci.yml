@@ -273,7 +273,7 @@ jobs:
       # --parallel — если используешь Pest с параллельным запуском
       - name: Run tests
         run: |
-          docker compose run --rm php-cli php artisan test --parallel
+          docker compose run --rm php-cli php artisan test
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
