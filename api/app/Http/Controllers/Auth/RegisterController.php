@@ -16,55 +16,22 @@ class RegisterController extends Controller
     {
         $data = $request->validated();
 
-        $avatarPath = '';
-        if ($request->hasFile('avatar')) {
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-        }
-
-        $fullName = trim(
-            ($data['last_name'] ?? '') . ' ' .
-            ($data['first_name'] ?? '') . ' ' .
-            ($data['middle_name'] ?? '')
-        );
-
         $user = User::query()->create([
-            // Персональні
             'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'middle_name' => $data['middle_name'] ?? null,
-            'full_name' => $fullName !== '' ? $fullName : null,
+            'last_name' => $data['last_name'] ?? null,
 
-            // Акаунт
             'username' => $data['username'],
             'email' => $data['email'],
-            'phone' => $data['phone'] ?? null,
 
-            // Навчання
-            'university' => $data['university'] ?? null,
-            'faculty' => $data['faculty'] ?? null,
-            'specialty' => $data['specialty'] ?? null,
-            'group' => $data['group'] ?? null,
-            'course' => $data['course'] ?? null,
-
-            // Налаштування
-            'language' => $data['language'] ?? 'uk',
-            'timezone' => $data['timezone'] ?? 'Europe/Zaporozhye',
-
-            // Додатково
-            'referral_code' => $data['referral_code'] ?? null,
-
-            // Аватар
-            'avatar_path' => $avatarPath,
-
-            // Згоди
             'agree_terms' => (bool)($data['agree_terms'] ?? false),
             'marketing_opt_in' => (bool)($data['marketing_opt_in'] ?? false),
 
-            // Безпека
             'password' => Hash::make($data['password']),
         ]);
 
         auth()->login($user);
+
+        $request->session()->regenerate();
 
         return ApiResponse::make(
             state: ResponseState::Created,

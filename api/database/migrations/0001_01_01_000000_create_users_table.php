@@ -14,30 +14,10 @@ return new class extends Migration
             // Персональні
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('middle_name')->nullable(); // тепер опційно
-            $table->string('full_name')->nullable();
 
             // Акаунт
             $table->string('username')->unique();
             $table->string('email')->unique();
-            $table->string('phone')->nullable()->index();
-
-            // Аватар (шлях у сховищі)
-            $table->string('avatar_path')->default('');
-
-            // Навчання (опційно)
-            $table->string('university')->nullable();
-            $table->string('faculty')->nullable();
-            $table->string('specialty')->nullable();
-            $table->string('group')->nullable();
-            $table->unsignedTinyInteger('course')->nullable();
-
-            // Налаштування
-            $table->string('language', 5)->default('uk'); // uk / en
-            $table->string('timezone')->default('Europe/Zaporozhye');
-
-            // Додатково
-            $table->string('referral_code')->nullable()->index();
 
             // Згоди
             $table->boolean('agree_terms')->default(false);
