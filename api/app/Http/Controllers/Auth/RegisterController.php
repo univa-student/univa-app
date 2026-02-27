@@ -65,7 +65,6 @@ class RegisterController extends Controller
         ]);
 
         auth()->login($user);
-        $request->session()->regenerate();
 
         return ApiResponse::make(
             state: ResponseState::Created,

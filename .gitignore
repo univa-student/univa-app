@@ -1,5 +1,17 @@
 .idea
+# Environment files — do not commit real secrets
 .env
+.env.local
+.env.*.local
+.env.dev
+
+# Явно ігнорувати .env підпроєктів
+api/.env
+frontend/.env
+
+# Keep example files tracked
+!.env.example
+!**/.env.example
 
 postgres_data/
 redis_data/

@@ -1,0 +1,18 @@
+# Автоматично нормалізувати закінчення рядків при commit/checkout.
+# Shell-скрипти ЗАВЖДИ мають зберігатись з LF (UNIX),
+# інакше Alpine Linux не зможе виконати shebang (#!/bin/sh).
+
+* text=auto
+
+# Shell scripts — force LF
+*.sh    text eol=lf
+
+# YAML/Dockerfile — force LF
+*.yml   text eol=lf
+*.yaml  text eol=lf
+Dockerfile text eol=lf
+
+# Windows-стиль для решти текстових файлів
+*.md    text
+*.json  text
+*.env*  text
