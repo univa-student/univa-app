@@ -7,7 +7,7 @@ use App\Http\Controllers\System\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['middleware' => ['auth:sanctum', 'throttle:api'], 'prefix' => '/v1'], function () {
+Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' => '/v1'], function () {
     Route::get('/univa-user', function (Request $request) {
         return $request->user();
     });
@@ -15,7 +15,7 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api'], 'prefix' => '/v1
     Route::post('/logout', [LogoutController::class, 'store']);
 });
 
-Route::group(['prefix' => '/v1'], function () {
+Route::group(['prefix' => '/v1', 'middleware' => ['web']], function () {
     Route::get('/health', [HealthController::class, 'health']);
 
     Route::post('/register', [RegisterController::class, 'store']);
