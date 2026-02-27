@@ -31,7 +31,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
-
+      - name: Create dummy env
+        run: cp api/.env.example api/.env
       # Валидация синтаксиса docker-compose.yml
       - name: Validate docker-compose syntax
         run: docker compose config --quiet
