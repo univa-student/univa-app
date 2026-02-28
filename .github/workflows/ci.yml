@@ -2,42 +2,38 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, develop, feature/workflow]
+    branches: [develop, feature/workflow, feature/CI]
   pull_request:
-    branches: [main, develop, feature/workflow]
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Global environment
+# ─────────────────────────────────────────────────────────────────────────────
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+
   DB_DATABASE: app_test
   DB_USERNAME: app
   DB_PASSWORD: secret
 
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 1 — Lint & Validate
+# ─────────────────────────────────────────────────────────────────────────────
 jobs:
-  # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 1: Lint & Validate
-  # ─────────────────────────────────────────────────────────────────────────────
   lint:
     name: 🔍 Lint & Validate
     runs-on: self-hosted
 
-    steps:
-      - name: Fix workspace permissions
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
+    env:
+      COMPOSE_PROJECT_NAME: ci-${{ github.run_id }}-lint
 
-      - name: Checkout code
+    steps:
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Create dummy env
-        run: cp api/.env.example api/.env
-      # Валидация синтаксиса docker-compose.yml
+
       - name: Validate docker-compose syntax
         run: docker compose config --quiet
 
-      # Устанавливаем hadolint как бинарник — работает на любом runner'е (включая self-hosted)
       - name: Install hadolint
         run: |
           HADOLINT_VERSION="v2.12.0"
@@ -46,375 +42,155 @@ jobs:
             -o "$HOME/.local/bin/hadolint"
           chmod +x "$HOME/.local/bin/hadolint"
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-          "$HOME/.local/bin/hadolint" --version
 
-      # Линтинг всех Dockerfile'ов проекта одной командой
-      - name: Lint all Dockerfiles
+      - name: Lint Dockerfiles
         run: |
-          FAILED=0
+          set -e
           for f in \
-            "gateway/docker/development/nginx/Dockerfile" \
-            "gateway/docker/development/php-fpm/Dockerfile" \
-            "gateway/docker/development/php-cli/Dockerfile" \
-            "gateway/docker/development/node/Dockerfile" \
-            "gateway/docker/development/redis/Dockerfile"; do
-            echo "── Linting $f"
-            hadolint --failure-threshold error "$f" && echo "  ✅ OK" || FAILED=1
+            gateway/docker/development/nginx/Dockerfile \
+            gateway/docker/development/php-fpm/Dockerfile \
+            gateway/docker/development/php-cli/Dockerfile \
+            gateway/docker/development/node/Dockerfile \
+            gateway/docker/development/redis/Dockerfile; do
+            echo "Linting $f"
+            hadolint --failure-threshold error "$f"
           done
-          exit $FAILED
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 2: Build & smoke-test всех сервисов
+  # JOB 2 — Docker Build
   # ─────────────────────────────────────────────────────────────────────────────
   build:
-    name: 🐳 Docker Build & Smoke Test
+    name: 🐳 Docker Build
     runs-on: self-hosted
     needs: lint
 
+    env:
+      COMPOSE_PROJECT_NAME: ci-${{ github.run_id }}-build
+
     steps:
-      - name: Fix workspace permissions
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
-
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Create dummy env
-        run: cp api/.env.example api/.env
-      # Сбрасываем права на файлы созданные Docker (root) в прошлых запусках
-      # Без этого git checkout падает с EACCES permission denied
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
 
       - name: Build all images
-        run: docker compose build --no-cache
-        env:
-          DOCKER_BUILDKIT: 1
-          UID: 1000
-          GID: 1000
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-
-      # Сначала поднимаем postgres и redis — у них прописаны healthcheck'и в compose
-      - name: Start postgres & redis
-        run: docker compose up -d postgres redis
-        env:
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-
-      - name: Wait for postgres to be healthy
-        run: |
-          echo "Waiting for gateway_postgres..."
-          for i in $(seq 1 30); do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_postgres 2>/dev/null || echo "missing")
-            echo "  attempt $i: $STATUS"
-            [ "$STATUS" = "healthy" ] && echo "✅ postgres is healthy" && break
-            [ $i -eq 30 ] && echo "❌ postgres did not become healthy" && docker compose logs postgres && exit 1
-            sleep 3
-          done
-
-      - name: Wait for redis to be healthy
-        run: |
-          echo "Waiting for gateway_redis..."
-          for i in $(seq 1 20); do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_redis 2>/dev/null || echo "missing")
-            echo "  attempt $i: $STATUS"
-            [ "$STATUS" = "healthy" ] && echo "✅ redis is healthy" && break
-            [ $i -eq 20 ] && echo "❌ redis did not become healthy" && docker compose logs redis && exit 1
-            sleep 3
-          done
-
-      # Теперь поднимаем остальные сервисы
-      - name: Start php-fpm, php-cli, nginx, node
-        run: docker compose up -d php-fpm php-cli nginx node
-        env:
-          UID: 1000
-          GID: 1000
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-
-      - name: Give services time to start
-        run: sleep 8
-
-      - name: Show running containers
-        run: docker compose ps
-
-      # Проверяем что ни один сервис не упал (Exit code != 0)
-      - name: Verify no containers have exited
-        run: |
-          EXITED=$(docker compose ps --status exited --format json 2>/dev/null | python3 -c "
-          import sys, json
-          lines = [l for l in sys.stdin if l.strip()]
-          services = [json.loads(l) for l in lines]
-          if services:
-              names = [s.get('Name', s.get('Service', '?')) for s in services]
-              print(' '.join(names))
-          " 2>/dev/null || echo "")
-          if [ -n "$EXITED" ]; then
-            echo "❌ Containers exited unexpectedly: $EXITED"
-            docker compose logs
-            exit 1
-          fi
-          echo "✅ All containers are running"
-
-      - name: Cleanup
-        if: always()
-        run: docker compose down -v
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 3: Backend Tests (PHP / Laravel)
-  # ─────────────────────────────────────────────────────────────────────────────
-  backend-tests:
-    name: 🧪 Backend Tests (PHP)
-    runs-on: self-hosted
-    needs: build
-
-    steps:
-      - name: Fix workspace permissions
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Create dummy env
-        run: cp api/.env.example api/.env
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-
-      - name: Restore Docker layer cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Build images
         run: docker compose build
         env:
           DOCKER_BUILDKIT: 1
           UID: 1000
           GID: 1000
 
-      - name: Start postgres & redis
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 3 — Backend Tests (Laravel)
+  # ─────────────────────────────────────────────────────────────────────────────
+  backend-tests:
+    name: 🧪 Backend Tests (PHP / Laravel)
+    runs-on: self-hosted
+    needs: build
+
+    env:
+      COMPOSE_PROJECT_NAME: ci-${{ github.run_id }}-backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use CI environment
+        run: cp api/.env.ci api/.env
+
+      - name: Start database services
         run: docker compose up -d postgres redis
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      - name: Wait for postgres & redis
+      - name: Wait for postgres
         run: |
-          for svc in gateway_postgres gateway_redis; do
-            echo "Waiting for $svc..."
-            for i in $(seq 1 30); do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' $svc 2>/dev/null || echo "missing")
-              [ "$STATUS" = "healthy" ] && echo "✅ $svc healthy" && break
-              [ $i -eq 30 ] && echo "❌ $svc not healthy" && docker compose logs && exit 1
-              sleep 3
-            done
+          echo "Waiting for postgres..."
+          for i in {1..30}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_postgres 2>/dev/null || true)
+            [ "$STATUS" = "healthy" ] && echo "Postgres ready" && break
+            sleep 2
+            [ $i -eq 30 ] && echo "Postgres failed" && docker compose logs && exit 1
           done
 
-      # Кешируем vendor/ чтобы не качать пакеты при каждом запуске
-      # Ключ привязан к composer.lock — при его изменении кеш сбросится
-      - name: Cache Composer dependencies
+      - name: Cache Composer
         uses: actions/cache@v4
         with:
-          path: ./api/vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('api/composer.lock') }}
 
-      # Composer не может сам создать vendor/ если директория не существует —
-      # создаём заранее с правильными правами (UID 1000 = пользователь внутри php-cli)
-      - name: Prepare vendor directory
-        run: |
-          mkdir -p ./api/vendor
-          sudo chown -R 1000:1000 ./api/vendor
-
-      # vendor/ не попадает в git — устанавливаем зависимости в контейнере
       - name: Install Composer dependencies
-        run: |
-          docker compose run --rm php-cli composer install \
-            --no-interaction \
-            --no-progress \
-            --prefer-dist \
-            --optimize-autoloader
-        env:
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+        run: docker compose run --rm php-cli composer install --no-interaction --prefer-dist
 
-      # Запускаем php-cli — он зависит от postgres и redis (depends_on прописан в compose)
-      - name: Run database migrations
-        run: |
-          docker compose run --rm php-cli php artisan migrate --force
-        env:
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+      - name: Fresh database & seed
+        run: docker compose run --rm php-cli php artisan migrate:fresh --seed --force
 
-      # Запуск PHPUnit / Pest
-      # --parallel — если используешь Pest с параллельным запуском
       - name: Run tests
-        run: |
-          docker compose run --rm php-cli php artisan test
-        env:
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+        run: docker compose run --rm php-cli php artisan test
 
       - name: Cleanup
         if: always()
         run: docker compose down -v
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 4: Frontend Build Check (Node / Vite)
+  # JOB 4 — Frontend Build (Vite)
   # ─────────────────────────────────────────────────────────────────────────────
-  frontend-build:
+  frontend:
     name: 🎨 Frontend Build (Vite)
     runs-on: self-hosted
     needs: lint
 
+    env:
+      COMPOSE_PROJECT_NAME: ci-${{ github.run_id }}-frontend
+
     steps:
-      - name: Fix workspace permissions
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
-
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
-
-      # Билдим только node-образ — не нужна БД
-      - name: Build node image
-        run: docker compose build node
-        env:
-          DOCKER_BUILDKIT: 1
-
-      # --no-deps чтобы не тянуть зависимые сервисы
-      # Если package.json в ./frontend — всё уже смонтировано через volume в compose
-      - name: Install dependencies & build
-        run: |
-          docker compose run --rm --no-deps node sh -c "npm ci && npm run build"
+      - name: Build frontend
+        run: docker compose run --rm --no-deps node sh -c "npm ci && npm run build"
 
       - name: Cleanup
         if: always()
         run: docker compose down -v
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 5: Push php-fpm & nginx images (только при push в main)
+  # JOB 5 — Push Images to GHCR (develop only)
   # ─────────────────────────────────────────────────────────────────────────────
   push:
     name: 📦 Push images to GHCR
     runs-on: self-hosted
-    needs: [backend-tests, frontend-build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [backend-tests, frontend]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
 
     permissions:
       contents: read
       packages: write
 
-    steps:
-      - name: Fix workspace permissions
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
+    env:
+      COMPOSE_PROJECT_NAME: ci-${{ github.run_id }}-push
 
-      - name: Checkout code
+    steps:
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── php-fpm ──────────────────────────────
-      - name: Metadata — php-fpm
-        id: meta-php
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/php-fpm
-          tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build & push — php-fpm
+      - name: Build & push php-fpm
         uses: docker/build-push-action@v5
         with:
-          context: ./gateway/docker/development/php-fpm
+          context: gateway/docker/development/php-fpm
           push: true
-          tags: ${{ steps.meta-php.outputs.tags }}
-          labels: ${{ steps.meta-php.outputs.labels }}
-          build-args: |
-            UID=1000
-            GID=1000
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/php-fpm:latest
 
-      # ── nginx ────────────────────────────────
-      - name: Metadata — nginx
-        id: meta-nginx
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/nginx
-          tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build & push — nginx
+      - name: Build & push nginx
         uses: docker/build-push-action@v5
         with:
-          context: ./gateway/docker/development/nginx
+          context: gateway/docker/development/nginx
           push: true
-          tags: ${{ steps.meta-nginx.outputs.tags }}
-          labels: ${{ steps.meta-nginx.outputs.labels }}
-
-      # ── node (frontend build artifact) ───────
-      - name: Metadata — node
-        id: meta-node
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/node
-          tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build & push — node
-        uses: docker/build-push-action@v5
-        with:
-          context: ./gateway/docker/development/node
-          push: true
-          tags: ${{ steps.meta-node.outputs.tags }}
-          labels: ${{ steps.meta-node.outputs.labels }}
-
-      # Ротация кеша слоёв
-      - name: Move Docker layer cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache 2>/dev/null || true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/nginx:latest
