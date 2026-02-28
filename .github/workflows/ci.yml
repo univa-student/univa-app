@@ -206,7 +206,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ✅ Создаём корневой .env (нужен для UID/GID и др.)
+      # ✅ Создаём необходимые .env файлы
       - name: Create root .env (if not exists)
         run: |
           if [ ! -f .env ] && [ -f .env.example ]; then
@@ -219,7 +219,6 @@ jobs:
       - name: Create dummy api env
         run: cp api/.env.example api/.env
 
-      # Необязательно, но для единообразия создадим frontend .env (не используется в тестах)
       - name: Create frontend .env (if not exists)
         run: |
           if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
@@ -283,25 +282,6 @@ jobs:
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      - name: Generate app key
-        run: docker compose run --rm php-cli php artisan key:generate --force
-        env:
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-
-      - name: Run database migrations
-        run: docker compose run --rm php-cli php artisan migrate --force
-        env:
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-
-      - name: Prepare vendor directory
-        run: |
-          mkdir -p ./api/vendor
-          sudo chown -R 1000:1000 ./api/vendor
-
       - name: Install Composer dependencies
         run: |
           docker compose run --rm php-cli composer install \
@@ -314,6 +294,20 @@ jobs:
             echo "❌ Composer install failed: vendor/autoload.php not found"
             exit 1
           fi
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Generate app key
+        run: docker compose run --rm php-cli php artisan key:generate --force
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Run database migrations
+        run: docker compose run --rm php-cli php artisan migrate --force
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
