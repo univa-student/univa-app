@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, develop, feature-workflow]
+    branches: [feature/docker, feature/workflow, feature/CI]
   pull_request:
-    branches: [main, develop, feature-workflow]
+    branches: [feature/docker, feature/workflow, feature/CI]
 
 env:
   REGISTRY: ghcr.io
@@ -32,11 +32,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Валидация синтаксиса docker-compose.yml
+      - name: Create dummy env
+        run: cp api/.env.example api/.env
+
       - name: Validate docker-compose syntax
         run: docker compose config --quiet
 
-      # Устанавливаем hadolint как бинарник — работает на любом runner'е (включая self-hosted)
       - name: Install hadolint
         run: |
           HADOLINT_VERSION="v2.12.0"
@@ -47,7 +48,6 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           "$HOME/.local/bin/hadolint" --version
 
-      # Линтинг всех Dockerfile'ов проекта одной командой
       - name: Lint all Dockerfiles
         run: |
           FAILED=0
@@ -81,8 +81,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Сбрасываем права на файлы созданные Docker (root) в прошлых запусках
-      # Без этого git checkout падает с EACCES permission denied
+      # ✅ Создаём необходимые .env файлы
+      - name: Create root .env (if not exists)
+        run: |
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          elif [ ! -f .env ]; then
+            echo "UID=1000" > .env
+            echo "GID=1000" >> .env
+          fi
+
+      - name: Create frontend .env (if not exists)
+        run: |
+          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
+            cp frontend/.env.example frontend/.env
+          elif [ ! -f frontend/.env ]; then
+            touch frontend/.env
+          fi
+
+      - name: Create dummy api env
+        run: cp api/.env.example api/.env
+
+      # ✅ Проверяем версию Docker Compose
+      - name: Verify Docker Compose
+        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -105,7 +127,6 @@ jobs:
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      # Сначала поднимаем postgres и redis — у них прописаны healthcheck'и в compose
       - name: Start postgres & redis
         run: docker compose up -d postgres redis
         env:
@@ -135,7 +156,6 @@ jobs:
             sleep 3
           done
 
-      # Теперь поднимаем остальные сервисы
       - name: Start php-fpm, php-cli, nginx, node
         run: docker compose up -d php-fpm php-cli nginx node
         env:
@@ -151,19 +171,13 @@ jobs:
       - name: Show running containers
         run: docker compose ps
 
-      # Проверяем что ни один сервис не упал (Exit code != 0)
+      # ✅ Упрощённая проверка, без Python
       - name: Verify no containers have exited
         run: |
-          EXITED=$(docker compose ps --status exited --format json 2>/dev/null | python3 -c "
-          import sys, json
-          lines = [l for l in sys.stdin if l.strip()]
-          services = [json.loads(l) for l in lines]
-          if services:
-              names = [s.get('Name', s.get('Service', '?')) for s in services]
-              print(' '.join(names))
-          " 2>/dev/null || echo "")
+          EXITED=$(docker compose ps --status exited --quiet)
           if [ -n "$EXITED" ]; then
-            echo "❌ Containers exited unexpectedly: $EXITED"
+            echo "❌ Containers exited unexpectedly:"
+            docker compose ps --status exited
             docker compose logs
             exit 1
           fi
@@ -192,9 +206,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ✅ Создаём необходимые .env файлы
+      - name: Create root .env (if not exists)
+        run: |
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          elif [ ! -f .env ]; then
+            echo "UID=1000" > .env
+            echo "GID=1000" >> .env
+          fi
+
+      - name: Create dummy api env
+        run: cp api/.env.example api/.env
+
+      - name: Create frontend .env (if not exists)
+        run: |
+          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
+            cp frontend/.env.example frontend/.env
+          elif [ ! -f frontend/.env ]; then
+            touch frontend/.env
+          fi
+
+      - name: Verify Docker Compose
+        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
 
       - name: Restore Docker layer cache
         uses: actions/cache@v4
@@ -230,8 +267,6 @@ jobs:
             done
           done
 
-      # Кешируем vendor/ чтобы не качать пакеты при каждом запуске
-      # Ключ привязан к composer.lock — при его изменении кеш сбросится
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
@@ -240,14 +275,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      # Composer не может сам создать vendor/ если директория не существует —
-      # создаём заранее с правильными правами (UID 1000 = пользователь внутри php-cli)
-      - name: Prepare vendor directory
-        run: |
-          mkdir -p ./api/vendor
-          sudo chown -R 1000:1000 ./api/vendor
+      - name: Ensure vendor directory exists (inside container)
+        run: docker compose run --rm php-cli mkdir -p /var/www/app/vendor
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      # vendor/ не попадает в git — устанавливаем зависимости в контейнере
       - name: Install Composer dependencies
         run: |
           docker compose run --rm php-cli composer install \
@@ -255,22 +289,30 @@ jobs:
             --no-progress \
             --prefer-dist \
             --optimize-autoloader
+          # Проверяем, что автозагрузчик появился
+          if [ ! -f api/vendor/autoload.php ]; then
+            echo "❌ Composer install failed: vendor/autoload.php not found"
+            exit 1
+          fi
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      # Запускаем php-cli — он зависит от postgres и redis (depends_on прописан в compose)
+      - name: Generate app key
+        run: docker compose run --rm php-cli php artisan key:generate --force
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
       - name: Run database migrations
-        run: |
-          docker compose run --rm php-cli php artisan migrate --force
+        run: docker compose run --rm php-cli php artisan migrate --force
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      # Запуск PHPUnit / Pest
-      # --parallel — если используешь Pest с параллельным запуском
       - name: Run tests
         run: |
           docker compose run --rm php-cli php artisan test
@@ -302,18 +344,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ✅ Создаём .env для фронтенда
+      - name: Create frontend .env (if not exists)
+        run: |
+          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
+            cp frontend/.env.example frontend/.env
+          elif [ ! -f frontend/.env ]; then
+            touch frontend/.env
+          fi
+
+      # Корневой .env тоже полезен (UID/GID для билда node)
+      - name: Create root .env (if not exists)
+        run: |
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          elif [ ! -f .env ]; then
+            echo "UID=1000" > .env
+            echo "GID=1000" >> .env
+          fi
+
+      - name: Verify Docker Compose
+        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-
-      # Билдим только node-образ — не нужна БД
       - name: Build node image
         run: docker compose build node
         env:
           DOCKER_BUILDKIT: 1
 
-      # --no-deps чтобы не тянуть зависимые сервисы
-      # Если package.json в ./frontend — всё уже смонтировано через volume в compose
       - name: Install dependencies & build
         run: |
           docker compose run --rm --no-deps node sh -c "npm ci && npm run build"
@@ -323,13 +383,13 @@ jobs:
         run: docker compose down -v
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 5: Push php-fpm & nginx images (только при push в main)
+  # JOB 5: Push php-fpm & nginx images (только при push в feature/docker)
   # ─────────────────────────────────────────────────────────────────────────────
   push:
     name: 📦 Push images to GHCR
     runs-on: self-hosted
     needs: [backend-tests, frontend-build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/feature/docker' && github.event_name == 'push'
 
     permissions:
       contents: read
@@ -345,6 +405,19 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # ✅ Корневой .env для build args (UID/GID)
+      - name: Create root .env (if not exists)
+        run: |
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          elif [ ! -f .env ]; then
+            echo "UID=1000" > .env
+            echo "GID=1000" >> .env
+          fi
+
+      - name: Verify Docker Compose
+        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -410,8 +483,10 @@ jobs:
           tags: ${{ steps.meta-node.outputs.tags }}
           labels: ${{ steps.meta-node.outputs.labels }}
 
-      # Ротация кеша слоёв
-      - name: Move Docker layer cache
+      # ✅ Ротация кеша слоёв (исправлено)
+      - name: Move Docker layer cache (if new cache exists)
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache 2>/dev/null || true
+          if [ -d /tmp/.buildx-cache-new ]; then
+            rm -rf /tmp/.buildx-cache
+            mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          fi

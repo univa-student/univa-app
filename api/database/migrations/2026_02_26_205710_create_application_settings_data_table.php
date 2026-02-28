@@ -16,14 +16,6 @@ return new class extends Migration
         ]);
 
         ApplicationSettingGroup::insertWithId([
-            'id' => ApplicationSettingGroup::USER_SETTINGS_GROUP_ID,
-            'code' => 'user_settings',
-            'name' => 'Аккаунт',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        ApplicationSettingGroup::insertWithId([
             'id' => ApplicationSettingGroup::SECURITY_SETTINGS_GROUP_ID,
             'code' => 'security_settings',
             'name' => 'Безпека',
