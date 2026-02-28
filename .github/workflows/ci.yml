@@ -276,6 +276,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
+      - name: Generate app key
+        run: docker compose run --rm php-cli php artisan key:generate --force
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
       - name: Prepare vendor directory
         run: |
           mkdir -p ./api/vendor
