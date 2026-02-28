@@ -276,8 +276,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
+      - name: Ensure vendor directory exists (inside container)
+        run: docker compose run --rm php-cli mkdir -p /var/www/app/vendor
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
       - name: Generate app key
         run: docker compose run --rm php-cli php artisan key:generate --force
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Run database migrations
+        run: docker compose run --rm php-cli php artisan migrate --force
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
@@ -295,14 +309,11 @@ jobs:
             --no-progress \
             --prefer-dist \
             --optimize-autoloader
-        env:
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-
-      - name: Run database migrations
-        run: |
-          docker compose run --rm php-cli php artisan migrate --force
+          # Проверяем, что автозагрузчик появился
+          if [ ! -f api/vendor/autoload.php ]; then
+            echo "❌ Composer install failed: vendor/autoload.php not found"
+            exit 1
+          fi
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
