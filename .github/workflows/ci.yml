@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [feature/docker, feature/workflow, feature/CI]
+    branches: [feature/docker, feature/workflow, feature/CI, develop]
   pull_request:
-    branches: [feature/docker, feature/workflow, feature/CI]
+    branches: [feature/docker, feature/workflow, feature/CI, develop]
 
 env:
   REGISTRY: ghcr.io
