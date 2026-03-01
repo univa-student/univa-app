@@ -1,0 +1,492 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [feature/* , develop]
+  pull_request:
+    branches: [feature/* , develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DB_DATABASE: app_test
+  DB_USERNAME: app
+  DB_PASSWORD: secret
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 1: Lint & Validate
+  # ─────────────────────────────────────────────────────────────────────────────
+  lint:
+    name: 🔍 Lint & Validate
+    runs-on: self-hosted
+
+    steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create dummy env
+        run: cp api/.env.example api/.env
+
+      - name: Validate docker-compose syntax
+        run: docker compose config --quiet
+
+      - name: Install hadolint
+        run: |
+          HADOLINT_VERSION="v2.12.0"
+          mkdir -p "$HOME/.local/bin"
+          curl -sSL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64" \
+            -o "$HOME/.local/bin/hadolint"
+          chmod +x "$HOME/.local/bin/hadolint"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          "$HOME/.local/bin/hadolint" --version
+
+      - name: Lint all Dockerfiles
+        run: |
+          FAILED=0
+          for f in \
+            "gateway/docker/development/nginx/Dockerfile" \
+            "gateway/docker/development/php-fpm/Dockerfile" \
+            "gateway/docker/development/php-cli/Dockerfile" \
+            "gateway/docker/development/node/Dockerfile" \
+            "gateway/docker/development/redis/Dockerfile"; do
+            echo "── Linting $f"
+            hadolint --failure-threshold error "$f" && echo "  ✅ OK" || FAILED=1
+          done
+          exit $FAILED
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 2: Build & smoke-test всех сервисов
+  # ─────────────────────────────────────────────────────────────────────────────
+  build:
+    name: 🐳 Docker Build & Smoke Test
+    runs-on: self-hosted
+    needs: lint
+
+    steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ✅ Создаём необходимые .env файлы
+      - name: Create root .env (if not exists)
+        run: |
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          elif [ ! -f .env ]; then
+            echo "UID=1000" > .env
+            echo "GID=1000" >> .env
+          fi
+
+      - name: Create frontend .env (if not exists)
+        run: |
+          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
+            cp frontend/.env.example frontend/.env
+          elif [ ! -f frontend/.env ]; then
+            touch frontend/.env
+          fi
+
+      - name: Create dummy api env
+        run: cp api/.env.example api/.env
+
+      # ✅ Проверяем версию Docker Compose
+      - name: Verify Docker Compose
+        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build all images
+        run: docker compose build --no-cache
+        env:
+          DOCKER_BUILDKIT: 1
+          UID: 1000
+          GID: 1000
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Start postgres & redis
+        run: docker compose up -d postgres redis
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Wait for postgres to be healthy
+        run: |
+          echo "Waiting for gateway_postgres..."
+          for i in $(seq 1 30); do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_postgres 2>/dev/null || echo "missing")
+            echo "  attempt $i: $STATUS"
+            [ "$STATUS" = "healthy" ] && echo "✅ postgres is healthy" && break
+            [ $i -eq 30 ] && echo "❌ postgres did not become healthy" && docker compose logs postgres && exit 1
+            sleep 3
+          done
+
+      - name: Wait for redis to be healthy
+        run: |
+          echo "Waiting for gateway_redis..."
+          for i in $(seq 1 20); do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_redis 2>/dev/null || echo "missing")
+            echo "  attempt $i: $STATUS"
+            [ "$STATUS" = "healthy" ] && echo "✅ redis is healthy" && break
+            [ $i -eq 20 ] && echo "❌ redis did not become healthy" && docker compose logs redis && exit 1
+            sleep 3
+          done
+
+      - name: Start php-fpm, php-cli, nginx, node
+        run: docker compose up -d php-fpm php-cli nginx node
+        env:
+          UID: 1000
+          GID: 1000
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Give services time to start
+        run: sleep 8
+
+      - name: Show running containers
+        run: docker compose ps
+
+      # ✅ Упрощённая проверка, без Python
+      - name: Verify no containers have exited
+        run: |
+          EXITED=$(docker compose ps --status exited --quiet)
+          if [ -n "$EXITED" ]; then
+            echo "❌ Containers exited unexpectedly:"
+            docker compose ps --status exited
+            docker compose logs
+            exit 1
+          fi
+          echo "✅ All containers are running"
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 3: Backend Tests (PHP / Laravel)
+  # ─────────────────────────────────────────────────────────────────────────────
+  backend-tests:
+    name: 🧪 Backend Tests (PHP)
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ✅ Создаём необходимые .env файлы
+      - name: Create root .env (if not exists)
+        run: |
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          elif [ ! -f .env ]; then
+            echo "UID=1000" > .env
+            echo "GID=1000" >> .env
+          fi
+
+      - name: Create dummy api env
+        run: cp api/.env.example api/.env
+
+      - name: Create frontend .env (if not exists)
+        run: |
+          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
+            cp frontend/.env.example frontend/.env
+          elif [ ! -f frontend/.env ]; then
+            touch frontend/.env
+          fi
+
+      - name: Verify Docker Compose
+        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Restore Docker layer cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build images
+        run: docker compose build
+        env:
+          DOCKER_BUILDKIT: 1
+          UID: 1000
+          GID: 1000
+
+      - name: Start postgres & redis
+        run: docker compose up -d postgres redis
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Wait for postgres & redis
+        run: |
+          for svc in gateway_postgres gateway_redis; do
+            echo "Waiting for $svc..."
+            for i in $(seq 1 30); do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' $svc 2>/dev/null || echo "missing")
+              [ "$STATUS" = "healthy" ] && echo "✅ $svc healthy" && break
+              [ $i -eq 30 ] && echo "❌ $svc not healthy" && docker compose logs && exit 1
+              sleep 3
+            done
+          done
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ./api/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Ensure vendor directory exists (inside container)
+        run: docker compose run --rm php-cli mkdir -p /var/www/app/vendor
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Install Composer dependencies
+        run: |
+          docker compose run --rm php-cli composer install \
+            --no-interaction \
+            --no-progress \
+            --prefer-dist \
+            --optimize-autoloader
+          # Проверяем, что автозагрузчик появился
+          if [ ! -f api/vendor/autoload.php ]; then
+            echo "❌ Composer install failed: vendor/autoload.php not found"
+            exit 1
+          fi
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Generate app key
+        run: docker compose run --rm php-cli php artisan key:generate --force
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Run database migrations
+        run: docker compose run --rm php-cli php artisan migrate --force
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Run tests
+        run: |
+          docker compose run --rm php-cli php artisan test
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 4: Frontend Build Check (Node / Vite)
+  # ─────────────────────────────────────────────────────────────────────────────
+  frontend-build:
+    name: 🎨 Frontend Build (Vite)
+    runs-on: self-hosted
+    needs: lint
+
+    steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ✅ Создаём .env для фронтенда
+      - name: Create frontend .env (if not exists)
+        run: |
+          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
+            cp frontend/.env.example frontend/.env
+          elif [ ! -f frontend/.env ]; then
+            touch frontend/.env
+          fi
+
+      # Корневой .env тоже полезен (UID/GID для билда node)
+      - name: Create root .env (if not exists)
+        run: |
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          elif [ ! -f .env ]; then
+            echo "UID=1000" > .env
+            echo "GID=1000" >> .env
+          fi
+
+      - name: Verify Docker Compose
+        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build node image
+        run: docker compose build node
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Install dependencies & build
+        run: |
+          docker compose run --rm --no-deps node sh -c "npm ci && npm run build"
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 5: Push php-fpm & nginx images (только при push в feature/docker)
+  # ─────────────────────────────────────────────────────────────────────────────
+  push:
+    name: 📦 Push images to GHCR
+    runs-on: self-hosted
+    needs: [backend-tests, frontend-build]
+    if: github.ref == 'refs/heads/feature/docker' && github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Fix workspace permissions
+        run: |
+          if [ -d "${{ github.workspace }}" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ✅ Корневой .env для build args (UID/GID)
+      - name: Create root .env (if not exists)
+        run: |
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          elif [ ! -f .env ]; then
+            echo "UID=1000" > .env
+            echo "GID=1000" >> .env
+          fi
+
+      - name: Verify Docker Compose
+        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── php-fpm ──────────────────────────────
+      - name: Metadata — php-fpm
+        id: meta-php
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/php-fpm
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push — php-fpm
+        uses: docker/build-push-action@v5
+        with:
+          context: ./gateway/docker/development/php-fpm
+          push: true
+          tags: ${{ steps.meta-php.outputs.tags }}
+          labels: ${{ steps.meta-php.outputs.labels }}
+          build-args: |
+            UID=1000
+            GID=1000
+
+      # ── nginx ────────────────────────────────
+      - name: Metadata — nginx
+        id: meta-nginx
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/nginx
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push — nginx
+        uses: docker/build-push-action@v5
+        with:
+          context: ./gateway/docker/development/nginx
+          push: true
+          tags: ${{ steps.meta-nginx.outputs.tags }}
+          labels: ${{ steps.meta-nginx.outputs.labels }}
+
+      # ── node (frontend build artifact) ───────
+      - name: Metadata — node
+        id: meta-node
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/node
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push — node
+        uses: docker/build-push-action@v5
+        with:
+          context: ./gateway/docker/development/node
+          push: true
+          tags: ${{ steps.meta-node.outputs.tags }}
+          labels: ${{ steps.meta-node.outputs.labels }}
+
+      # ✅ Ротация кеша слоёв (исправлено)
+      - name: Move Docker layer cache (if new cache exists)
+        run: |
+          if [ -d /tmp/.buildx-cache-new ]; then
+            rm -rf /tmp/.buildx-cache
+            mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          fi

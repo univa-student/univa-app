@@ -7,6 +7,7 @@ import { router } from "./router/router.tsx";
 import { queryClient } from "@/shared/api/query-client";
 import { AuthProvider } from "./providers/auth-provider";
 import { AppProviders } from "./providers/providers";
+import { SettingsProvider } from "./providers/settings-provider";
 
 import "@/shared/styles/index.css";
 
@@ -14,9 +15,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                <AppProviders>
-                    <RouterProvider router={router} />
-                </AppProviders>
+                <SettingsProvider>
+                    <AppProviders>
+                        <RouterProvider router={router} />
+                    </AppProviders>
+                </SettingsProvider>
             </AuthProvider>
         </QueryClientProvider>
     </React.StrictMode>
