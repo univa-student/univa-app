@@ -1,12 +1,18 @@
-import {cn} from "@/shared/shadcn/lib/utils"
-import {Button} from "@/shared/shadcn/ui/button"
-import {Card, CardContent} from "@/shared/shadcn/ui/card"
-import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel,} from "@/shared/shadcn/ui/field"
-import {Input} from "@/shared/shadcn/ui/input"
-import {Link} from "react-router-dom"
-import {Eye, EyeOff, Hash, Lock, Mail, User} from "lucide-react"
-import type React from "react"
-import {useMemo, useState} from "react"
+import { cn } from "@/shared/shadcn/lib/utils"
+import { Button } from "@/shared/shadcn/ui/button"
+import { Card, CardContent } from "@/shared/shadcn/ui/card"
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from "@/shared/shadcn/ui/field"
+import { Input } from "@/shared/shadcn/ui/input"
+import { Link } from "react-router-dom"
+import { Mail, Lock, Eye, EyeOff, User, Phone, Globe, Users, Hash, Image as ImageIcon, GraduationCap, School } from "lucide-react"
+import React, { useMemo, useState } from "react"
+import { AvatarPicker } from "@/shared/ui/components/avatar-picker"
 
 export type RegisterFormData = {
     first_name: string;
