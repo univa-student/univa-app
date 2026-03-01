@@ -187,6 +187,30 @@
         color-scheme: dark;
     }
 
+    /* Compact mode: уменьшенные отступы и шрифты */
+    :root[data-compact="1"] body {
+        @apply text-sm;
+    }
+
+    :root[data-compact="1"] .px-4 {
+        @apply px-3;
+    }
+
+    :root[data-compact="1"] .py-4 {
+        @apply py-2;
+    }
+
+    :root[data-compact="1"] .p-4 {
+        @apply p-3;
+    }
+
+    /* Animations off: глобально выключаем transition/animation, кроме критических вещей */
+    :root[data-animations="0"] * {
+        @apply transition-none;
+        animation-duration: 0s !important;
+        animation-iteration-count: 1 !important;
+    }
+
     ::-webkit-scrollbar {
         width: 5px;
     }
