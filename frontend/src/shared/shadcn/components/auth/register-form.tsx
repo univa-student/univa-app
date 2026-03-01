@@ -11,9 +11,8 @@ import {
 import { Input } from "@/shared/shadcn/ui/input"
 import { Link } from "react-router-dom"
 import { Mail, Lock, Eye, EyeOff, User, Phone, Globe, Users, Hash, Image as ImageIcon, GraduationCap, School } from "lucide-react"
-import type React from "react"
-import { useMemo, useState } from "react"
-import {AvatarPicker} from "@/shared/ui/components/avatar-picker.tsx";
+import React, { useMemo, useState } from "react"
+import { AvatarPicker } from "@/shared/ui/components/avatar-picker"
 
 /** ===== Types ===== */
 
