@@ -10,7 +10,7 @@ import {
 } from "@/shared/shadcn/ui/field"
 import { Input } from "@/shared/shadcn/ui/input"
 import { Link } from "react-router-dom"
-import { Mail, Lock, Eye, EyeOff, User, Phone, Globe, Users, Hash, Image as ImageIcon, GraduationCap, School } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff, User, Phone, Globe, Users, Hash, GraduationCap, School, ImageIcon } from "lucide-react"
 import React, { useMemo, useState } from "react"
 import { AvatarPicker } from "@/shared/ui/components/avatar-picker"
 
