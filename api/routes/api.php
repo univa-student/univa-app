@@ -15,9 +15,15 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' 
 
     Route::post('/logout', [LogoutController::class, 'store']);
 
+<<<<<<< Updated upstream
     Route::get('/settings', [SettingsController::class, 'index']);
     Route::patch('/settings/{key}', [SettingsController::class, 'update'])
         ->where('key', '.+');
+=======
+    // ── Settings ──────────────────────────────────────────────────────────
+    Route::get('/settings', [SettingsController::class, 'index']);
+    Route::patch('/settings/{key}', [SettingsController::class, 'update'])->where('key', '.+');
+>>>>>>> Stashed changes
 });
 
 Route::group(['prefix' => '/v1', 'middleware' => ['web']], function () {
