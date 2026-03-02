@@ -9,10 +9,6 @@ use App\Services\Settings\SettingsService;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-<<<<<<< Updated upstream
-=======
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
->>>>>>> Stashed changes
 
 class SettingsController extends Controller
 {

@@ -4,117 +4,51 @@ namespace App\Models\Application\Settings;
 
 use App\Core\Traits\HasInsertWithId;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ApplicationSettingValue extends Model
 {
-    use HasInsertWithId;
+    use HasInsertWithId, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'key_name',
-        'option_name',
+        'value',
+        'label',
+        'meta',
     ];
 
-    /* =========================
-     | BOOLEAN (універсальні)
-     ========================= */
+    protected $casts = [
+        'meta' => 'array',
+    ];
 
-    public const  ENABLED = 'enabled';
-    public const  ENABLED_ID = 1;
+    public const SETTING_ENABLED_VALUE_ID = 1;
+    public const SETTING_ENABLED_VALUE = 1;
+    public const SETTING_DISABLED_VALUE_ID = 2;
+    public const SETTING_DISABLED_VALUE = 0;
 
-    public const  DISABLED = 'disabled';
-    public const  DISABLED_ID = 2;
+    public const SETTING_APPEARANCE_LIGHT_VALUE_ID = 3;
+    public const SETTING_APPEARANCE_LIGHT_VALUE = 'light';
+    public const SETTING_APPEARANCE_DARK_VALUE_ID = 4;
+    public const SETTING_APPEARANCE_DARK_VALUE = 'dark';
+    public const SETTING_APPEARANCE_SYSTEM_VALUE_ID = 5;
+    public const SETTING_APPEARANCE_SYSTEM_VALUE = 'system';
+    public const SETTING_APPEARANCE_LANGUAGE_UA_VALUE_ID = 6;
+    public const SETTING_APPEARANCE_LANGUAGE_UA_VALUE = 'ua';
+    public const SETTING_APPEARANCE_LANGUAGE_EN_VALUE_ID = 7;
+    public const SETTING_APPEARANCE_LANGUAGE_EN_VALUE = 'en';
+    public const SETTING_APPEARANCE_LANGUAGE_PL_VALUE_ID = 8;
+    public const SETTING_APPEARANCE_LANGUAGE_PL_VALUE = 'pl';
 
-    /* =========================
-     | THEME
-     ========================= */
+    public const SETTING_PRIVACY_PROFILE_PUBLIC_VALUE_ID = 9;
+    public const SETTING_PRIVACY_PROFILE_PUBLIC_VALUE = 'profile_public';
+    public const SETTING_PRIVACY_PROFILE_FRIENDS_ID = 10;
+    public const SETTING_PRIVACY_PROFILE_FRIENDS = 'profile_friends';
+    public const SETTING_PRIVACY_PROFILE_PRIVATE_VALUE_ID = 11;
+    public const SETTING_PRIVACY_PROFILE_PRIVATE_VALUE = 'profile_private';
+    public const SETTING_DANDER_ZONE_DEACTIVATE_ACCOUNT_VALUE_ID = 12;
 
-    public const  THEME_LIGHT = 'light';
-    public const  THEME_LIGHT_ID = 10;
-
-    public const  THEME_DARK = 'dark';
-    public const  THEME_DARK_ID = 11;
-
-    public const  THEME_SYSTEM = 'system';
-    public const  THEME_SYSTEM_ID = 12;
-
-    /* =========================
-     | AI MODEL
-     ========================= */
-
-    public const  AI_MODEL_FAST = 'fast';
-    public const  AI_MODEL_FAST_ID = 20;
-
-    public const  AI_MODEL_BALANCED = 'balanced';
-    public const  AI_MODEL_BALANCED_ID = 21;
-
-    public const  AI_MODEL_ADVANCED = 'advanced';
-    public const  AI_MODEL_ADVANCED_ID = 22;
-
-    /* =========================
-     | AI CREATIVITY
-     ========================= */
-
-    public const  CREATIVITY_LOW = 'low';
-    public const  CREATIVITY_LOW_ID = 30;
-
-    public const  CREATIVITY_MEDIUM = 'medium';
-    public const  CREATIVITY_MEDIUM_ID = 31;
-
-    public const  CREATIVITY_HIGH = 'high';
-    public const  CREATIVITY_HIGH_ID = 32;
-
-    /* =========================
-     | LANGUAGE
-     ========================= */
-
-    public const  LANG_UK = 'uk';
-    public const  LANG_UK_ID = 40;
-
-    public const  LANG_EN = 'en';
-    public const  LANG_EN_ID = 41;
-
-    public const  LANG_PL = 'pl';
-    public const  LANG_PL_ID = 42;
-
-    public const  LANG_AUTO = 'auto';
-    public const  LANG_AUTO_ID = 43;
-
-    /* =========================
-     | CALENDAR
-     ========================= */
-
-    public const  FIRST_DAY_MON = 'mon';
-    public const  FIRST_DAY_MON_ID = 50;
-
-    public const  FIRST_DAY_SUN = 'sun';
-    public const  FIRST_DAY_SUN_ID = 51;
-
-    public const  VIEW_DAY = 'day';
-    public const  VIEW_DAY_ID = 52;
-
-    public const  VIEW_WEEK = 'week';
-    public const  VIEW_WEEK_ID = 53;
-
-    public const  REMINDER_15 = '15';
-    public const  REMINDER_15_ID = 60;
-
-    public const  REMINDER_30 = '30';
-    public const  REMINDER_30_ID = 61;
-
-    public const  REMINDER_60 = '60';
-    public const  REMINDER_60_ID = 62;
-
-    /* =========================
-     | FILE PREVIEW QUALITY
-     ========================= */
-
-    public const  PREVIEW_LOW = 'low';
-    public const  PREVIEW_LOW_ID = 70;
-
-    public const  PREVIEW_MEDIUM = 'medium';
-    public const  PREVIEW_MEDIUM_ID = 71;
-
-    public const  PREVIEW_HIGH = 'high';
-    public const  PREVIEW_HIGH_ID = 72;
+    public const SETTING_DANDER_ZONE_DEACTIVATE_ACCOUNT_VALUE = 'deactivate_account';
+    public const SETTING_DANDER_ZONE_CLEAR_DATA_VALUE_ID = 13;
+    public const SETTING_DANDER_ZONE_CLEAR_DATA_VALUE = 'clear_data';
+    public const SETTING_DANDER_ZONE_DELETE_ACCOUNT_VALUE_ID = 14;
+    public const SETTING_DANDER_ZONE_DELETE_ACCOUNT_VALUE = 'delete_account';
 }

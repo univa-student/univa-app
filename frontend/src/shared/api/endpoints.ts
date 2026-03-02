@@ -7,7 +7,7 @@ export const ENDPOINTS = {
         register: `${API}/register`,
         login: `${API}/login`,
         logout: `${API}/logout`,
-        me: `${API}/univa-user`,
+        me: `${API}/me/univa-user`,
     },
     settings: {
         group: (groupId: number) => `${API}/settings?group_id=${groupId}`,
