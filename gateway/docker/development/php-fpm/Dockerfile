@@ -1,5 +1,5 @@
 # docker/development/php-fpm/Dockerfile
-ARG PHP_VERSION=8.2
+ARG PHP_VERSION=8.4
 FROM php:${PHP_VERSION}-fpm-alpine AS base
 
 ARG UID=1000
@@ -59,6 +59,8 @@ RUN sed -i \
 # ── Entrypoint ────────────────────────────────────────────────────────────────
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+# Установка Prometheus клиента
+RUN composer require promphp/prometheus_client_php --no-interaction --prefer-dist
 
 
 

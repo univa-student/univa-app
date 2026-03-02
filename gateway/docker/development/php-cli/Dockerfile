@@ -1,5 +1,5 @@
 # docker/development/php-cli/Dockerfile
-ARG PHP_VERSION=8.2
+ARG PHP_VERSION=8.4
 FROM php:${PHP_VERSION}-cli-alpine AS base
 
 ARG UID=1000
@@ -54,6 +54,8 @@ RUN delgroup www-data 2>/dev/null || true \
 # ── Вспомогательные скрипты ───────────────────────────────────────────────────
 COPY scripts/ /usr/local/bin/
 RUN chmod +x /usr/local/bin/*.sh 2>/dev/null || true
+# Установка Prometheus клиента
+RUN composer require promphp/prometheus_client_php --no-interaction --prefer-dist
 
 WORKDIR /var/www/app
 

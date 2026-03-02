@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Сам Prometheus — самомониторинг
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # cAdvisor — метрики всех Docker-контейнеров
+  - job_name: 'cadvisor'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Laravel — метрики приложения через nginx (HTTP → php-fpm)
+  # ВАЖНО: Prometheus опрашивает nginx:80/api/metrics (не php-fpm:9000!)
+  # php-fpm не говорит HTTP, поэтому всегда идём через nginx
+  - job_name: 'laravel-app'
+    metrics_path: '/api/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['nginx:80']
+    # Метка для удобной фильтрации в Grafana
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'laravel'

@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\System\HealthController;
+use App\Http\Controllers\System\MetricsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,3 +26,8 @@ Route::group(['prefix' => '/v1', 'middleware' => ['web']], function () {
     Route::post('/register', [RegisterController::class, 'store']);
     Route::post('/login', [LoginController::class, 'store']);
 });
+
+// ── Prometheus metrics scrape endpoint (без авторизации, только внутри Docker-сети) ──
+// Доступен по: GET /api/metrics
+// В продакшне закройте этот маршрут на уровне nginx для внешних IP!
+Route::get('/metrics', MetricsController::class)->withoutMiddleware(['auth:sanctum']);
