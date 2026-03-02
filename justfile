@@ -5,7 +5,7 @@ docker-down:
     docker compose down
 
 docker-build:
-    docker compose build -no-cache
+    docker compose build --no-cache
 
 api-migrate:
     docker exec gateway_php_fpm php artisan migrate

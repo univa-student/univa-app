@@ -1,22 +1,26 @@
 <?php
 
-use App\Http\Controllers\Application\Settings\UserSettingsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\System\HealthController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\System\User\MeController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' => '/v1'], function () {
-    Route::get('/univa-user', function (Request $request) {
-        return $request->user();
+
+    Route::group(['prefix' => '/me'], function () {
+        Route::get('/univa-user', [MeController::class, 'user']);
+        Route::get('/settings', [MeController::class, 'settings']);
     });
 
     Route::post('/logout', [LogoutController::class, 'store']);
 
-    Route::get('/settings', [UserSettingsController::class, 'index']);
-    Route::post('/settings', [UserSettingsController::class, 'store']);
+    Route::get('/settings', [SettingsController::class, 'index']);
+    Route::patch('/settings', [SettingsController::class, 'bulkUpdate']);
+    Route::patch('/settings/{key}', [SettingsController::class, 'update'])
+        ->where('key', '.+');
 });
 
 Route::group(['prefix' => '/v1', 'middleware' => ['web']], function () {

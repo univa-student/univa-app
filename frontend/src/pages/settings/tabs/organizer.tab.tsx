@@ -1,28 +1,42 @@
-import { useState } from "react"
-import { TabShell, ToggleSection, MultiSelectorSection, useToggleState } from "../settings.renderers"
-import {
-    plannerSection, tasksSection,
-    plannerViewOptions, plannerToggles, tasksToggles,
-} from "../config/organizer.config"
+import { useEffect } from "react"
+import { LayoutListIcon } from "lucide-react"
+import { TabShell, DynamicSettingsCard, SettingsLoadingShell } from "../settings.renderers"
+import { useSettingsGroup } from "@/entities/settings/hooks/use-settings-group"
+import { useSettingsDraft } from "@/entities/settings/hooks/use-settings-draft"
+import type { TabDef } from "../settings.types"
 
-export function OrganizerTab() {
-    const [selectors, setSelectors] = useState<Record<string, string>>({ view: "day" })
-    const planner = useToggleState(plannerToggles)
-    const tasks = useToggleState(tasksToggles)
-    const updateSelector = (id: string, v: string) => setSelectors(p => ({ ...p, [id]: v }))
+export function OrganizerTab({ tab }: { tab: TabDef }) {
+    const { data, isLoading } = useSettingsGroup(tab.groupId!)
+    const { draft, set, isDirty, isSaving, error, onSave, seed } = useSettingsDraft(tab.groupId!)
+
+    useEffect(() => { if (data) seed(data) }, [data])
+
+    if (isLoading) return <SettingsLoadingShell />
+    if (!data) return null
+
+    const enumSettings = data.filter(s => s.type === "enum")
+    const boolSettings = data.filter(s => s.type === "bool")
 
     return (
-        <TabShell>
-            <MultiSelectorSection
-                section={plannerSection}
-                groups={[
-                    { id: "view", label: "Вигляд планера за замовчуванням", options: plannerViewOptions, columns: 2 },
-                ]}
-                values={selectors}
-                onChange={updateSelector}
-            />
-            <ToggleSection section={{ title: "Планер" }} settings={plannerToggles} values={planner.values} onChange={planner.update} />
-            <ToggleSection section={tasksSection} settings={tasksToggles} values={tasks.values} onChange={tasks.update} />
+        <TabShell showSave onSave={onSave} isSaving={isSaving} isDirty={isDirty} error={error}>
+            {enumSettings.length > 0 && (
+                <DynamicSettingsCard
+                    title="Вигляд"
+                    description="Початковий вигляд органайзера"
+                    icon={LayoutListIcon}
+                    settings={enumSettings}
+                    draft={draft}
+                    onChange={set}
+                />
+            )}
+            {boolSettings.length > 0 && (
+                <DynamicSettingsCard
+                    title="Параметри"
+                    settings={boolSettings}
+                    draft={draft}
+                    onChange={set}
+                />
+            )}
         </TabShell>
     )
 }
