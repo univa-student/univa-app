@@ -1,34 +1,43 @@
-import { useState } from "react"
-import { TabShell, ToggleSection, MultiSelectorSection, useToggleState } from "../settings.renderers"
-import {
-    modelSection, behaviorSection,
-    modelOptions, creativityOptions, languageOptions,
-    behaviorToggles,
-} from "../config/ai.config"
+import { useEffect } from "react"
+import { SparklesIcon, BrainIcon } from "lucide-react"
+import { TabShell, DynamicSettingsCard, SettingsLoadingShell } from "../settings.renderers"
+import { useSettingsGroup } from "@/entities/settings/hooks/use-settings-group"
+import { useSettingsDraft } from "@/entities/settings/hooks/use-settings-draft"
+import type { TabDef } from "../settings.types"
 
-export function AITab() {
-    const [selectors, setSelectors] = useState<Record<string, string>>({
-        model: "balanced",
-        creativity: "medium",
-        language: "uk",
-    })
-    const behavior = useToggleState(behaviorToggles)
+export function AITab({ tab }: { tab: TabDef }) {
+    const { data, isLoading } = useSettingsGroup(tab.groupId!)
+    const { draft, set, isDirty, isSaving, error, onSave, seed } = useSettingsDraft(tab.groupId!)
 
-    const updateSelector = (id: string, v: string) => setSelectors(p => ({ ...p, [id]: v }))
+    useEffect(() => { if (data) seed(data) }, [data])
+
+    if (isLoading) return <SettingsLoadingShell />
+    if (!data) return null
+
+    const enumSettings = data.filter(s => s.type === "enum")
+    const boolSettings = data.filter(s => s.type === "bool")
 
     return (
-        <TabShell>
-            <MultiSelectorSection
-                section={modelSection}
-                groups={[
-                    { id: "model", label: "Модель AI", options: modelOptions, variant: "card" },
-                    { id: "creativity", label: "Рівень креативності", options: creativityOptions, variant: "compact" },
-                    { id: "language", label: "Мова відповідей AI", options: languageOptions, variant: "emoji" },
-                ]}
-                values={selectors}
-                onChange={updateSelector}
-            />
-            <ToggleSection section={behaviorSection} settings={behaviorToggles} values={behavior.values} onChange={behavior.update} />
+        <TabShell showSave onSave={onSave} isSaving={isSaving} isDirty={isDirty} error={error}>
+            {enumSettings.length > 0 && (
+                <DynamicSettingsCard
+                    title="AI-помічник"
+                    description="Вибір моделі та стилю відповідей"
+                    icon={SparklesIcon}
+                    settings={enumSettings}
+                    draft={draft}
+                    onChange={set}
+                />
+            )}
+            {boolSettings.length > 0 && (
+                <DynamicSettingsCard
+                    title="Поведінка"
+                    icon={BrainIcon}
+                    settings={boolSettings}
+                    draft={draft}
+                    onChange={set}
+                />
+            )}
         </TabShell>
     )
 }

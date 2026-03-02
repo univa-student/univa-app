@@ -2,36 +2,49 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Application\CreateApplicationAction;
 use App\Core\Response\ApiResponse;
 use App\Core\Response\ResponseState;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterStoreRequest;
 use App\Http\Resources\Auth\UserResource;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Throwable;
 
 class RegisterController extends Controller
 {
+    /**
+     * @throws Throwable
+     */
     public function store(RegisterStoreRequest $request)
     {
         $data = $request->validated();
 
-        $user = User::query()->create([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'] ?? null,
+        DB::beginTransaction();
 
-            'username' => $data['username'],
-            'email' => $data['email'],
+            $user = User::query()->create([
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'] ?? null,
 
-            'agree_terms' => (bool)($data['agree_terms'] ?? false),
-            'marketing_opt_in' => (bool)($data['marketing_opt_in'] ?? false),
+                'username' => $data['username'],
+                'email' => $data['email'],
 
-            'password' => Hash::make($data['password']),
-        ]);
+                'agree_terms' => (bool)($data['agree_terms'] ?? false),
+                'marketing_opt_in' => (bool)($data['marketing_opt_in'] ?? false),
 
-        auth()->login($user);
+                'password' => Hash::make($data['password']),
+            ]);
 
-        $request->session()->regenerate();
+            auth()->login($user);
+
+            (new CreateApplicationAction())
+                ->handle($user->id);
+
+            $request->session()->regenerate();
+
+        DB::commit();
 
         return ApiResponse::make(
             state: ResponseState::Created,

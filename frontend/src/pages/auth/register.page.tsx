@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSignUp } from "@/features/auth/sign-up/use-sign-up";
 import { ApiError } from "@/shared/types/api";
@@ -25,22 +25,6 @@ export function RegisterPage() {
         // Акаунт
         username: "",
         email: "",
-        phone: "",
-
-        // Навчання (опційно)
-        university: "",
-        faculty: "",
-        specialty: "",
-        group: "",
-        course: "",
-
-        // Налаштування (опційно)
-        language: "uk",
-        timezone: "Europe/Zaporozhye",
-
-        // Додатково
-        referral_code: "",
-        avatar: null,
 
         // Безпека
         password: "",

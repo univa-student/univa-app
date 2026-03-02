@@ -1,14 +1,29 @@
-import { TabShell, ToggleSection, useToggleState } from "../settings.renderers"
-import { messagesSection, smartSection, messagesToggles, smartToggles } from "../config/chats.config"
+import { useEffect } from "react"
+import { MessageSquareIcon } from "lucide-react"
+import { TabShell, DynamicSettingsCard, SettingsLoadingShell } from "../settings.renderers"
+import { useSettingsGroup } from "@/entities/settings/hooks/use-settings-group"
+import { useSettingsDraft } from "@/entities/settings/hooks/use-settings-draft"
+import type { TabDef } from "../settings.types"
 
-export function ChatsTab() {
-    const messages = useToggleState(messagesToggles)
-    const smart = useToggleState(smartToggles)
+export function ChatsTab({ tab }: { tab: TabDef }) {
+    const { data, isLoading } = useSettingsGroup(tab.groupId!)
+    const { draft, set, isDirty, isSaving, error, onSave, seed } = useSettingsDraft(tab.groupId!)
+
+    useEffect(() => { if (data) seed(data) }, [data])
+
+    if (isLoading) return <SettingsLoadingShell />
+    if (!data) return null
 
     return (
-        <TabShell>
-            <ToggleSection section={messagesSection} settings={messagesToggles} values={messages.values} onChange={messages.update} />
-            <ToggleSection section={smartSection} settings={smartToggles} values={smart.values} onChange={smart.update} />
+        <TabShell showSave onSave={onSave} isSaving={isSaving} isDirty={isDirty} error={error}>
+            <DynamicSettingsCard
+                title="Чати"
+                description="Параметри відображення та поведінки чатів"
+                icon={MessageSquareIcon}
+                settings={data}
+                draft={draft}
+                onChange={set}
+            />
         </TabShell>
     )
 }

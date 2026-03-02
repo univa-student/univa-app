@@ -1,9 +1,9 @@
 import type { LoaderFunctionArgs } from "react-router-dom";
 import { redirect } from "react-router-dom";
 
-import { queryClient } from "../../shared/api/query-client";
-import { authStore } from "../../entities/user/model/auth-store";
-import { userQueries } from "../../entities/user/api/queries";
+import { queryClient } from "@/shared/api/query-client.ts";
+import { authStore } from "@/entities/user/model/auth-store.ts";
+import { userQueries } from "@/entities/user/api/queries.ts";
 // import { filesQueries } from "../../entities/file/api/queries";
 // import { spacesQueries } from "../../entities/space/api/queries";
 // import { messagesQueries } from "../../entities/message/api/queries";
