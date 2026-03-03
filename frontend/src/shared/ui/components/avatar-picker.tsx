@@ -37,11 +37,6 @@ async function createImage(url: string): Promise<HTMLImageElement> {
     })
 }
 
-function getRadianAngle(deg: number) {
-    return (deg * Math.PI) / 180
-}
-
-// тут rotation не використовуємо, але залишив як базу (на майбутнє)
 async function cropToBlob(imageSrc: string, pixelCrop: Area, mime = "image/webp", quality = 0.92) {
     const image = await createImage(imageSrc)
     const canvas = document.createElement("canvas")
