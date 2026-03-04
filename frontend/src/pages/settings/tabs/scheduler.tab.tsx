@@ -9,7 +9,7 @@ export function SchedulerTab({ tab }: { tab: TabDef }) {
     const { data, isLoading } = useSettingsGroup(tab.groupId!)
     const { draft, set, isDirty, isSaving, error, onSave, seed } = useSettingsDraft(tab.groupId!)
 
-    useEffect(() => { if (data) seed(data) }, [data])
+    useEffect(() => { if (data) seed(data) }, [data, seed])
 
     if (isLoading) return <SettingsLoadingShell />
     if (!data) return null

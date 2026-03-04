@@ -46,6 +46,18 @@ class ApplicationSetting extends Model
     public const PRIVACY_PROFILE_SETTING_KEY = 'privacy_profile';
     public const PRIVACY_ONLINE_STATUS_SETTING_ID = 10;
     public const PRIVACY_ONLINE_STATUS_SETTING_KEY = 'online_status';
+    public const SCHEDULER_DEFAULT_VIEW_SETTING_ID = 11;
+    public const SCHEDULER_DEFAULT_VIEW_SETTING_KEY = 'scheduler_default_view';
+    public const SCHEDULER_SHOW_WEEKENDS_SETTING_ID = 12;
+    public const SCHEDULER_SHOW_WEEKENDS_SETTING_KEY = 'scheduler_show_weekends';
+    public const SCHEDULER_DAY_START_SETTING_ID = 13;
+    public const SCHEDULER_DAY_START_SETTING_KEY = 'scheduler_day_start';
+    public const SCHEDULER_DAY_END_SETTING_ID = 14;
+    public const SCHEDULER_DAY_END_SETTING_KEY = 'scheduler_day_end';
+    public const SCHEDULER_LESSON_REMINDER_SETTING_ID = 15;
+    public const SCHEDULER_LESSON_REMINDER_SETTING_KEY = 'scheduler_lesson_reminder';
+    public const SCHEDULER_WEEK_PARITY_ANCHOR_SETTING_ID = 16;
+    public const SCHEDULER_WEEK_PARITY_ANCHOR_SETTING_KEY = 'scheduler_week_parity_anchor';
 
     public function group(): BelongsTo
     {

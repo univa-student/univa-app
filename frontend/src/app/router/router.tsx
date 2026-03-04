@@ -19,6 +19,8 @@ import { TodoPage } from "@/pages/dashboard/organizer/todo.page.tsx";
 import { SchedulePage } from "@/pages/schedule/schedule.page.tsx";
 import { PlaceholderPage } from "@/pages/dashboard/placeholder.page.tsx";
 
+import { FilesPage } from "@/pages/files/files.page";
+
 export const router = createBrowserRouter([
     {
         path: "/",
@@ -168,7 +170,7 @@ export const router = createBrowserRouter([
                         { label: "Головна", href: "/dashboard" },
                         { label: "Файли" },
                     ]}>
-                        <PlaceholderPage title="Файли" />
+                        <FilesPage />
                     </DashboardLayout>
                 </AuthGuard>
             </LazyBoundary>

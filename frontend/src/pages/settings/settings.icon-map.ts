@@ -39,6 +39,8 @@ export const SETTING_VALUE_ICON_MAP: Record<string, LucideIcon> = {
     // Scheduler — view
     "day": CalendarDaysIcon,
     "week": CalendarDaysIcon,
+    "month": CalendarDaysIcon,
+    "semester": CalendarDaysIcon,
 
     // Scheduler — reminder
     "15": ClockIcon,
@@ -52,7 +54,7 @@ export const SETTING_VALUE_ICON_MAP: Record<string, LucideIcon> = {
 
     // AI — creativity / language
     "auto": GlobeIcon,
-    "uk": GlobeIcon,
+    "ua": GlobeIcon,
     "en": GlobeIcon,
     "pl": GlobeIcon,
     "low_cr": AlignJustifyIcon,   // avoid key clash with "low" quality

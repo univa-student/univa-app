@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/shadcn/ui/card"
 import { Separator } from "@/shared/shadcn/ui/separator"
