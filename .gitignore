@@ -17,3 +17,6 @@ postgres_data/
 redis_data/
 
 *.log
+
+*:Zone.Identifier
+*Zone.Identifier

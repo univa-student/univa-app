@@ -1,27 +1,41 @@
-import { useState } from "react"
-import { TabShell, ToggleSection, SelectorSection, useToggleState } from "../settings.renderers"
-import {
-    storageSection, searchSection,
-    storageToggles, previewQualityOptions, searchToggles,
-} from "../config/files.config"
+import { useEffect } from "react"
+import { HardDriveIcon } from "lucide-react"
+import { TabShell, DynamicSettingsCard, SettingsLoadingShell } from "../settings.renderers"
+import { useSettingsGroup } from "@/entities/settings/hooks/use-settings-group"
+import { useSettingsDraft } from "@/entities/settings/hooks/use-settings-draft"
+import type { TabDef } from "../settings.types"
 
-export function FilesTab() {
-    const storage = useToggleState(storageToggles)
-    const search = useToggleState(searchToggles)
-    const [quality, setQuality] = useState("medium")
+export function FilesTab({ tab }: { tab: TabDef }) {
+    const { data, isLoading } = useSettingsGroup(tab.groupId!)
+    const { draft, set, isDirty, isSaving, error, onSave, seed } = useSettingsDraft(tab.groupId!)
+
+    useEffect(() => { if (data) seed(data) }, [data])
+
+    if (isLoading) return <SettingsLoadingShell />
+    if (!data) return null
+
+    const enumSettings = data.filter(s => s.type === "enum")
+    const boolSettings = data.filter(s => s.type === "bool")
 
     return (
-        <TabShell>
-            <ToggleSection section={storageSection} settings={storageToggles} values={storage.values} onChange={storage.update} />
-            <SelectorSection
-                section={searchSection}
-                label="Якість попереднього перегляду"
-                options={previewQualityOptions}
-                value={quality}
-                onChange={setQuality}
-                variant="compact"
-            />
-            <ToggleSection section={{ title: "Пошук та AI" }} settings={searchToggles} values={search.values} onChange={search.update} />
+        <TabShell showSave onSave={onSave} isSaving={isSaving} isDirty={isDirty} error={error}>
+            {enumSettings.length > 0 && (
+                <DynamicSettingsCard
+                    title="Якість перегляду"
+                    icon={HardDriveIcon}
+                    settings={enumSettings}
+                    draft={draft}
+                    onChange={set}
+                />
+            )}
+            {boolSettings.length > 0 && (
+                <DynamicSettingsCard
+                    title="Сховище та синхронізація"
+                    settings={boolSettings}
+                    draft={draft}
+                    onChange={set}
+                />
+            )}
         </TabShell>
     )
 }

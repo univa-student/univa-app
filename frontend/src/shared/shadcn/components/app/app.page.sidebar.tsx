@@ -37,8 +37,8 @@ const navMain = [
         url: "/dashboard/schedule",
         icon: <CalendarDaysIcon />,
         items: [
-            { title: "Тиждень", url: "/dashboard/schedule/week" },
-            { title: "Дедлайни", url: "/dashboard/schedule/deadlines" },
+            { title: "Календар", url: "/dashboard/schedule/calendar" },
+            { title: "Предмети", url: "/dashboard/schedule/subjects" },
         ],
     },
     {
@@ -64,7 +64,7 @@ const navMain = [
         url: "/dashboard/organizer",
         icon: <ListChecksIcon />,
         items: [
-            { title: "To-do", url: "/dashboard/organizer/todo" },
+            { title: "To-do", url: "/dashboard/organizer/to-do" },
             { title: "Нотатки", url: "/dashboard/organizer/notes" },
         ],
     },
@@ -80,9 +80,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const user = useAuthUser()
 
     const navUser = {
-        name: user?.full_name ?? user?.first_name ?? "...",
+        name: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "...",
         email: user?.email ?? "",
-        avatar: user?.avatar_path ?? "",
+        avatar: user?.avatarPath ?? "",
     }
 
     return (
