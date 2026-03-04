@@ -22,11 +22,9 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Bypass PowerShell execution policy
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           if [ -d "${{ github.workspace }}" ]; then
             docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
@@ -75,11 +73,9 @@ jobs:
     needs: lint
 
     steps:
-      - name: Bypass PowerShell execution policy
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           if [ -d "${{ github.workspace }}" ]; then
             docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
@@ -204,11 +200,9 @@ jobs:
     needs: build
 
     steps:
-      - name: Bypass PowerShell execution policy
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           if [ -d "${{ github.workspace }}" ]; then
             docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
@@ -346,11 +340,9 @@ jobs:
     needs: lint
 
     steps:
-      - name: Bypass PowerShell execution policy
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           if [ -d "${{ github.workspace }}" ]; then
             docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
@@ -412,11 +404,9 @@ jobs:
       packages: write
 
     steps:
-      - name: Bypass PowerShell execution policy
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           if [ -d "${{ github.workspace }}" ]; then
             docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
