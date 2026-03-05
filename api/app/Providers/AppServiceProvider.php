@@ -2,12 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\Files\File;
+use App\Models\Files\Folder;
 use App\Models\Schedule\ExamEvent;
 use App\Models\Schedule\ScheduleLesson;
 use App\Models\Schedule\Subject;
+use App\Policies\Files\FilePolicy;
+use App\Policies\Files\FolderPolicy;
 use App\Policies\Schedule\ExamEventPolicy;
 use App\Policies\Schedule\ScheduleLessonPolicy;
 use App\Policies\Schedule\SubjectPolicy;
+use App\Services\Files\LocalStorageAdapter;
+use App\Services\Files\StorageServiceInterface;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->singleton(StorageServiceInterface::class, LocalStorageAdapter::class);
     }
 
     public function boot(): void
@@ -31,5 +37,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Subject::class, SubjectPolicy::class);
         Gate::policy(ScheduleLesson::class, ScheduleLessonPolicy::class);
         Gate::policy(ExamEvent::class, ExamEventPolicy::class);
+
+        // Files module policies
+        Gate::policy(File::class, FilePolicy::class);
+        Gate::policy(Folder::class, FolderPolicy::class);
     }
 }
+

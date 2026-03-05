@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     addDays, addMonths, endOfMonth, endOfWeek,
     format, startOfMonth, startOfWeek, startOfYear,
@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 
 import { useSchedule } from "@/entities/schedule/api/hooks";
+import { useSettingsGroup } from "@/entities/settings/hooks/use-settings-group";
+import { getSelectedValue, type SettingItem } from "@/entities/settings/api/settings.api";
+import { SETTING_GROUP } from "@/pages/settings/config/tabs.config";
 import { AddLessonModal } from "./components/AddLessonModal";
 import { AddExamModal } from "./components/AddExamModal";
 import type { LessonInstance } from "@/entities/schedule/model/types";
@@ -23,29 +26,106 @@ import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 /* ─────────────────────────────────────────────────────────── */
 
 type ViewMode = "semester" | "month" | "week" | "day";
+type WeekParityAnchor = "even" | "odd";
 
-const WEEKDAYS_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт"];
+type SchedulerConfig = {
+    defaultView: ViewMode;
+    showWeekends: boolean;
+    dayStartMin: number;
+    dayEndMin: number;
+    lessonReminderMin: number | null;
+    weekParityAnchor: WeekParityAnchor;
+};
 
-const SLOT_START  = 8 * 60;       // 08:00
-const SLOT_END    = 20 * 60;      // 20:00
-const PX_PER_MIN  = 1.6;          // 96px / hour
-const GRID_HEIGHT = (SLOT_END - SLOT_START) * PX_PER_MIN;
-const HOURS       = Array.from({ length: (SLOT_END - SLOT_START) / 60 + 1 }, (_, i) => SLOT_START / 60 + i);
+const WEEKDAYS_SHORT_WORKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт"];
+
+const WEEKDAYS_SHORT_FULL = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+
+const PX_PER_MIN  = 1.2;
+const DEFAULT_SCHEDULER_CONFIG: SchedulerConfig = {
+    defaultView: "week",
+    showWeekends: false,
+    dayStartMin: 8 * 60,
+    dayEndMin: 20 * 60,
+    lessonReminderMin: 15,
+    weekParityAnchor: "even",
+};
 
 function toMin(t: string): number {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + (m ?? 0);
 }
+
+function parseReminderMinutes(value: string): number | null {
+    if (value === "off") return null;
+    if (value.endsWith("m")) {
+        const n = Number(value.slice(0, -1));
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+    return null;
+}
+
+function clampDayRange(startMin: number, endMin: number): { start: number; end: number } {
+    const start = Math.max(0, Math.min(startMin, 23 * 60));
+    const end = Math.max(start + 60, Math.min(endMin, 24 * 60));
+    return { start, end };
+}
+
+function getSelectedSettingValue(settings: Map<string, SettingItem>, key: string): string {
+    const setting = settings.get(key);
+    if (!setting) return "";
+    return getSelectedValue(setting);
+}
+
+function getSchedulerConfig(settings: SettingItem[] | undefined): SchedulerConfig {
+    const byKey = new Map((settings ?? []).map((s) => [s.key, s]));
+
+    const defaultViewRaw = getSelectedSettingValue(byKey, "scheduler_default_view");
+    const defaultView = ["semester", "month", "week", "day"].includes(defaultViewRaw)
+        ? (defaultViewRaw as ViewMode)
+        : DEFAULT_SCHEDULER_CONFIG.defaultView;
+
+    const showWeekendsRaw = getSelectedSettingValue(byKey, "scheduler_show_weekends");
+    const showWeekends = showWeekendsRaw === "1";
+
+    const dayStartRaw = getSelectedSettingValue(byKey, "scheduler_day_start");
+    const dayEndRaw = getSelectedSettingValue(byKey, "scheduler_day_end");
+    const dayStartParsed = /^\d{2}:\d{2}$/.test(dayStartRaw) ? toMin(dayStartRaw) : DEFAULT_SCHEDULER_CONFIG.dayStartMin;
+    const dayEndParsed = /^\d{2}:\d{2}$/.test(dayEndRaw) ? toMin(dayEndRaw) : DEFAULT_SCHEDULER_CONFIG.dayEndMin;
+    const range = clampDayRange(dayStartParsed, dayEndParsed);
+
+    const reminderRaw = getSelectedSettingValue(byKey, "scheduler_lesson_reminder");
+    const lessonReminderMin = reminderRaw ? parseReminderMinutes(reminderRaw) : DEFAULT_SCHEDULER_CONFIG.lessonReminderMin;
+
+    const parityRaw = getSelectedSettingValue(byKey, "scheduler_week_parity_anchor");
+    const weekParityAnchor: WeekParityAnchor = parityRaw === "odd" ? "odd" : "even";
+
+    return {
+        defaultView,
+        showWeekends,
+        dayStartMin: range.start,
+        dayEndMin: range.end,
+        lessonReminderMin,
+        weekParityAnchor,
+    };
+}
+
 function fmtTime(t: string | null | undefined): string {
     if (!t) return "";
     const p = t.split(":");
     return `${p[0]}:${p[1]}`;
 }
-function minToTop(min: number): number {
-    return (min - SLOT_START) * PX_PER_MIN;
+function minToTop(min: number, slotStart: number): number {
+    return (min - slotStart) * PX_PER_MIN;
 }
 function durationToPx(sm: number, em: number): number {
     return Math.max((em - sm) * PX_PER_MIN - 2, 32);
+}
+function getGridHeight(slotStart: number, slotEnd: number): number {
+    return (slotEnd - slotStart) * PX_PER_MIN;
+}
+function getHours(slotStart: number, slotEnd: number): number[] {
+    return Array.from({ length: Math.floor((slotEnd - slotStart) / 60) + 1 }, (_, i) => slotStart / 60 + i);
 }
 
 /* ─────────────────────────────────────────────────────────── */
@@ -53,7 +133,7 @@ function durationToPx(sm: number, em: number): number {
 /* ─────────────────────────────────────────────────────────── */
 
 function LessonTypeIcon({ code, className }: { code: string; className?: string }) {
-    const cls = `w-3 h-3 shrink-0 ${className ?? ""}`;
+    const cls = `w-3.5 h-3.5 shrink-0 ${className ?? ""}`;
     if (code === "lecture")      return <BookOpenIcon className={cls} />;
     if (code === "practice")     return <ZapIcon className={cls} />;
     if (code === "lab")          return <FlaskConicalIcon className={cls} />;
@@ -67,13 +147,13 @@ function ModeBadge({ code }: { code: string }) {
     if (code === "online")
         return (
             <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-sky-600 bg-sky-100 dark:bg-sky-900/40 dark:text-sky-400 px-1.5 py-0.5 rounded-full">
-                <WifiIcon className="w-2.5 h-2.5" />Онлайн
+                <WifiIcon className="w-3 h-3" />Онлайн
             </span>
         );
     if (code === "hybrid")
         return (
             <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-violet-600 bg-violet-100 dark:bg-violet-900/40 dark:text-violet-400 px-1.5 py-0.5 rounded-full">
-                <MonitorIcon className="w-2.5 h-2.5" />Гібрид
+                <MonitorIcon className="w-3 h-3" />Гібрид
             </span>
         );
     return null;
@@ -128,7 +208,7 @@ function EventCard({ inst, style, compact }: EventCardProps) {
                 </div>
 
                 {/* Subject name */}
-                <div className="text-[12px] font-black leading-tight" style={{ color: accent }}>
+                <div className="text-[14px] font-bold leading-tight" style={{ color: accent }}>
                     {inst.subject?.name ?? "Предмет"}
                 </div>
 
@@ -136,21 +216,21 @@ function EventCard({ inst, style, compact }: EventCardProps) {
                     <>
                         <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-auto pt-0.5">
                             {inst.lessonType && (
-                                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
                                     <LessonTypeIcon code={inst.lessonType.code} />
                                     {inst.lessonType.name}
                                 </span>
                             )}
                             {inst.location && (
-                                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                    <MapPinIcon className="w-2.5 h-2.5 shrink-0" />
+                                <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
+                                    <MapPinIcon className="w-3.5 h-3.5 shrink-0" />
                                     {inst.location}
                                 </span>
                             )}
                         </div>
                         {inst.subject?.teacherName && (
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground truncate">
-                                <UserIcon className="w-2.5 h-2.5 shrink-0" />
+                            <div className="flex items-center gap-1 text-[12px] text-muted-foreground truncate">
+                                <UserIcon className="w-3.5 h-3.5 shrink-0" />
                                 {inst.subject.teacherName}
                             </div>
                         )}
@@ -165,10 +245,10 @@ function EventCard({ inst, style, compact }: EventCardProps) {
 /*  Time column                                                 */
 /* ─────────────────────────────────────────────────────────── */
 
-function TimeColumn() {
+function TimeColumn({ hours, gridHeight }: { hours: number[]; gridHeight: number }) {
     return (
-        <div className="w-14 shrink-0 relative select-none" style={{ height: GRID_HEIGHT }}>
-            {HOURS.map((h, i) => (
+        <div className="w-14 shrink-0 relative select-none" style={{ height: gridHeight }}>
+            {hours.map((h, i) => (
                 <div
                     key={h}
                     className="absolute right-3 text-[10px] font-semibold tabular-nums text-muted-foreground/60"
@@ -185,13 +265,13 @@ function TimeColumn() {
 /*  Current time indicator                                      */
 /* ─────────────────────────────────────────────────────────── */
 
-function NowLine({ now }: { now: Date }) {
+function NowLine({ now, slotStart, slotEnd }: { now: Date; slotStart: number; slotEnd: number }) {
     const min = now.getHours() * 60 + now.getMinutes();
-    if (min < SLOT_START || min > SLOT_END) return null;
+    if (min < slotStart || min > slotEnd) return null;
     return (
         <div
             className="absolute left-0 right-0 z-20 flex items-center pointer-events-none"
-            style={{ top: minToTop(min) }}
+            style={{ top: minToTop(min, slotStart) }}
         >
             <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1 shrink-0 shadow-md shadow-red-500/50" />
             <div className="flex-1 h-[1.5px] bg-red-500/70" />
@@ -391,12 +471,18 @@ function MonthView({ rangeStart, rangeEnd, byDate, onDayClick }: MonthViewProps)
 
 interface WeekViewProps {
     weekDays: Date[];
+    weekdayLabels: string[];
     byDate: Record<string, LessonInstance[]>;
     now: Date;
+    slotStart: number;
+    slotEnd: number;
+    hours: number[];
+    gridHeight: number;
+    showNowLine: boolean;
     onDayClick: (d: Date) => void;
 }
 
-function WeekView({ weekDays, byDate, now, onDayClick }: WeekViewProps) {
+function WeekView({ weekDays, weekdayLabels, byDate, now, slotStart, slotEnd, hours, gridHeight, showNowLine, onDayClick }: WeekViewProps) {
     const todayStr = format(new Date(), "yyyy-MM-dd");
 
     return (
@@ -419,7 +505,7 @@ function WeekView({ weekDays, byDate, now, onDayClick }: WeekViewProps) {
                             ].join(" ")}
                         >
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
-                                {WEEKDAYS_SHORT[idx]}
+                                {weekdayLabels[idx]}
                             </span>
                             <span className={[
                                 "w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors",
@@ -442,7 +528,7 @@ function WeekView({ weekDays, byDate, now, onDayClick }: WeekViewProps) {
             {/* Scrollable time grid */}
             <div className="flex-1">
                 <div className="flex">
-                    <TimeColumn />
+                    <TimeColumn hours={hours} gridHeight={gridHeight} />
                     {weekDays.map((day) => {
                         const dateStr = format(day, "yyyy-MM-dd");
                         const items   = byDate[dateStr] ?? [];
@@ -455,10 +541,10 @@ function WeekView({ weekDays, byDate, now, onDayClick }: WeekViewProps) {
                                     "flex-1 relative border-l border-border/60",
                                     isToday ? "bg-primary/[0.025]" : "bg-background",
                                 ].join(" ")}
-                                style={{ height: GRID_HEIGHT }}
+                                style={{ height: gridHeight }}
                             >
                                 {/* Hour lines */}
-                                {HOURS.map((h, i) => (
+                                {hours.map((h, i) => (
                                     <div
                                         key={h}
                                         className={`absolute left-0 right-0 border-t ${i % 2 === 0 ? "border-border/50" : "border-border/20"}`}
@@ -466,7 +552,7 @@ function WeekView({ weekDays, byDate, now, onDayClick }: WeekViewProps) {
                                     />
                                 ))}
 
-                                {isToday && <NowLine now={now} />}
+                                {isToday && showNowLine && <NowLine now={now} slotStart={slotStart} slotEnd={slotEnd} />}
 
                                 {items.map((inst, ii) => {
                                     const sm = toMin(inst.startsAt);
@@ -476,7 +562,7 @@ function WeekView({ weekDays, byDate, now, onDayClick }: WeekViewProps) {
                                             key={`${inst.source}-${inst.id}-${ii}`}
                                             inst={inst}
                                             compact={durationToPx(sm, em) < 60}
-                                            style={{ top: minToTop(sm), height: durationToPx(sm, em) }}
+                                            style={{ top: minToTop(sm, slotStart), height: durationToPx(sm, em) }}
                                         />
                                     );
                                 })}
@@ -498,10 +584,15 @@ interface DayViewProps {
     instances: LessonInstance[];
     now: Date;
     isToday: boolean;
+    slotStart: number;
+    slotEnd: number;
+    hours: number[];
+    gridHeight: number;
+    showNowLine: boolean;
     onAddLesson: () => void;
 }
 
-function DayView({ dateStr, instances, now, isToday, onAddLesson }: DayViewProps) {
+function DayView({ dateStr, instances, now, isToday, slotStart, slotEnd, hours, gridHeight, showNowLine, onAddLesson }: DayViewProps) {
     const date   = new Date(dateStr + "T12:00:00");
     const nowMin = now.getHours() * 60 + now.getMinutes();
 
@@ -533,16 +624,16 @@ function DayView({ dateStr, instances, now, isToday, onAddLesson }: DayViewProps
             {/* Time grid */}
             <div className="flex-1 min-w-0">
                 <div className="flex max-w-2xl">
-                    <TimeColumn />
-                    <div className="flex-1 relative" style={{ height: GRID_HEIGHT }}>
-                        {HOURS.map((h, i) => (
+                    <TimeColumn hours={hours} gridHeight={gridHeight} />
+                    <div className="flex-1 relative" style={{ height: gridHeight }}>
+                        {hours.map((h, i) => (
                             <div
                                 key={h}
                                 className={`absolute left-0 right-0 border-t ${i % 2 === 0 ? "border-border/50" : "border-border/20"}`}
                                 style={{ top: i * 60 * PX_PER_MIN }}
                             />
                         ))}
-                        {isToday && <NowLine now={now} />}
+                        {isToday && showNowLine && <NowLine now={now} slotStart={slotStart} slotEnd={slotEnd} />}
                         {instances.map((inst, ii) => {
                             const sm = toMin(inst.startsAt);
                             const em = inst.endsAt ? toMin(inst.endsAt) : sm + 90;
@@ -551,7 +642,7 @@ function DayView({ dateStr, instances, now, isToday, onAddLesson }: DayViewProps
                                     key={`${inst.source}-${inst.id}-${ii}`}
                                     inst={inst}
                                     compact={false}
-                                    style={{ top: minToTop(sm), height: durationToPx(sm, em) }}
+                                    style={{ top: minToTop(sm, slotStart), height: durationToPx(sm, em) }}
                                 />
                             );
                         })}
@@ -650,10 +741,23 @@ export function SchedulePage() {
     const [now, setNow] = useState(new Date());
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
+    const { data: schedulerSettings } = useSettingsGroup(SETTING_GROUP.SCHEDULER);
+    const schedulerConfig = useMemo(
+        () => getSchedulerConfig(schedulerSettings),
+        [schedulerSettings]
+    );
+    const isViewInitialized = useRef(false);
+
     useEffect(() => {
         const id = setInterval(() => setNow(new Date()), 30_000);
         return () => clearInterval(id);
     }, []);
+
+    useEffect(() => {
+        if (isViewInitialized.current) return;
+        setViewMode(schedulerConfig.defaultView);
+        isViewInitialized.current = true;
+    }, [schedulerConfig.defaultView]);
 
     const range = useMemo(() => {
         if (viewMode === "week")
@@ -685,9 +789,19 @@ export function SchedulePage() {
     }, [instances]);
 
     const weekDays = useMemo(
-        () => viewMode === "week" ? Array.from({ length: 5 }, (_, i) => addDays(range.start, i)) : [],
-        [range, viewMode]
+        () => {
+            if (viewMode !== "week") return [];
+            const length = schedulerConfig.showWeekends ? 7 : 5;
+            return Array.from({ length }, (_, i) => addDays(range.start, i));
+        },
+        [range, viewMode, schedulerConfig.showWeekends]
     );
+
+    const weekdayLabels = schedulerConfig.showWeekends ? WEEKDAYS_SHORT_FULL : WEEKDAYS_SHORT_WORKDAYS;
+    const slotStart = schedulerConfig.dayStartMin;
+    const slotEnd = schedulerConfig.dayEndMin;
+    const gridHeight = getGridHeight(slotStart, slotEnd);
+    const hours = getHours(slotStart, slotEnd);
 
     const todayStr         = format(new Date(), "yyyy-MM-dd");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -704,15 +818,61 @@ export function SchedulePage() {
         return { nextLesson: next, minutesUntilNext: next ? toMin(next.startsAt) - nowMin : 0 };
     }, [todayInstances, nowMin]);
 
-    const completedToday = todayInstances.filter(i => {
-        const end = i.endsAt ? toMin(i.endsAt) : toMin(i.startsAt) + 90;
-        return end <= nowMin;
+    const reminderKeySet = useRef<Set<string>>(new Set());
+
+    useEffect(() => {
+        if (schedulerConfig.lessonReminderMin === null || !nextLesson) return;
+        if (minutesUntilNext !== schedulerConfig.lessonReminderMin) return;
+
+        const reminderKey = `${todayStr}:${nextLesson.id}:${schedulerConfig.lessonReminderMin}`;
+        if (reminderKeySet.current.has(reminderKey)) return;
+        reminderKeySet.current.add(reminderKey);
+
+        const title = "Нагадування про заняття";
+
+        const body = `${nextLesson.subject?.name ?? "Предмет"} починається о ${fmtTime(nextLesson.startsAt)}`;
+
+        if (typeof window !== "undefined" && "Notification" in window) {
+            if (window.Notification.permission === "granted") {
+                new window.Notification(title, { body });
+            }
+        }
+    }, [
+        minutesUntilNext,
+        nextLesson,
+        schedulerConfig.lessonReminderMin,
+        todayStr,
+    ]);
+
+
+    useEffect(() => {
+        if (schedulerConfig.lessonReminderMin == null) return;
+        if (typeof window === "undefined") return;
+        if (!("Notification" in window)) return;
+        if (window.Notification.permission !== "default") return;
+
+        void window.Notification.requestPermission();
+    }, [schedulerConfig.lessonReminderMin]);
+
+    const completedToday = todayInstances.filter((i) => {
+        const endMin = i.endsAt ? toMin(i.endsAt) : toMin(i.startsAt) + 90;
+        return endMin <= nowMin;
     }).length;
 
+    const weekParityLabel = useMemo(() => {
+        const weekNumber = Number(format(anchorDate, "I")); // ISO week number
+        const isEven = weekNumber % 2 === 0;
+
+        const parityMatchesAnchor =
+            schedulerConfig.weekParityAnchor === "even" ? isEven : !isEven;
+
+        return parityMatchesAnchor ? "Парний" : "Непарний";
+    }, [anchorDate, schedulerConfig.weekParityAnchor]);
+
     function prev() {
-        setAnchorDate(d => {
-            if (viewMode === "week")     return addDays(d, -7);
-            if (viewMode === "month")    return addMonths(d, -1);
+        setAnchorDate((d) => {
+            if (viewMode === "week") return addDays(d, -7);
+            if (viewMode === "month") return addMonths(d, -1);
             if (viewMode === "semester") return addMonths(d, -6);
             return addDays(d, -1);
         });
@@ -765,7 +925,7 @@ export function SchedulePage() {
                             <ChevronRightIcon className="w-4 h-4" />
                         </button>
                     </div>
-                    <h1 className="text-lg font-black tracking-tight capitalize text-foreground">
+                    <h1 className="text-lg font-bold tracking-tight capitalize text-foreground">
                         {headerLabel}
                     </h1>
                 </div>
@@ -832,6 +992,12 @@ export function SchedulePage() {
                         </div>
                     )}
 
+
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <CalendarDaysIcon className="w-3.5 h-3.5 shrink-0" />
+                        Парність: <span className="font-semibold text-foreground/80">{weekParityLabel}</span>
+                    </div>
+
                     {/* Day progress */}
                     <div className="flex items-center gap-2 ml-auto">
                         <span className="text-xs text-muted-foreground">
@@ -877,8 +1043,14 @@ export function SchedulePage() {
                 ) : viewMode === "week" ? (
                     <WeekView
                         weekDays={weekDays}
+                        weekdayLabels={weekdayLabels}
                         byDate={byDate}
                         now={now}
+                        slotStart={slotStart}
+                        slotEnd={slotEnd}
+                        hours={hours}
+                        gridHeight={gridHeight}
+                        showNowLine={true}
                         onDayClick={goDay}
                     />
                 ) : (
@@ -887,6 +1059,11 @@ export function SchedulePage() {
                         instances={activeDayInstances}
                         now={now}
                         isToday={activeDayStr === todayStr}
+                        slotStart={slotStart}
+                        slotEnd={slotEnd}
+                        hours={hours}
+                        gridHeight={gridHeight}
+                        showNowLine={true}
                         onAddLesson={() => setShowAddLesson(true)}
                     />
                 )}
@@ -897,3 +1074,17 @@ export function SchedulePage() {
         </div>
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
