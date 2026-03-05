@@ -1,7 +1,7 @@
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import type {
-    FileItem, FolderItem, FolderTreeNode, CreateFolderPayload, UpdateFolderPayload, UpdateFilePayload,
+    FileItem, FolderItem, CreateFolderPayload, UpdateFolderPayload, UpdateFilePayload,
     FolderTreeResponse
 } from "../model/types";
 
@@ -116,7 +116,7 @@ export const folderQueries = {
     tree() {
         return {
             queryKey: ["folders", "tree"],
-            queryFn: () => apiFetch<FolderTreeResponse>(ENDPOINTS.folders.tree), // ← було FolderTreeNode[]
+            queryFn: () => apiFetch<FolderTreeResponse>(ENDPOINTS.folders.tree),
         };
     },
 };
