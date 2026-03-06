@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   DB_DATABASE: app_test
   DB_USERNAME: app
-  DB_PASSWORD: secret
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
@@ -20,50 +20,14 @@ jobs:
   lint:
     name: 🔍 Lint & Validate
     runs-on: self-hosted
+    timeout-minutes: 15
 
     steps:
-      # Windows: разрешаем выполнение любых PowerShell-скриптов
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
-      # Linux: исправляем права на рабочую директорию (только для Linux)
-      - name: Fix workspace permissions (Linux only)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create dummy api env
-        shell: bash
-        run: cp api/.env.example api/.env
-
-      - name: Create root .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
-          fi
-
-      - name: Create frontend .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
-          cp frontend/.env.example frontend/.env
-          elif [ ! -f frontend/.env ]; then
-          mkdir -p frontend
-          touch frontend/.env
-          fi
+      - uses: ./.github/actions/setup-env
+        with:
+          setup-frontend-env: "true"
+          setup-api-env: "true"
+          verify-compose: "true"
 
       - name: Validate docker-compose syntax
         shell: bash
@@ -102,54 +66,15 @@ jobs:
     name: 🐳 Docker Build & Smoke Test
     runs-on: self-hosted
     needs: lint
+    timeout-minutes: 30
 
     steps:
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
-      - name: Fix workspace permissions (Linux only)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create root .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
-          fi
-
-      - name: Create frontend .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
-            cp frontend/.env.example frontend/.env
-          elif [ ! -f frontend/.env ]; then
-            touch frontend/.env
-          fi
-
-      - name: Create dummy api env
-        shell: bash
-        run: cp api/.env.example api/.env
-
-      - name: Verify Docker Compose
-        shell: bash
-        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: ./.github/actions/setup-env
+        with:
+          setup-frontend-env: "true"
+          setup-api-env: "true"
+          verify-compose: "true"
+          setup-buildx: "true"
 
       - name: Cache Docker layers
         uses: actions/cache@v4
@@ -161,7 +86,7 @@ jobs:
 
       - name: Build all images
         shell: bash
-        run: docker compose build --no-cache
+        run: docker compose build
         env:
           DOCKER_BUILDKIT: 1
           UID: 1000
@@ -244,54 +169,15 @@ jobs:
     name: 🧪 Backend Tests (PHP)
     runs-on: self-hosted
     needs: build
+    timeout-minutes: 30
 
     steps:
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
-      - name: Fix workspace permissions (Linux only)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create root .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
-          fi
-
-      - name: Create dummy api env
-        shell: bash
-        run: cp api/.env.example api/.env
-
-      - name: Create frontend .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
-            cp frontend/.env.example frontend/.env
-          elif [ ! -f frontend/.env ]; then
-            touch frontend/.env
-          fi
-
-      - name: Verify Docker Compose
-        shell: bash
-        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: ./.github/actions/setup-env
+        with:
+          setup-frontend-env: "true"
+          setup-api-env: "true"
+          verify-compose: "true"
+          setup-buildx: "true"
 
       - name: Restore Docker layer cache
         uses: actions/cache@v4
@@ -354,7 +240,6 @@ jobs:
             --no-progress \
             --prefer-dist \
             --optimize-autoloader
-          # Проверяем, что автозагрузчик появился
           if [ ! -f api/vendor/autoload.php ]; then
             echo "❌ Composer install failed: vendor/autoload.php not found"
             exit 1
@@ -382,8 +267,7 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: |
-          docker compose run --rm php-cli php artisan test
+        run: docker compose run --rm php-cli php artisan test
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
@@ -401,50 +285,14 @@ jobs:
     name: 🎨 Frontend Build (Vite)
     runs-on: self-hosted
     needs: lint
+    timeout-minutes: 20
 
     steps:
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
-      - name: Fix workspace permissions (Linux only)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create frontend .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
-            cp frontend/.env.example frontend/.env
-          elif [ ! -f frontend/.env ]; then
-            touch frontend/.env
-          fi
-
-      - name: Create root .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
-          fi
-
-      - name: Verify Docker Compose
-        shell: bash
-        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: ./.github/actions/setup-env
+        with:
+          setup-frontend-env: "true"
+          verify-compose: "true"
+          setup-buildx: "true"
 
       - name: Build node image
         shell: bash
@@ -454,8 +302,7 @@ jobs:
 
       - name: Install dependencies & build
         shell: bash
-        run: |
-          docker compose run --rm --no-deps node sh -c "npm ci && npm run build"
+        run: docker compose run --rm --no-deps node sh -c "npm ci && npm run build"
 
       - name: Cleanup
         if: always()
@@ -463,49 +310,25 @@ jobs:
         run: docker compose down -v
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 5: Push php-fpm & nginx images (только при push в feature/docker)
+  # JOB 5: Push php-fpm & nginx images
   # ─────────────────────────────────────────────────────────────────────────────
   push:
     name: 📦 Push images to GHCR
     runs-on: self-hosted
     needs: [backend-tests, frontend-build]
-    if: github.ref == 'refs/heads/feature/docker' && github.event_name == 'push'
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
 
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
-      - name: Fix workspace permissions (Linux only)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
-          fi
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create root .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
-          fi
-
-      - name: Verify Docker Compose
-        shell: bash
-        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+      - uses: ./.github/actions/setup-env
+        with:
+          verify-compose: "true"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -525,7 +348,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & push — php-fpm
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./gateway/docker/development/php-fpm
           push: true
@@ -546,14 +369,14 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & push — nginx
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./gateway/docker/development/nginx
           push: true
           tags: ${{ steps.meta-nginx.outputs.tags }}
           labels: ${{ steps.meta-nginx.outputs.labels }}
 
-      # ── node (frontend build artifact) ───────
+      # ── node ─────────────────────────────────
       - name: Metadata — node
         id: meta-node
         uses: docker/metadata-action@v5
@@ -564,14 +387,13 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & push — node
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./gateway/docker/development/node
           push: true
           tags: ${{ steps.meta-node.outputs.tags }}
           labels: ${{ steps.meta-node.outputs.labels }}
 
-      # ✅ Ротация кеша слоёв (исправлено)
       - name: Move Docker layer cache (if new cache exists)
         shell: bash
         run: |

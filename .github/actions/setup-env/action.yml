@@ -1,0 +1,71 @@
+name: Setup CI Environment
+description: Повторяющиеся шаги инициализации окружения
+
+inputs:
+  setup-frontend-env:
+    description: Создать frontend/.env
+    default: "false"
+  setup-api-env:
+    description: Создать api/.env из api/.env.example
+    default: "false"
+  setup-buildx:
+    description: Настроить Docker Buildx
+    default: "false"
+  verify-compose:
+    description: Проверить версию Docker Compose
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Bypass PowerShell execution policy (Windows only)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+
+    - name: Fix workspace permissions (Linux only)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        if [ -d "${{ github.workspace }}" ]; then
+          docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+            chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+        fi
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create root .env (if not exists)
+      shell: bash
+      run: |
+        if [ ! -f .env ] && [ -f .env.example ]; then
+          cp .env.example .env
+        elif [ ! -f .env ]; then
+          echo "UID=1000" > .env
+          echo "GID=1000" >> .env
+        fi
+
+    - name: Create frontend .env (if not exists)
+      if: inputs.setup-frontend-env == 'true'
+      shell: bash
+      run: |
+        if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
+          cp frontend/.env.example frontend/.env
+        elif [ ! -f frontend/.env ]; then
+          mkdir -p frontend
+          touch frontend/.env
+        fi
+
+    - name: Create api .env
+      if: inputs.setup-api-env == 'true'
+      shell: bash
+      run: cp api/.env.example api/.env
+
+    - name: Verify Docker Compose
+      if: inputs.verify-compose == 'true'
+      shell: bash
+      run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+
+    - name: Set up Docker Buildx
+      if: inputs.setup-buildx == 'true'
+      uses: docker/setup-buildx-action@v3
