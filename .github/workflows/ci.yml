@@ -166,7 +166,7 @@ jobs:
       - name: Cleanup
         if: always()
         shell: bash
-        run: docker compose down -v
+        run: docker compose down -v 2>/dev/null || true
 
   # ─────────────────────────────────────────────────────────────────────────────
   # JOB 3: Backend Tests (PHP / Laravel)
@@ -285,7 +285,7 @@ jobs:
       - name: Cleanup
         if: always()
         shell: bash
-        run: docker compose down -v
+        run: docker compose down -v 2>/dev/null || true
 
   # ─────────────────────────────────────────────────────────────────────────────
   # JOB 4: Frontend Build Check (Node / Vite)
@@ -319,7 +319,7 @@ jobs:
       - name: Cleanup
         if: always()
         shell: bash
-        run: docker compose down -v
+        run: docker compose down -v 2>/dev/null || true
 
   # ─────────────────────────────────────────────────────────────────────────────
   # JOB 5: Push images to GHCR
