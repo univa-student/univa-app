@@ -1,5 +1,4 @@
 name: Setup CI Environment
-description: Повторяющиеся шаги инициализации окружения
 
 inputs:
   setup-frontend-env:
@@ -31,9 +30,6 @@ runs:
           docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
             chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
         fi
-
-    - name: Checkout code
-      uses: actions/checkout@v4
 
     - name: Create root .env (if not exists)
       shell: bash
