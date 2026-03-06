@@ -62,8 +62,10 @@ chmod -R 775 "${APP_DIR}/storage" "${APP_DIR}/bootstrap/cache" 2>/dev/null || tr
 
 # 7. База данных: Ожидание и миграции
 echo "🗄️ Running migrations..."
-# --force обязателен для работы в CI/production режимах
-php "${APP_DIR}/artisan" migrate --force --no-interaction
+
+if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+    php "${APP_DIR}/artisan" migrate --force --no-interaction
+fi
 
 # 8. Финальный запуск php-fpm
 echo "🎉 Setup complete! Starting php-fpm..."
