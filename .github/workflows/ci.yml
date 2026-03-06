@@ -23,6 +23,13 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      - name: Fix workspace permissions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+            chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -72,6 +79,13 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      - name: Fix workspace permissions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+            chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -178,6 +192,13 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      - name: Fix workspace permissions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+            chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -297,6 +318,13 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      - name: Fix workspace permissions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+            chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -338,6 +366,13 @@ jobs:
       packages: write
 
     steps:
+      - name: Fix workspace permissions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+            chown -R $(id -u):$(id -g) /workspace 2>/dev/null || true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
