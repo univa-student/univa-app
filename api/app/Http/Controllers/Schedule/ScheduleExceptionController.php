@@ -19,7 +19,6 @@ class ScheduleExceptionController extends Controller
 
     public function store(StoreExceptionRequest $request, ScheduleLesson $lesson): JsonResponse
     {
-        // Only owner can add exceptions
         $this->authorize('update', $lesson);
 
         try {
@@ -33,7 +32,6 @@ class ScheduleExceptionController extends Controller
 
     public function destroy(ScheduleLessonException $exception): JsonResponse
     {
-        // Ensure the owner owns the parent lesson
         $this->authorize('update', $exception->lesson);
 
         $this->service->deleteException($exception);

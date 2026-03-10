@@ -4,7 +4,10 @@ import { ToastProvider } from "@/shared/providers/toast-provider";
 import { TooltipProvider } from "@/shared/shadcn/ui/tooltip.tsx";
 import { AuthProvider } from "@/app/providers/auth-provider.tsx";
 import { SettingsProvider } from "@/app/providers/settings-provider.tsx";
+import { WsProvider } from "@/app/providers/ws-provider.tsx";
+import { ThemeProvider } from "@/app/providers/theme-provider.tsx";
 import { useUserSettings } from "@/entities/user/hooks/use-user-settings";
+import { DevBar } from "@/widgets/dev-bar";
 
 /**
  * Inner wrapper — lives inside SettingsProvider so useUserSettings can
@@ -25,11 +28,19 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     return (
         <AuthProvider>
             <SettingsProvider>
-                <AnimationProvider>
-                    <TooltipProvider delayDuration={0}>
-                        <ToastProvider>{children}</ToastProvider>
-                    </TooltipProvider>
-                </AnimationProvider>
+                <ThemeProvider>
+                    <WsProvider>
+                        <AnimationProvider>
+                            <TooltipProvider delayDuration={0}>
+                                <ToastProvider>
+                                    {children}
+                                    {/* DevBar is only rendered in IS_DEV mode — see widget */}
+                                    <DevBar />
+                                </ToastProvider>
+                            </TooltipProvider>
+                        </AnimationProvider>
+                    </WsProvider>
+                </ThemeProvider>
             </SettingsProvider>
         </AuthProvider>
     );

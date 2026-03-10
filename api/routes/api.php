@@ -6,6 +6,9 @@ use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Files\FileController;
+use App\Http\Controllers\Files\FolderController;
+use App\Http\Controllers\Deadlines\DeadlineController;
 use App\Http\Controllers\Schedule\DictionaryController;
 use App\Http\Controllers\Schedule\ExamEventController;
 use App\Http\Controllers\Schedule\ScheduleController;
@@ -37,6 +40,10 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' 
         ->where('key', '.+');
 
     // ── Schedule module ───────────────────────────────────────────────────────
+    
+    // Deadlines
+    Route::get('deadlines/stats', [DeadlineController::class, 'stats']);
+    Route::apiResource('deadlines', DeadlineController::class);
 
     // Built schedule (lessons + exams merged)
     Route::get('/schedule', [ScheduleController::class, 'index']);
@@ -48,6 +55,7 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' 
     Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy']);
 
     // Schedule lesson rules
+    Route::get('/schedule-lessons/{lesson}', [ScheduleLessonController::class, 'show']);
     Route::post('/schedule-lessons', [ScheduleLessonController::class, 'store']);
     Route::patch('/schedule-lessons/{lesson}', [ScheduleLessonController::class, 'update']);
     Route::delete('/schedule-lessons/{lesson}', [ScheduleLessonController::class, 'destroy']);
@@ -61,6 +69,23 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' 
     Route::post('/exams', [ExamEventController::class, 'store']);
     Route::patch('/exams/{exam}', [ExamEventController::class, 'update']);
     Route::delete('/exams/{exam}', [ExamEventController::class, 'destroy']);
+
+    // ── Files module ─────────────────────────────────────────────────────────
+    Route::get('/storage/info', [FileController::class, 'storageInfo']);
+    Route::get('/files/search', [FileController::class, 'search']);
+    Route::get('/files/recent', [FileController::class, 'recent']);
+    Route::get('/files', [FileController::class, 'index']);
+    Route::post('/files', [FileController::class, 'store']);
+    Route::get('/files/{file}', [FileController::class, 'show']);
+    Route::get('/files/{file}/download', [FileController::class, 'download']);
+    Route::patch('/files/{file}', [FileController::class, 'update']);
+    Route::delete('/files/{file}', [FileController::class, 'destroy']);
+
+    Route::get('/folders/tree', [FolderController::class, 'tree']);
+    Route::get('/folders', [FolderController::class, 'index']);
+    Route::post('/folders', [FolderController::class, 'store']);
+    Route::patch('/folders/{folder}', [FolderController::class, 'update']);
+    Route::delete('/folders/{folder}', [FolderController::class, 'destroy']);
 });
 
 Route::group(['prefix' => '/v1', 'middleware' => ['web']], function () {

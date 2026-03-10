@@ -26,8 +26,8 @@ export function useAuth(): AuthContextValue {
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [isReady, setIsReady] = useState(false);
+    const [user, setUser] = useState<User | null>(() => authStore.getState().user);
+    const [isReady, setIsReady] = useState(() => authStore.getState().isReady);
 
     const fetchMe = useCallback(async () => {
         try {

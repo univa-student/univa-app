@@ -9,9 +9,22 @@ interface AuthState {
     isReady: boolean;
 }
 
+const LS_USER_KEY = "univa:auth:user:v1";
+
+function loadCachedUser(): User | null {
+    try {
+        const raw = localStorage.getItem(LS_USER_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+
+const cachedUser = loadCachedUser();
+
 let state: AuthState = {
-    user: null,
-    isReady: false,
+    user: cachedUser,
+    isReady: !!cachedUser, // If we have a cached user, we are instantly ready
 };
 
 const listeners = new Set<Listener>();
@@ -25,6 +38,10 @@ export const authStore = {
 
     setUser(user: User | null) {
         state = { ...state, user };
+        try {
+            if (user) localStorage.setItem(LS_USER_KEY, JSON.stringify(user));
+            else localStorage.removeItem(LS_USER_KEY);
+        } catch { /* empty */ } // ignore
         notify();
     },
 
@@ -35,6 +52,7 @@ export const authStore = {
 
     reset() {
         state = { user: null, isReady: true };
+        try { localStorage.removeItem(LS_USER_KEY); } catch { }
         notify();
     },
 
