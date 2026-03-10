@@ -7,6 +7,7 @@ use App\Core\UnivaHttpException;
 use App\Enums\FileScope;
 use App\Enums\FileStatus;
 use App\Models\Files\File;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -99,6 +100,17 @@ class FileService
         ?int $subjectId = null,
         string $scope = 'personal',
     ): File {
+        $user = User::findOrFail($userId);
+        $fileSize = $uploadedFile->getSize();
+
+        if ($user->storage_used + $fileSize > $user->storage_limit) {
+            throw new UnivaHttpException(
+                'Storage limit exceeded. You cannot upload this file.',
+                ResponseState::Error,
+                403
+            );
+        }
+
         $storageKey = $this->generateStorageKey($uploadedFile);
 
         // 1. Create metadata record with status "uploading"
@@ -136,11 +148,16 @@ class FileService
      */
     private function finalize(File $file, UploadedFile $uploadedFile): File
     {
+        $size = $uploadedFile->getSize();
+
         $file->update([
-            'size'     => $uploadedFile->getSize(),
+            'size'     => $size,
             'checksum' => hash_file('sha256', $uploadedFile->getRealPath()),
             'status'   => FileStatus::Ready,
         ]);
+
+        $user = User::findOrFail($file->user_id);
+        $user->increment('storage_used', $size);
 
         return $file->fresh();
     }
@@ -181,8 +198,16 @@ class FileService
      */
     public function delete(File $file): void
     {
+        $fileSize = $file->size;
+        $userId = $file->user_id;
+
         $file->update(['status' => FileStatus::Deleted]);
         $file->delete(); // soft delete
+
+        $user = User::find($userId);
+        if ($user && $user->storage_used >= $fileSize) {
+            $user->decrement('storage_used', $fileSize);
+        }
     }
 
     // ── Download ─────────────────────────────────────────────────────────────

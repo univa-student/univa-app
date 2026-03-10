@@ -29,6 +29,7 @@ export const ENDPOINTS = {
     },
     lessons: {
         create: `${API}/schedule-lessons`,
+        show: (id: number) => `${API}/schedule-lessons/${id}`,
         update: (id: number) => `${API}/schedule-lessons/${id}`,
         delete: (id: number) => `${API}/schedule-lessons/${id}`,
         createException: (lessonId: number) => `${API}/schedule-lessons/${lessonId}/exceptions`,
@@ -67,6 +68,9 @@ export const ENDPOINTS = {
         },
         recent: `${API}/files/recent`,
     },
+    storage: {
+        info: `${API}/storage/info`,
+    },
     folders: {
         list: (parentId?: number | null) =>
             parentId ? `${API}/folders?parent_id=${parentId}` : `${API}/folders`,
@@ -75,5 +79,9 @@ export const ENDPOINTS = {
         update: (id: number) => `${API}/folders/${id}`,
         delete: (id: number) => `${API}/folders/${id}`,
     },
+    deadlines: {
+        base: "/api/v1/deadlines",
+        stats: "/api/v1/deadlines/stats",
+        id: (id: number) => `/api/v1/deadlines/${id}`,
+    },
 } as const;
-

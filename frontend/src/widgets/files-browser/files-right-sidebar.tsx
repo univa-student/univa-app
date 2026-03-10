@@ -1,12 +1,12 @@
 import {
     UploadCloudIcon, FolderPlusIcon, HomeIcon,
-    StarIcon, ClockIcon, TreePineIcon, HardDriveIcon, FolderIcon,
+    StarIcon, ClockIcon, TreePineIcon, HardDriveIcon,
 } from "lucide-react";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import { ScrollArea } from "@/shared/shadcn/ui/scroll-area";
 import { Button } from "@/shared/shadcn/ui/button";
 import { Separator } from "@/shared/shadcn/ui/separator";
-import { useFolderTree } from "@/entities/file/api/hooks";
+import { useFolderTree, useStorageInfo } from "@/entities/file/api/hooks";
 import type { FileItem, FolderTreeNode } from "@/entities/file/model/types";
 import { FolderTreeItem } from "@/shared/ui/files/folder-tree-item";
 import { mimeColorMap, mimeGroup, FileTypeIcon } from "@/shared/ui/files/file-type-icon";
@@ -23,6 +23,18 @@ export function FilesRightSidebar({
     currentFolderId, onSelectFolder, onSelectFile, onUpload, onNewFolder,
 }: Props) {
     const { data: tree, isLoading } = useFolderTree();
+    const { data: storage } = useStorageInfo();
+
+    const formatBytes = (bytes: number) => {
+        if (bytes === 0) return "0 MB";
+        const mb = bytes / (1024 * 1024);
+        if (mb < 1000) return `${mb.toFixed(1)} MB`;
+        return `${(mb / 1024).toFixed(1)} GB`;
+    };
+
+    const usedFormatted = storage ? formatBytes(storage.used) : "0 MB";
+    const limitFormatted = storage ? formatBytes(storage.limit) : "0 GB";
+    const fillPercent = storage && storage.limit > 0 ? Math.min(100, (storage.used / storage.limit) * 100) : 0;
 
     return (
         <aside className="w-[280px] shrink-0 flex flex-col border-l bg-card/30">
@@ -98,12 +110,6 @@ export function FilesRightSidebar({
                             ))}
                         </div>
                     )}
-                    {!isLoading && (!tree || tree.folders.length === 0) && (
-                        <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-                            <FolderIcon className="size-10 text-muted-foreground/20" />
-                            <p className="text-xs font-medium text-muted-foreground">Папок ще немає</p>
-                        </div>
-                    )}
                     {tree?.folders?.map((node: FolderTreeNode) => (
                         <FolderTreeItem
                             key={node.id}
@@ -146,11 +152,14 @@ export function FilesRightSidebar({
                     </div>
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between text-xs font-medium">
-                            <span className="text-foreground">2.4 GB</span>
-                            <span className="text-muted-foreground">з 10 GB</span>
+                            <span className="text-foreground">{usedFormatted}</span>
+                            <span className="text-muted-foreground">з {limitFormatted}</span>
                         </div>
                         <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-                            <div className="h-full rounded-full bg-primary transition-all duration-1000 ease-out" style={{ width: "24%" }} />
+                            <div
+                                className={`h-full rounded-full transition-all duration-1000 ease-out ${fillPercent > 90 ? "bg-destructive" : (fillPercent > 70 ? "bg-amber-500" : "bg-primary")}`}
+                                style={{ width: `${Math.max(1, fillPercent)}%` }}
+                            />
                         </div>
                     </div>
                 </div>

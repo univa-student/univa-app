@@ -34,6 +34,20 @@ class FileController extends Controller
     }
 
     /**
+     * GET /storage/info
+     */
+    public function storageInfo(): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
+        return ApiResponse::ok('Storage info.', [
+            'used'  => (int) $user->storage_used,
+            'limit' => (int) $user->storage_limit,
+        ]);
+    }
+
+    /**
      * GET /files/recent
      */
     public function recent(): JsonResponse

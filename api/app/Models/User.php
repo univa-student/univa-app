@@ -20,6 +20,8 @@ class User extends Authenticatable
         'avatar_path',
         'agree_terms',
         'marketing_opt_in',
+        'storage_used',
+        'storage_limit',
     ];
 
     protected $hidden = [
@@ -32,6 +34,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'storage_used' => 'integer',
+            'storage_limit' => 'integer',
         ];
     }
 }

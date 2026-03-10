@@ -10,12 +10,15 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 
-import { useSchedule } from "@/entities/schedule/api/hooks";
+import { useSchedule, useLesson } from "@/entities/schedule/api/hooks";
+import { useDeadlines } from "@/entities/deadline/api/hooks";
 import { useSettingsGroup } from "@/entities/settings/hooks/use-settings-group";
 import { SETTING_GROUP } from "@/pages/settings/config/tabs.config";
 import type { LessonInstance } from "@/entities/schedule/model/types";
+import type { Deadline } from "@/entities/deadline/model/types";
 import { AddLessonModal } from "@/pages/schedule/components/AddLessonModal";
 import { AddExamModal } from "@/pages/schedule/components/AddExamModal";
+import { EditLessonModal } from "@/pages/schedule/components/EditLessonModal";
 
 import {
     type ViewMode,
@@ -41,6 +44,8 @@ export function ScheduleCalendar() {
     const [showAddExam, setShowAddExam] = useState(false);
     const [now, setNow] = useState(new Date());
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
+    const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
+    const { data: editingLesson } = useLesson(editingLessonId);
 
     const { data: schedulerSettings } = useSettingsGroup(SETTING_GROUP.SCHEDULER);
     const schedulerConfig = useMemo<SchedulerConfig>(
@@ -72,10 +77,17 @@ export function ScheduleCalendar() {
         return { start: anchorDate, end: anchorDate };
     }, [anchorDate, viewMode]);
 
-    const { data: instances = [], isLoading } = useSchedule(
+    const { data: instances = [], isLoading: isLoadingSchedule } = useSchedule(
         format(range.start, "yyyy-MM-dd"),
         format(range.end, "yyyy-MM-dd"),
     );
+
+    const { data: deadlines = [], isLoading: isLoadingDeadlines } = useDeadlines({
+        dateFrom: format(range.start, "yyyy-MM-dd"),
+        dateTo: format(range.end, "yyyy-MM-dd"),
+    });
+
+    const isLoading = isLoadingSchedule || isLoadingDeadlines;
 
     const byDate = useMemo(() => {
         const map: Record<string, LessonInstance[]> = {};
@@ -88,6 +100,17 @@ export function ScheduleCalendar() {
         );
         return map;
     }, [instances]);
+
+    const deadlinesByDate = useMemo(() => {
+        const map: Record<string, Deadline[]> = {};
+        deadlines.forEach(dl => {
+            if (!dl.dueAt) return;
+            const dateStr = format(new Date(dl.dueAt), "yyyy-MM-dd");
+            if (!map[dateStr]) map[dateStr] = [];
+            map[dateStr].push(dl);
+        });
+        return map;
+    }, [deadlines]);
 
     const weekDays = useMemo(() => {
         if (viewMode !== "week") return [];
@@ -102,6 +125,7 @@ export function ScheduleCalendar() {
     const hours = getHours(slotStart, slotEnd);
 
     const todayStr = format(new Date(), "yyyy-MM-dd");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const todayInstances = byDate[todayStr] ?? [];
     const activeDayStr = selectedDay ?? format(anchorDate, "yyyy-MM-dd");
     const activeDayInstances = byDate[activeDayStr] ?? [];
@@ -305,6 +329,7 @@ export function ScheduleCalendar() {
                         rangeStart={range.start}
                         rangeEnd={range.end}
                         byDate={byDate}
+                        deadlinesByDate={deadlinesByDate}
                         onDayClick={goDay}
                     />
                 ) : viewMode === "week" ? (
@@ -312,6 +337,7 @@ export function ScheduleCalendar() {
                         weekDays={weekDays}
                         weekdayLabels={weekdayLabels}
                         byDate={byDate}
+                        deadlinesByDate={deadlinesByDate}
                         now={now}
                         slotStart={slotStart}
                         slotEnd={slotEnd}
@@ -319,11 +345,13 @@ export function ScheduleCalendar() {
                         gridHeight={gridHeight}
                         showNowLine={true}
                         onDayClick={goDay}
+                        onLessonClick={setEditingLessonId}
                     />
                 ) : (
                     <DayView
                         dateStr={activeDayStr}
                         instances={activeDayInstances}
+                        deadlines={deadlinesByDate[activeDayStr] ?? []}
                         now={now}
                         isToday={activeDayStr === todayStr}
                         slotStart={slotStart}
@@ -332,12 +360,19 @@ export function ScheduleCalendar() {
                         gridHeight={gridHeight}
                         showNowLine={true}
                         onAddLesson={() => setShowAddLesson(true)}
+                        onLessonClick={setEditingLessonId}
                     />
                 )}
             </div>
 
             {showAddLesson && <AddLessonModal onClose={() => setShowAddLesson(false)} />}
             {showAddExam && <AddExamModal onClose={() => setShowAddExam(false)} />}
+            {editingLesson && editingLessonId && (
+                <EditLessonModal
+                    lesson={editingLesson}
+                    onClose={() => setEditingLessonId(null)}
+                />
+            )}
         </div>
     );
 }

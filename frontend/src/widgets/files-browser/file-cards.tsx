@@ -12,6 +12,8 @@ import {
     FileTypeIcon, mimeColorMap, mimeGroup,
     isPreviewable, formatBytes, formatFileDate,
 } from "@/shared/ui/files/file-type-icon";
+import { API_BASE_URL } from "@/app/config/app.config";
+import { ENDPOINTS } from "@/shared/api/endpoints";
 
 interface Props {
     file: FileItem;
@@ -28,28 +30,41 @@ export function FileCardGrid({ file, onPreview, onDownload, onRename, onPin, onD
         else onDownload();
     };
 
+    const isImage = mimeGroup(file.mimeType) === "img";
+    const imageUrl = `${API_BASE_URL}${ENDPOINTS.files.download(file.id)}`;
+
     return (
         <div
-            className="group relative flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 cursor-pointer
+            className="group relative flex flex-col rounded-xl border border-border/70 bg-card cursor-pointer overflow-hidden
                 transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
             onClick={handleClick}
         >
-            {file.isPinned && <PinIcon className="absolute top-2.5 left-2.5 size-3 text-amber-500" />}
+            {file.isPinned && <PinIcon className="absolute top-2.5 left-2.5 size-3 text-amber-500 z-10 drop-shadow-sm" />}
 
-            <div className={`flex size-11 items-center justify-center rounded-xl self-start ${mimeColorMap[mimeGroup(file.mimeType)]}`}>
-                <FileTypeIcon mime={file.mimeType} />
+            {isImage ? (
+                <div className="h-28 w-full bg-muted/20 relative border-b border-border/50">
+                    <img src={imageUrl} alt={file.originalName} className="object-cover w-full h-full" loading="lazy" />
+                </div>
+            ) : (
+                <div className="h-28 w-full bg-muted/10 relative flex items-center justify-center border-b border-border/50">
+                    <div className={`flex size-14 items-center justify-center rounded-xl ${mimeColorMap[mimeGroup(file.mimeType)]}`}>
+                        <FileTypeIcon mime={file.mimeType} />
+                    </div>
+                </div>
+            )}
+
+            <div className="p-3 flex flex-col gap-1 min-w-0 bg-card">
+                <p className="text-[13px] font-semibold truncate leading-snug" title={file.originalName}>{file.originalName}</p>
+                <div className="flex items-center justify-between mt-auto pt-1">
+                    <p className="text-[11px] text-muted-foreground">{formatBytes(file.size)}</p>
+                    <p className="text-[11px] text-muted-foreground/70">{formatFileDate(file.updatedAt)}</p>
+                </div>
             </div>
 
-            <div className="flex flex-col gap-0.5 min-w-0">
-                <p className="text-[13px] font-semibold truncate leading-snug">{file.originalName}</p>
-                <p className="text-[11px] text-muted-foreground">{formatBytes(file.size)}</p>
-            </div>
-            <p className="text-[11px] text-muted-foreground/70 -mt-1">{formatFileDate(file.updatedAt)}</p>
-
-            <div className="absolute top-2.5 right-2.5" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+            <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-xs" className="opacity-0 group-hover:opacity-100 transition-opacity size-6 rounded-lg bg-background/80 backdrop-blur-sm border border-border/60 hover:bg-background">
+                        <Button variant="ghost" size="icon-xs" className="opacity-0 group-hover:opacity-100 transition-opacity size-7 rounded-lg bg-background/80 backdrop-blur-sm border border-border/60 hover:bg-background">
                             <MoreVerticalIcon className="size-3" />
                         </Button>
                     </DropdownMenuTrigger>

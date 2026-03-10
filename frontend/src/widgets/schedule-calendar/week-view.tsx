@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import type { LessonInstance } from "@/entities/schedule/model/types";
+import type { Deadline } from "@/entities/deadline/model/types";
 import { PX_PER_MIN, toMin, minToTop, durationToPx } from "./schedule.utils";
 import { TimeColumn } from "@/shared/ui/schedule/time-column";
 import { NowLine } from "@/shared/ui/schedule/now-line";
@@ -9,6 +10,7 @@ interface Props {
     weekDays: Date[];
     weekdayLabels: string[];
     byDate: Record<string, LessonInstance[]>;
+    deadlinesByDate: Record<string, Deadline[]>;
     now: Date;
     slotStart: number;
     slotEnd: number;
@@ -16,11 +18,12 @@ interface Props {
     gridHeight: number;
     showNowLine: boolean;
     onDayClick: (d: Date) => void;
+    onLessonClick?: (lessonId: number) => void;
 }
 
 export function WeekView({
-    weekDays, weekdayLabels, byDate, now,
-    slotStart, slotEnd, hours, gridHeight, showNowLine, onDayClick,
+    weekDays, weekdayLabels, byDate, deadlinesByDate, now,
+    slotStart, slotEnd, hours, gridHeight, showNowLine, onDayClick, onLessonClick,
 }: Props) {
     const todayStr = format(new Date(), "yyyy-MM-dd");
 
@@ -33,31 +36,39 @@ export function WeekView({
                     const dateStr = format(day, "yyyy-MM-dd");
                     const isToday = dateStr === todayStr;
                     const count = (byDate[dateStr] ?? []).length;
+                    const dls = deadlinesByDate[dateStr] ?? [];
                     return (
                         <button
                             key={dateStr}
                             onClick={() => onDayClick(day)}
                             className={[
                                 "flex-1 flex flex-col items-center justify-center py-3 gap-0.5 transition-colors border-l border-border",
-                                "hover:bg-muted/30",
+                                "hover:bg-muted/30 relative",
                                 isToday ? "bg-primary/5" : "",
                             ].join(" ")}
                         >
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                                 {weekdayLabels[idx]}
                             </span>
-                            <span className={[
-                                "w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors",
-                                isToday ? "bg-primary text-primary-foreground shadow-md shadow-primary/30" : "text-foreground",
-                            ].join(" ")}>
-                                {format(day, "d")}
-                            </span>
+
+                            <div className="relative">
+                                <span className={[
+                                    "w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors",
+                                    isToday ? "bg-primary text-primary-foreground shadow-md shadow-primary/30" : "text-foreground",
+                                ].join(" ")}>
+                                    {format(day, "d")}
+                                </span>
+                                {dls.length > 0 && (
+                                    <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm border border-background" title={`${dls.length} дедлайнів`} />
+                                )}
+                            </div>
+
                             {count > 0 ? (
                                 <span className="text-[10px] text-muted-foreground tabular-nums">
                                     {count} пар{count === 1 ? "а" : count < 5 ? "и" : ""}
                                 </span>
                             ) : (
-                                <span className="text-[10px] text-muted-foreground/30">—</span>
+                                <span className="text-[10px] text-muted-foreground/30 text-transparent select-none">—</span>
                             )}
                         </button>
                     );
@@ -103,6 +114,7 @@ export function WeekView({
                                             inst={inst}
                                             compact={durationToPx(sm, em) < 60}
                                             style={{ top: minToTop(sm, slotStart), height: durationToPx(sm, em) }}
+                                            onClick={inst.lessonId && onLessonClick ? () => onLessonClick(inst.lessonId!) : undefined}
                                         />
                                     );
                                 })}

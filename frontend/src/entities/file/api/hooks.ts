@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fileQueries, folderQueries } from "./queries";
+import { fileQueries, folderQueries, storageQueries } from "./queries";
 import type { CreateFolderPayload, UpdateFolderPayload, UpdateFilePayload } from "../model/types";
 
 // ─── Files ────────────────────────────────────────────────────────────────────
@@ -30,6 +30,7 @@ export function useUploadFile() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["files"] });
             qc.invalidateQueries({ queryKey: ["folders", "tree"] });
+            qc.invalidateQueries({ queryKey: ["storage", "info"] });
         },
     });
 }
@@ -50,6 +51,7 @@ export function useDeleteFile() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["files"] });
             qc.invalidateQueries({ queryKey: ["folders", "tree"] });
+            qc.invalidateQueries({ queryKey: ["storage", "info"] });
         },
     });
 }
@@ -87,4 +89,10 @@ export function useDeleteFolder() {
 
 export function useFolderTree() {
     return useQuery(folderQueries.tree());
+}
+
+// ─── Storage ──────────────────────────────────────────────────────────────────
+
+export function useStorageInfo() {
+    return useQuery(storageQueries.info());
 }

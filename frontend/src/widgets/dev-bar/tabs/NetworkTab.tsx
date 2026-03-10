@@ -95,7 +95,7 @@ export function NetworkTab({ entries, clear }: NetworkTabProps) {
     };
 
     const availableMethods = useMemo(() =>
-            [...new Set(entries.map(e => e.method))].sort(),
+        [...new Set(entries.map(e => e.method))].sort(),
         [entries]
     );
 
@@ -171,11 +171,10 @@ export function NetworkTab({ entries, clear }: NetworkTabProps) {
                         <button
                             key={method}
                             onClick={() => toggleMethodFilter(method)}
-                            className={`px-2 py-0.5 rounded text-[12px] font-mono transition-colors ${
-                                methodFilter.includes(method)
+                            className={`px-2 py-0.5 rounded text-[12px] font-mono transition-colors ${methodFilter.includes(method)
                                     ? `${methodColor[method] || "text-zinc-300"} bg-zinc-800`
                                     : "text-zinc-600 hover:text-zinc-400"
-                            }`}
+                                }`}
                         >
                             {method}
                         </button>
@@ -197,11 +196,10 @@ export function NetworkTab({ entries, clear }: NetworkTabProps) {
                         <button
                             key={status}
                             onClick={() => toggleStatusFilter(status)}
-                            className={`px-2 py-0.5 rounded text-[12px] font-mono transition-colors ${
-                                statusFilter.includes(status)
+                            className={`px-2 py-0.5 rounded text-[12px] font-mono transition-colors ${statusFilter.includes(status)
                                     ? "text-zinc-300 bg-zinc-800"
                                     : "text-zinc-600 hover:text-zinc-400"
-                            }`}
+                                }`}
                         >
                             {status}
                         </button>
@@ -232,13 +230,13 @@ export function NetworkTab({ entries, clear }: NetworkTabProps) {
                             }
                         })();
 
-                        const isExpanded = selectedEntry === e.id;
+                        const isExpanded = selectedEntry === String(e.id);
 
                         return (
                             <div key={e.id} className="border-b border-zinc-800/30">
                                 <div
                                     className="group flex items-center gap-2 px-3 py-2 hover:bg-zinc-800/30 transition-colors cursor-pointer"
-                                    onClick={() => setSelectedEntry(isExpanded ? null : e.id)}
+                                    onClick={() => setSelectedEntry(isExpanded ? null : String(e.id))}
                                 >
                                     <span className={`text-[14px] font-mono font-bold shrink-0 w-12 ${methodColor[e.method] ?? "text-zinc-400"}`}>
                                         {e.method}

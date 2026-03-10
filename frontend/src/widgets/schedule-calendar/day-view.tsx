@@ -2,6 +2,7 @@ import { CalendarDaysIcon, MapPinIcon, PlusIcon, UserIcon } from "lucide-react";
 import { format } from "date-fns";
 import { uk } from "date-fns/locale";
 import type { LessonInstance } from "@/entities/schedule/model/types";
+import type { Deadline } from "@/entities/deadline/model/types";
 import { PX_PER_MIN, toMin, minToTop, durationToPx, fmtTime } from "./schedule.utils";
 import { TimeColumn } from "@/shared/ui/schedule/time-column";
 import { NowLine } from "@/shared/ui/schedule/now-line";
@@ -12,6 +13,7 @@ import { ModeBadge } from "@/shared/ui/schedule/mode-badge";
 interface Props {
     dateStr: string;
     instances: LessonInstance[];
+    deadlines: Deadline[];
     now: Date;
     isToday: boolean;
     slotStart: number;
@@ -20,16 +22,17 @@ interface Props {
     gridHeight: number;
     showNowLine: boolean;
     onAddLesson: () => void;
+    onLessonClick?: (lessonId: number) => void;
 }
 
 export function DayView({
-    dateStr, instances, now, isToday, slotStart, slotEnd,
-    hours, gridHeight, showNowLine, onAddLesson,
+    dateStr, instances, deadlines, now, isToday, slotStart, slotEnd,
+    hours, gridHeight, showNowLine, onAddLesson, onLessonClick,
 }: Props) {
     const date = new Date(dateStr + "T12:00:00");
     const nowMin = now.getHours() * 60 + now.getMinutes();
 
-    if (instances.length === 0) {
+    if (instances.length === 0 && deadlines.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center pb-16">
                 <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center">
@@ -38,7 +41,7 @@ export function DayView({
                 <div>
                     <p className="font-bold text-foreground">Вільний день</p>
                     <p className="text-sm text-muted-foreground mt-1 capitalize">
-                        {format(date, "EEEE, d MMMM", { locale: uk })} — занять немає
+                        {format(date, "EEEE, d MMMM", { locale: uk })} — занять та дедлайнів немає
                     </p>
                 </div>
                 <button
@@ -78,6 +81,7 @@ export function DayView({
                                     inst={inst}
                                     compact={false}
                                     style={{ top: minToTop(sm, slotStart), height: durationToPx(sm, em) }}
+                                    onClick={inst.lessonId && onLessonClick ? () => onLessonClick(inst.lessonId!) : undefined}
                                 />
                             );
                         })}
@@ -87,9 +91,29 @@ export function DayView({
 
             {/* Right panel */}
             <div className="hidden lg:flex w-60 xl:w-72 shrink-0 flex-col gap-2 pb-4 pr-1">
-                <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1 pt-0.5 sticky top-0 bg-background">
+                <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60 mb-3 pt-0.5 sticky top-0 bg-background z-10 block">
                     {format(date, "EEEE, d MMMM", { locale: uk })}
                 </p>
+
+                {deadlines.length > 0 && (
+                    <div className="mb-4">
+                        <div className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm" />
+                            Дедлайни ({deadlines.length})
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            {deadlines.map(dl => (
+                                <div key={dl.id} className="p-3 rounded-xl border border-red-500/20 bg-red-500/5 relative overflow-hidden group">
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500/50" />
+                                    <p className="text-xs font-bold leading-tight pl-1 text-foreground">{dl.title}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-1 pl-1 font-medium">
+                                        До {format(new Date(dl.dueAt), "HH:mm")}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {instances.map((inst, ii) => {
                     const accent = inst.subject?.color ?? "#6366f1";

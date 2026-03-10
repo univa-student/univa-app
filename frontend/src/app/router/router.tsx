@@ -15,6 +15,7 @@ import { RegisterPage } from "@/pages/auth/register.page.tsx";
 import { AuthGuard } from "@/processes/auth-guard/auth-guard.tsx";
 import { GuestGuard } from "@/processes/guest-guard/guest-guard.tsx";
 import { SubjectsPage } from "@/pages/schedule/subjects/subjects.page.tsx";
+import { SubjectDetailPage } from "@/pages/schedule/subjects/subject-detail.page.tsx";
 import { TodoPage } from "@/pages/dashboard/organizer/todo.page.tsx";
 import { SchedulePage } from "@/pages/schedule/schedule.page.tsx";
 import { PlaceholderPage } from "@/pages/dashboard/placeholder.page.tsx";
@@ -157,6 +158,24 @@ export const router = createBrowserRouter([
                         { label: "Предмети" },
                     ]}>
                         <SubjectsPage />
+                    </DashboardLayout>
+                </AuthGuard>
+            </LazyBoundary>
+        ),
+        errorElement: <RouterErrorPage />,
+    },
+    {
+        path: "/dashboard/schedule/subjects/:id",
+        element: (
+            <LazyBoundary>
+                <AuthGuard>
+                    <DashboardLayout breadcrumbs={[
+                        { label: "Головна", href: "/dashboard" },
+                        { label: "Розклад" },
+                        { label: "Предмети", href: "/dashboard/schedule/subjects" },
+                        { label: "Деталі" },
+                    ]}>
+                        <SubjectDetailPage />
                     </DashboardLayout>
                 </AuthGuard>
             </LazyBoundary>

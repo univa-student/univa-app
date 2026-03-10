@@ -53,6 +53,12 @@ export function useDeleteSubject() {
 
 // ─── Lessons ──────────────────────────────────────────────────────────────────
 
+export function useLesson(id: number | null) {
+    return useQuery({
+        ...lessonQueries.show(id!),
+        enabled: id != null && id > 0,
+    });
+}
 export function useCreateLesson() {
     const qc = useQueryClient();
     return useMutation({

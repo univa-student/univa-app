@@ -9,14 +9,16 @@ interface EventCardProps {
     inst: LessonInstance;
     style?: React.CSSProperties;
     compact?: boolean;
+    onClick?: () => void;
 }
 
-export function EventCard({ inst, style, compact }: EventCardProps) {
+export function EventCard({ inst, style, compact, onClick }: EventCardProps) {
     const accent = inst.subject?.color ?? "#6366f1";
     const isExam = inst.source === "exam";
 
     return (
         <div
+            onClick={onClick}
             className="absolute left-1 right-1 rounded-xl overflow-hidden transition-all duration-150 hover:z-30 hover:shadow-xl hover:-translate-y-px cursor-pointer select-none"
             style={{
                 ...style,

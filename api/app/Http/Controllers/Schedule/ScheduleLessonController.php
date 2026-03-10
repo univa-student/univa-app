@@ -17,6 +17,13 @@ class ScheduleLessonController extends Controller
         private readonly ScheduleService $service,
     ) {}
 
+    public function show(ScheduleLesson $lesson): JsonResponse
+    {
+        $lesson->load(['subject', 'lessonType', 'deliveryMode', 'recurrenceRule']);
+
+        return ApiResponse::ok('Lesson retrieved.', $lesson);
+    }
+
     public function store(StoreScheduleLessonRequest $request): JsonResponse
     {
         try {

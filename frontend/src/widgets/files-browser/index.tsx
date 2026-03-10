@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import {
     SearchIcon, LayoutGridIcon, LayoutListIcon,
-    FolderIcon, ChevronRightIcon, HomeIcon,
+    FolderIcon, ChevronRightIcon, HomeIcon, UploadCloudIcon
 } from "lucide-react";
 import { Input } from "@/shared/shadcn/ui/input";
 import { Button } from "@/shared/shadcn/ui/button";
@@ -224,11 +224,26 @@ export function FilesBrowser() {
 
                 {/* Drop zone + content */}
                 <div
-                    className={`relative flex-1 min-h-[200px] rounded-2xl transition-all duration-200 ${dragOver ? "bg-primary/4 ring-2 ring-dashed ring-primary/40 ring-offset-2" : ""}`}
+                    className={`relative flex-1 min-h-[200px] rounded-2xl transition-all duration-200 ${dragOver ? "bg-muted/30" : ""}`}
                     onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                    onDragLeave={() => setDragOver(false)}
+                    onDragLeave={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                            setDragOver(false);
+                        }
+                    }}
                     onDrop={handleDrop}
                 >
+                    {dragOver && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl bg-background/60 backdrop-blur-sm border-2 border-dashed border-primary pointer-events-none">
+                            <div className="flex flex-col items-center gap-3 text-primary animate-in zoom-in-95 duration-200">
+                                <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
+                                    <UploadCloudIcon className="size-8" />
+                                </div>
+                                <p className="font-semibold text-lg text-foreground">Відпустіть файли щоб завантажити</p>
+                                <p className="text-sm text-primary font-medium">Завантаження розпочнеться автоматично</p>
+                            </div>
+                        </div>
+                    )}
                     {isLoading && (
                         <div className={`grid gap-3 ${viewMode === "grid" ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"}`}>
                             {Array.from({ length: 8 }).map((_, i) => (

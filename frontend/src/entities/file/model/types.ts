@@ -60,3 +60,8 @@ export interface UpdateFilePayload {
     folderId?: number | null;
     isPinned?: boolean;
 }
+
+export interface StorageInfoResponse {
+    used: number;
+    limit: number;
+}

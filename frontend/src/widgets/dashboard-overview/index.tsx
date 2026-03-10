@@ -1,81 +1,57 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-    CalendarDaysIcon, ClockIcon, MessageSquareIcon, FolderOpenIcon,
-    BotIcon, PlusIcon, AlertCircleIcon, UsersIcon,
-    FileTextIcon, FileSpreadsheetIcon, FileIcon,
-    ArrowRightIcon, TrendingUpIcon, BookOpenIcon, SparklesIcon,
-    CheckCircle2Icon, StickyNoteIcon, BarChart3Icon, ZapIcon,
-    FilePenLineIcon, PresentationIcon,
+    CalendarDaysIcon, ClockIcon, FolderOpenIcon,
+    AlertCircleIcon, ArrowRightIcon, TrendingUpIcon,
+    BookOpenIcon, CheckCircle2Icon, AlertTriangleIcon,
+    CalendarCheckIcon, MapPinIcon, FileTextIcon,
+    FileSpreadsheetIcon, FileIcon, PresentationIcon,
+    HardDriveIcon, GraduationCapIcon,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { format, formatDistanceToNow } from "date-fns";
+import { uk } from "date-fns/locale";
 import {
     Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from "@/shared/shadcn/ui/card.tsx";
 import { Badge } from "@/shared/shadcn/ui/badge.tsx";
 import { Button } from "@/shared/shadcn/ui/button.tsx";
 import { Separator } from "@/shared/shadcn/ui/separator.tsx";
+import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import { useAuthUser } from "@/entities/user/model/useAuthUser.ts";
+import { useDeadlinesStats, useDeadlines } from "@/entities/deadline/api/hooks";
+import { useSchedule, useSubjects } from "@/entities/schedule/api/hooks";
+import { useRecentFiles, useStorageInfo } from "@/entities/file/api/hooks";
+import { priorityConfig } from "@/shared/ui/deadlines/deadline-priority-badge";
 import { GreetingHeader } from "@/shared/ui/dashboard/greeting-header";
+import type { LessonInstance } from "@/entities/schedule/model/types";
+import type { FileItem } from "@/entities/file/model/types";
 
-// ── Mock data ────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────
 
-const stats = [
-    { label: "Дедлайни тижня", value: "6", icon: AlertCircleIcon, color: "text-red-500", bg: "bg-red-500/10" },
-    { label: "Пари сьогодні", value: "3", icon: CalendarDaysIcon, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Непрочитані", value: "12", icon: MessageSquareIcon, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { label: "Файлів збережено", value: "47", icon: FolderOpenIcon, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Виконано завдань", value: "18", icon: CheckCircle2Icon, color: "text-violet-500", bg: "bg-violet-500/10" },
-    { label: "Активні нотатки", value: "9", icon: StickyNoteIcon, color: "text-pink-500", bg: "bg-pink-500/10" },
-];
-
-const todaySchedule = [
-    { time: "08:30 – 10:05", subject: "Вища математика", room: "Ауд. 301", format: "Офлайн", teacher: "проф. Коваленко І.М." },
-    { time: "10:25 – 12:00", subject: "Програмування", room: "Ауд. 215", format: "Офлайн", teacher: "доц. Петренко А.В." },
-    { time: "13:00 – 14:35", subject: "Англійська мова", room: "Zoom", format: "Онлайн", teacher: "ст. викл. Браун О.С." },
-];
-
-const deadlines = [
-    { title: "Лабораторна з БД", subject: "Бази даних", due: "Завтра, 23:59", priority: "high" as const },
-    { title: "Есе: \"Цифрова трансформація\"", subject: "Економіка", due: "26 лют, 18:00", priority: "medium" as const },
-    { title: "Курсова — розділ 2", subject: "Програмування", due: "01 бер, 12:00", priority: "high" as const },
-    { title: "Тест з граматики", subject: "Англійська мова", due: "03 бер, 10:00", priority: "low" as const },
-    { title: "Контрольна з математики", subject: "Вища математика", due: "10 бер, 08:30", priority: "high" as const },
-    { title: "Залік з філософії", subject: "Філософія", due: "17 бер, 10:00", priority: "medium" as const },
-];
-
-const recentFiles = [
-    { name: "Лекція_05_Нормалізація.pdf", subject: "Бази даних", icon: FileTextIcon, date: "Вчора" },
-    { name: "Задачі_Інтеграли.docx", subject: "Вища математика", icon: FileIcon, date: "22 лют" },
-    { name: "Оцінки_семестр.xlsx", subject: "Загальне", icon: FileSpreadsheetIcon, date: "20 лют" },
-    { name: "Презентація_Курсова.pptx", subject: "Програмування", icon: PresentationIcon, date: "18 лют" },
-    { name: "Конспект_Філософія_03.pdf", subject: "Філософія", icon: FilePenLineIcon, date: "15 лют" },
-];
-
-const aiInsight = {
-    title: "Рекомендація AI",
-    message: "У тебе 2 високопріоритетні дедлайни цього тижня. Рекомендую почати з лабораторної з БД — на неї залишилось менше доби. Після цього зверни увагу на курсову — ще є час, але розділ 2 потребує дослідження. Гарного продуктивного дня! 🚀",
-    tip: "Почни підготовку до контрольної з математики заздалегідь — вона через 2 тижні.",
+const dashPriorityVariant: Record<string, "destructive" | "secondary" | "outline"> = {
+    critical: "destructive", high: "destructive", medium: "secondary", low: "outline",
 };
 
-const weeklyProgress = { done: 18, total: 26, label: "завдань виконано цього тижня" };
+function fmtTime(t: string | null | undefined) {
+    if (!t) return "";
+    return t.slice(0, 5);
+}
 
-const weekActivity = [
-    { day: "Пн", tasks: 5, done: 4 }, { day: "Вт", tasks: 3, done: 3 },
-    { day: "Ср", tasks: 6, done: 4 }, { day: "Чт", tasks: 4, done: 2 },
-    { day: "Пт", tasks: 3, done: 1 }, { day: "Сб", tasks: 2, done: 0 },
-    { day: "Нд", tasks: 1, done: 0 },
-];
+function fmtSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} Б`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} КБ`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} ГБ`;
+}
 
-const recentNotes = [
-    { emoji: "📐", title: "Формули інтегралів", snippet: "Таблиця основних інтегралів та правил підстановки...", date: "Сьогодні" },
-    { emoji: "💾", title: "SQL JOIN types", snippet: "INNER, LEFT, RIGHT, FULL — приклади та відмінності...", date: "Вчора" },
-    { emoji: "🧠", title: "Ідеї для курсової", snippet: "Тема: оптимізація запитів у реляційних СУБД...", date: "22 лют" },
-];
-
-const priorityConfig = {
-    high: { label: "Високий", variant: "destructive" as const },
-    medium: { label: "Середній", variant: "secondary" as const },
-    low: { label: "Низький", variant: "outline" as const },
-};
+function fileIcon(mimeType: string | null) {
+    if (!mimeType) return FileIcon;
+    if (mimeType.includes("pdf") || mimeType.includes("document") || mimeType.includes("text")) return FileTextIcon;
+    if (mimeType.includes("spreadsheet") || mimeType.includes("excel") || mimeType.includes("csv")) return FileSpreadsheetIcon;
+    if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) return PresentationIcon;
+    return FileIcon;
+}
 
 // ── Animations ───────────────────────────────────────────────
 
@@ -86,8 +62,82 @@ const item = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, trans
 
 export function DashboardOverview() {
     const authUser = useAuthUser();
-    const progressPct = Math.round((weeklyProgress.done / weeklyProgress.total) * 100);
-    const maxTasks = Math.max(...weekActivity.map(d => d.tasks));
+    const { data: dlStats, isLoading: isStatsLoading } = useDeadlinesStats();
+
+    // Today's schedule
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const { data: todayInstances = [], isLoading: isScheduleLoading } = useSchedule(todayStr, todayStr);
+
+    // Upcoming & overdue deadlines
+    const { data: upcomingDeadlines = [], isLoading: isDlLoading } = useDeadlines(
+        { timeFrame: "upcoming", sortBy: "dueAt", sortDir: "asc" }
+    );
+    const { data: overdueDeadlines = [] } = useDeadlines(
+        { timeFrame: "overdue", sortBy: "dueAt", sortDir: "asc" }
+    );
+
+    // Subjects map
+    const { data: subjects = [] } = useSubjects();
+    const subjectMap = new Map(subjects.map(s => [s.id, s.name]));
+
+    // Recent files
+    const { data: recentFiles = [], isLoading: isFilesLoading } = useRecentFiles();
+    const { data: storageInfo } = useStorageInfo();
+
+    // Sort today's lessons by start time
+    const todayLessons = useMemo(() =>
+        [...todayInstances].sort((a, b) => (a.startsAt ?? "").localeCompare(b.startsAt ?? "")),
+        [todayInstances]);
+
+    // Current/next lesson detection
+    const currentLesson = useMemo(() => {
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        return todayLessons.find(l => {
+            const startMin = parseInt(l.startsAt?.slice(0, 2) ?? "0") * 60 + parseInt(l.startsAt?.slice(3, 5) ?? "0");
+            const endMin = l.endsAt
+                ? parseInt(l.endsAt.slice(0, 2)) * 60 + parseInt(l.endsAt.slice(3, 5))
+                : startMin + 90;
+            return nowMin >= startMin && nowMin <= endMin;
+        }) ?? null;
+    }, [todayLessons]);
+
+    const nextLesson = useMemo(() => {
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        return todayLessons.find(l => {
+            const startMin = parseInt(l.startsAt?.slice(0, 2) ?? "0") * 60 + parseInt(l.startsAt?.slice(3, 5) ?? "0");
+            return startMin > nowMin;
+        }) ?? null;
+    }, [todayLessons]);
+
+    // Combine overdue + upcoming for the card — limited to 6
+    const allVisibleDeadlines = [...overdueDeadlines, ...upcomingDeadlines].slice(0, 6);
+
+    // Find the closest critical/high priority deadline
+    const closestCritical = [...overdueDeadlines, ...upcomingDeadlines].find(
+        dl => dl.priority === "critical" || dl.priority === "high"
+    );
+
+    // Stats cards
+    const stats = [
+        { label: "Прострочені", value: String(dlStats?.overdue ?? 0), icon: AlertTriangleIcon, color: "text-red-500", bg: "bg-red-500/10", pulse: (dlStats?.overdue ?? 0) > 0 },
+        { label: "На сьогодні", value: String(dlStats?.today ?? 0), icon: CalendarCheckIcon, color: "text-amber-500", bg: "bg-amber-500/10" },
+        { label: "На тиждень", value: String(dlStats?.thisWeek ?? 0), icon: CalendarDaysIcon, color: "text-blue-500", bg: "bg-blue-500/10" },
+        { label: "Найближчі", value: String(dlStats?.upcoming ?? 0), icon: ClockIcon, color: "text-orange-500", bg: "bg-orange-500/10" },
+        { label: "Виконано", value: String(dlStats?.completed ?? 0), icon: CheckCircle2Icon, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+        { label: "Всього", value: String(dlStats?.all ?? 0), icon: AlertCircleIcon, color: "text-violet-500", bg: "bg-violet-500/10" },
+    ];
+
+    // Deadline-derived weekly progress
+    const progressDone = dlStats?.completed ?? 0;
+    const progressTotal = dlStats?.all ?? 1;
+    const progressPct = progressTotal > 0 ? Math.round((progressDone / progressTotal) * 100) : 0;
+
+    // Storage info
+    const storageUsed = storageInfo?.used ?? 0;
+    const storageLimit = storageInfo?.limit ?? 1;
+    const storagePct = storageLimit > 0 ? Math.round((storageUsed / storageLimit) * 100) : 0;
 
     return (
         <motion.div className="flex flex-col gap-6" variants={container} initial="hidden" animate="visible">
@@ -100,152 +150,290 @@ export function DashboardOverview() {
             {/* ─── Stats grid ─── */}
             <motion.section variants={item}>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                    {stats.map((s) => (
-                        <Card key={s.label} size="sm">
-                            <CardHeader className="flex-row items-center justify-between pb-1">
-                                <CardDescription className="text-xs">{s.label}</CardDescription>
-                                <div className={`flex size-8 items-center justify-center rounded-lg ${s.bg}`}>
-                                    <s.icon className={`size-4 ${s.color}`} />
-                                </div>
-                            </CardHeader>
-                            <CardContent><p className="text-2xl font-bold">{s.value}</p></CardContent>
-                        </Card>
-                    ))}
+                    {isStatsLoading ? (
+                        Array.from({ length: 6 }).map((_, i) => (
+                            <Card key={i} size="sm">
+                                <CardHeader className="flex-row items-center justify-between pb-1">
+                                    <Skeleton className="h-4 w-20" />
+                                    <Skeleton className="size-8 rounded-lg" />
+                                </CardHeader>
+                                <CardContent><Skeleton className="h-8 w-12" /></CardContent>
+                            </Card>
+                        ))
+                    ) : (
+                        stats.map((s) => (
+                            <Card key={s.label} size="sm" className="transition-shadow hover:shadow-md">
+                                <CardHeader className="flex-row items-center justify-between pb-1">
+                                    <CardDescription className="text-xs">{s.label}</CardDescription>
+                                    <div className={`relative flex size-8 items-center justify-center rounded-lg ${s.bg}`}>
+                                        <s.icon className={`size-4 ${s.color}`} />
+                                        {s.pulse && (
+                                            <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-red-500 animate-pulse" />
+                                        )}
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-2xl font-bold">{s.value}</p>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
                 </div>
-            </motion.section>
-
-            {/* ─── AI insight ─── */}
-            <motion.section variants={item}>
-                <Card className="border-violet-200 dark:border-violet-500/20 bg-gradient-to-r from-violet-50/50 to-fuchsia-50/30 dark:from-violet-950/20 dark:to-fuchsia-950/10">
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="flex size-9 items-center justify-center rounded-lg bg-violet-500/10">
-                                    <SparklesIcon className="size-5 text-violet-500" />
-                                </div>
-                                <div>
-                                    <CardTitle className="text-base">{aiInsight.title}</CardTitle>
-                                    <CardDescription className="text-xs">Персональна рекомендація на основі твого розкладу</CardDescription>
-                                </div>
-                            </div>
-                            <Badge variant="secondary" className="gap-1"><ZapIcon className="size-3" /> AI</Badge>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-3">
-                        <p className="text-sm leading-relaxed">{aiInsight.message}</p>
-                        <div className="flex items-center gap-2 bg-violet-100/50 dark:bg-violet-900/20 rounded-lg px-3 py-2">
-                            <SparklesIcon className="size-3.5 text-violet-500 shrink-0" />
-                            <p className="text-xs text-muted-foreground">{aiInsight.tip}</p>
-                        </div>
-                        <div className="flex justify-end">
-                            <Button variant="outline" size="sm" className="gap-1 text-xs">
-                                <BotIcon className="size-3.5" /> Відкрити AI-помічника
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
             </motion.section>
 
             {/* ─── Schedule + Deadlines ─── */}
             <div className="grid gap-6 lg:grid-cols-2">
                 <motion.section variants={item}>
-                    <Card className="h-full">
+                    <Card className="h-full flex flex-col">
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2"><CalendarDaysIcon className="size-5 text-blue-500" /><CardTitle>Розклад на сьогодні</CardTitle></div>
-                                <Badge variant="secondary">{todaySchedule.length} пари</Badge>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="secondary">{todayLessons.length} {todayLessons.length === 1 ? "пара" : "пар"}</Badge>
+                                    <Button variant="ghost" size="sm" asChild className="hidden sm:flex text-xs gap-1">
+                                        <Link to="/dashboard/schedule/calendar">Розклад <ArrowRightIcon className="size-3" /></Link>
+                                    </Button>
+                                </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {todaySchedule.map((lesson, i) => (
-                                <div key={i}>
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="flex items-start gap-3">
-                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-                                                <ClockIcon className="size-4 text-blue-500" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium leading-tight">{lesson.subject}</p>
-                                                <p className="text-muted-foreground text-xs mt-0.5">{lesson.time} · {lesson.room}</p>
-                                                <p className="text-muted-foreground/70 text-[11px] mt-0.5">{lesson.teacher}</p>
-                                            </div>
-                                        </div>
-                                        <Badge variant={lesson.format === "Онлайн" ? "outline" : "secondary"} className="shrink-0">{lesson.format}</Badge>
+                        <CardContent className="flex flex-col gap-3 flex-1">
+                            {/* Current/next lesson highlight */}
+                            {(currentLesson || nextLesson) && (
+                                <div className={`rounded-xl border p-3 mb-1 ${currentLesson
+                                    ? "border-blue-500/30 bg-blue-500/5 dark:bg-blue-500/10"
+                                    : "border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10"
+                                    }`}>
+                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest mb-1 ${currentLesson ? "text-blue-500" : "text-amber-500"}`}>
+                                        {currentLesson ? (
+                                            <><span className="size-1.5 rounded-full bg-blue-500 animate-pulse" /> Зараз</>
+                                        ) : (
+                                            <><ClockIcon className="size-3" /> Наступна</>
+                                        )}
                                     </div>
-                                    {i < todaySchedule.length - 1 && <Separator className="mt-3" />}
+                                    {(() => {
+                                        const l = currentLesson ?? nextLesson!;
+                                        return (
+                                            <>
+                                                <p className="text-sm font-bold">{l.subject?.name ?? "Предмет"}</p>
+                                                <p className="text-xs text-muted-foreground mt-0.5">
+                                                    {fmtTime(l.startsAt)}–{fmtTime(l.endsAt)} · {l.location ?? ""} {l.deliveryMode ? `· ${l.deliveryMode.name}` : ""}
+                                                </p>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
-                            ))}
+                            )}
+
+                            {isScheduleLoading ? (
+                                Array.from({ length: 3 }).map((_, i) => (
+                                    <div key={i} className="flex items-start gap-3">
+                                        <Skeleton className="size-9 rounded-lg shrink-0" />
+                                        <div className="flex-1 space-y-1.5">
+                                            <Skeleton className="h-4 w-36" />
+                                            <Skeleton className="h-3 w-48" />
+                                        </div>
+                                    </div>
+                                ))
+                            ) : todayLessons.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <CalendarDaysIcon className="size-8 text-muted-foreground/20 mb-2" />
+                                    <p className="text-sm text-muted-foreground">На сьогодні пар немає 🎉</p>
+                                </div>
+                            ) : (
+                                todayLessons.map((lesson, i) => {
+                                    const accent = lesson.subject?.color ?? "#3b82f6";
+                                    const isExam = lesson.source === "exam";
+                                    return (
+                                        <div key={`${lesson.source}-${lesson.id}-${i}`}>
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-start gap-3">
+                                                    <div
+                                                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                                        style={{ backgroundColor: `${accent}18` }}
+                                                    >
+                                                        {isExam ? (
+                                                            <GraduationCapIcon className="size-4" style={{ color: accent }} />
+                                                        ) : (
+                                                            <BookOpenIcon className="size-4" style={{ color: accent }} />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium leading-tight">{lesson.subject?.name ?? "Предмет"}</p>
+                                                        <p className="text-muted-foreground text-xs mt-0.5">
+                                                            {fmtTime(lesson.startsAt)}–{fmtTime(lesson.endsAt)}
+                                                            {lesson.location && ` · ${lesson.location}`}
+                                                        </p>
+                                                        {lesson.subject?.teacherName && (
+                                                            <p className="text-muted-foreground/70 text-[11px] mt-0.5 flex items-center gap-1">
+                                                                {lesson.subject.teacherName}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    {lesson.lessonType && (
+                                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">{lesson.lessonType.name}</Badge>
+                                                    )}
+                                                    {lesson.deliveryMode && (
+                                                        <Badge variant={lesson.deliveryMode.code === "online" ? "secondary" : "outline"} className="text-[10px] px-1.5 py-0">
+                                                            {lesson.deliveryMode.name}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {i < todayLessons.length - 1 && <Separator className="mt-3" />}
+                                        </div>
+                                    );
+                                })
+                            )}
                         </CardContent>
                     </Card>
                 </motion.section>
 
                 <motion.section variants={item}>
-                    <Card className="h-full">
+                    <Card className="h-full flex flex-col">
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2"><AlertCircleIcon className="size-5 text-red-500" /><CardTitle>Найближчі дедлайни</CardTitle></div>
-                                <Badge variant="destructive">{deadlines.length}</Badge>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="destructive">{allVisibleDeadlines.length}</Badge>
+                                    <Button variant="ghost" size="sm" asChild className="hidden sm:flex text-xs gap-1">
+                                        <Link to="/dashboard/deadlines">Всі <ArrowRightIcon className="size-3" /></Link>
+                                    </Button>
+                                </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {deadlines.map((d, i) => {
-                                const prio = priorityConfig[d.priority];
-                                return (
-                                    <div key={i}>
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div>
-                                                <p className="text-sm font-medium leading-tight">{d.title}</p>
-                                                <p className="text-muted-foreground text-xs mt-0.5">{d.subject} · {d.due}</p>
-                                            </div>
-                                            <Badge variant={prio.variant} className="shrink-0">{prio.label}</Badge>
-                                        </div>
-                                        {i < deadlines.length - 1 && <Separator className="mt-3" />}
+                        <CardContent className="flex flex-col gap-3 flex-1">
+                            {/* Closest critical deadline highlight */}
+                            {closestCritical && (
+                                <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-3 mb-1">
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">
+                                        <AlertTriangleIcon className="size-3" />
+                                        Найближчий критичний
                                     </div>
-                                );
-                            })}
+                                    <p className="text-sm font-bold">{closestCritical.title}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        {subjectMap.get(closestCritical.subjectId) ?? "Предмет"} · {formatDistanceToNow(new Date(closestCritical.dueAt), { addSuffix: true, locale: uk })}
+                                    </p>
+                                </div>
+                            )}
+
+                            {isDlLoading ? (
+                                Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 space-y-1.5">
+                                            <Skeleton className="h-4 w-40" />
+                                            <Skeleton className="h-3 w-28" />
+                                        </div>
+                                        <Skeleton className="h-5 w-16 rounded-full" />
+                                    </div>
+                                ))
+                            ) : allVisibleDeadlines.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <CheckCircle2Icon className="size-8 text-emerald-500/50 mb-2" />
+                                    <p className="text-sm text-muted-foreground">Всі дедлайни виконано 🎉</p>
+                                </div>
+                            ) : (
+                                allVisibleDeadlines.map((d, i) => {
+                                    const isOverdue = new Date(d.dueAt) < new Date() && d.status !== "completed";
+                                    return (
+                                        <div key={d.id}>
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-sm font-medium leading-tight ${isOverdue ? "text-red-500" : ""}`}>{d.title}</p>
+                                                    <p className="text-muted-foreground text-xs mt-0.5">
+                                                        {subjectMap.get(d.subjectId) ?? "Предмет"} · {formatDistanceToNow(new Date(d.dueAt), { addSuffix: true, locale: uk })}
+                                                    </p>
+                                                </div>
+                                                <Badge variant={dashPriorityVariant[d.priority] ?? "outline"} className="shrink-0">
+                                                    {priorityConfig[d.priority]?.label ?? d.priority}
+                                                </Badge>
+                                            </div>
+                                            {i < allVisibleDeadlines.length - 1 && <Separator className="mt-3" />}
+                                        </div>
+                                    );
+                                })
+                            )}
                         </CardContent>
                     </Card>
                 </motion.section>
             </div>
 
-            {/* ─── Progress + Activity chart ─── */}
+            {/* ─── Progress + Recent files ─── */}
             <div className="grid gap-6 lg:grid-cols-2">
                 <motion.section variants={item}>
                     <Card className="h-full">
                         <CardHeader>
-                            <div className="flex items-center gap-2"><TrendingUpIcon className="size-5 text-emerald-500" /><CardTitle>Прогрес тижня</CardTitle></div>
-                            <CardDescription>{weeklyProgress.done} із {weeklyProgress.total} {weeklyProgress.label}</CardDescription>
+                            <div className="flex items-center gap-2"><TrendingUpIcon className="size-5 text-emerald-500" /><CardTitle>Прогрес дедлайнів</CardTitle></div>
+                            <CardDescription>{progressDone} із {progressTotal} дедлайнів виконано</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-2">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="font-medium">{progressPct}%</span>
-                                    <span className="text-muted-foreground text-xs">{weeklyProgress.done}/{weeklyProgress.total}</span>
+                            {isStatsLoading ? (
+                                <div className="flex flex-col gap-3">
+                                    <Skeleton className="h-4 w-full rounded-full" />
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)}
+                                    </div>
                                 </div>
-                                <div className="h-3 rounded-full bg-secondary overflow-hidden">
-                                    <motion.div
-                                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${progressPct}%` }}
-                                        transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                                    />
-                                </div>
-                            </div>
-                            <Separator />
-                            <div className="grid grid-cols-3 gap-3 text-center">
-                                <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-emerald-500/5">
-                                    <span className="text-lg font-bold text-emerald-500">{weeklyProgress.done}</span>
-                                    <span className="text-[10px] text-muted-foreground">Виконано</span>
-                                </div>
-                                <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-amber-500/5">
-                                    <span className="text-lg font-bold text-amber-500">{weeklyProgress.total - weeklyProgress.done}</span>
-                                    <span className="text-[10px] text-muted-foreground">В процесі</span>
-                                </div>
-                                <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-blue-500/5">
-                                    <span className="text-lg font-bold text-blue-500">{progressPct}%</span>
-                                    <span className="text-[10px] text-muted-foreground">Прогрес</span>
-                                </div>
-                            </div>
+                            ) : (
+                                <>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="font-medium">{progressPct}%</span>
+                                            <span className="text-muted-foreground text-xs">{progressDone}/{progressTotal}</span>
+                                        </div>
+                                        <div className="h-3 rounded-full bg-secondary overflow-hidden">
+                                            <motion.div
+                                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${progressPct}%` }}
+                                                transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <Separator />
+                                    <div className="grid grid-cols-3 gap-3 text-center">
+                                        <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-emerald-500/5">
+                                            <span className="text-lg font-bold text-emerald-500">{dlStats?.completed ?? 0}</span>
+                                            <span className="text-[10px] text-muted-foreground">Виконано</span>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-amber-500/5">
+                                            <span className="text-lg font-bold text-amber-500">{(dlStats?.all ?? 0) - (dlStats?.completed ?? 0)}</span>
+                                            <span className="text-[10px] text-muted-foreground">Залишилось</span>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-red-500/5">
+                                            <span className="text-lg font-bold text-red-500">{dlStats?.overdue ?? 0}</span>
+                                            <span className="text-[10px] text-muted-foreground">Прострочені</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Storage info */}
+                                    {storageInfo && (
+                                        <>
+                                            <Separator />
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex size-8 items-center justify-center rounded-lg bg-blue-500/10">
+                                                    <HardDriveIcon className="size-4 text-blue-500" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between text-xs mb-1">
+                                                        <span className="font-medium">Сховище</span>
+                                                        <span className="text-muted-foreground">{fmtSize(storageUsed)} / {fmtSize(storageLimit)}</span>
+                                                    </div>
+                                                    <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                                                        <motion.div
+                                                            className={`h-full rounded-full ${storagePct > 90 ? "bg-red-500" : storagePct > 70 ? "bg-amber-500" : "bg-blue-500"}`}
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${storagePct}%` }}
+                                                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </CardContent>
                     </Card>
                 </motion.section>
@@ -253,30 +441,54 @@ export function DashboardOverview() {
                 <motion.section variants={item}>
                     <Card className="h-full">
                         <CardHeader>
-                            <div className="flex items-center gap-2"><BarChart3Icon className="size-5 text-blue-500" /><CardTitle>Активність за тиждень</CardTitle></div>
-                            <CardDescription>Завдання по днях: заплановано / виконано</CardDescription>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2"><FolderOpenIcon className="size-5 text-emerald-500" /><CardTitle>Останні файли</CardTitle></div>
+                                <Button variant="ghost" size="sm" asChild className="text-xs gap-1">
+                                    <Link to="/dashboard/files">Всі файли <ArrowRightIcon className="size-3" /></Link>
+                                </Button>
+                            </div>
                         </CardHeader>
-                        <CardContent>
-                            <div className="flex items-end justify-between gap-2 h-36">
-                                {weekActivity.map((d, i) => {
-                                    const totalH = maxTasks > 0 ? (d.tasks / maxTasks) * 100 : 0;
-                                    const doneH = d.tasks > 0 ? (d.done / d.tasks) * 100 : 0;
-                                    const isToday = i === new Date().getDay() - 1;
+                        <CardContent className="flex flex-col gap-3">
+                            {isFilesLoading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <div key={i} className="flex items-center gap-3">
+                                        <Skeleton className="size-9 rounded-lg shrink-0" />
+                                        <div className="flex-1 space-y-1.5">
+                                            <Skeleton className="h-4 w-36" />
+                                            <Skeleton className="h-3 w-20" />
+                                        </div>
+                                        <Skeleton className="h-3 w-12" />
+                                    </div>
+                                ))
+                            ) : recentFiles.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <FolderOpenIcon className="size-8 text-muted-foreground/20 mb-2" />
+                                    <p className="text-sm text-muted-foreground">Файлів поки немає</p>
+                                </div>
+                            ) : (
+                                (recentFiles as FileItem[]).slice(0, 5).map((file, i) => {
+                                    const Icon = fileIcon(file.mimeType);
                                     return (
-                                        <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
-                                            <div className="w-full relative rounded-t-md overflow-hidden" style={{ height: `${totalH}%`, minHeight: 8 }}>
-                                                <motion.div className="absolute inset-0 bg-blue-100 dark:bg-blue-900/30 rounded-md" initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 0.5, delay: 0.1 * i }} style={{ originY: 1 }} />
-                                                <motion.div className="absolute bottom-0 left-0 right-0 bg-blue-500 rounded-md" initial={{ height: 0 }} animate={{ height: `${doneH}%` }} transition={{ duration: 0.6, delay: 0.15 * i + 0.2 }} style={{ minHeight: d.done > 0 ? 4 : 0 }} />
+                                        <div key={file.id}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                                                    <Icon className="size-4 text-muted-foreground" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">{file.originalName}</p>
+                                                    <p className="text-muted-foreground text-xs">
+                                                        {file.subject?.name ?? "Загальне"} · {fmtSize(file.size)}
+                                                    </p>
+                                                </div>
+                                                <span className="text-muted-foreground text-xs shrink-0">
+                                                    {formatDistanceToNow(new Date(file.createdAt), { addSuffix: true, locale: uk })}
+                                                </span>
                                             </div>
-                                            <span className={`text-[10px] font-medium ${isToday ? "text-primary font-semibold" : "text-muted-foreground"}`}>{d.day}</span>
+                                            {i < Math.min(recentFiles.length, 5) - 1 && <Separator className="mt-3" />}
                                         </div>
                                     );
-                                })}
-                            </div>
-                            <div className="flex items-center gap-4 mt-3 pt-3 border-t">
-                                <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><span className="size-2.5 rounded-sm bg-blue-100 dark:bg-blue-900/30" /> Заплановано</span>
-                                <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><span className="size-2.5 rounded-sm bg-blue-500" /> Виконано</span>
-                            </div>
+                                })
+                            )}
                         </CardContent>
                     </Card>
                 </motion.section>
@@ -290,71 +502,22 @@ export function DashboardOverview() {
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <Button variant="outline" className="h-auto flex-col gap-2 py-4"><BotIcon className="size-5" /><span className="text-xs">AI-помічник</span></Button>
-                            <Button variant="outline" className="h-auto flex-col gap-2 py-4"><PlusIcon className="size-5" /><span className="text-xs">Додати файл</span></Button>
-                            <Button variant="outline" className="h-auto flex-col gap-2 py-4"><BookOpenIcon className="size-5" /><span className="text-xs">Новий дедлайн</span></Button>
-                            <Button variant="outline" className="h-auto flex-col gap-2 py-4"><UsersIcon className="size-5" /><span className="text-xs">Груповий чат</span></Button>
+                            <Button variant="outline" className="h-auto flex-col gap-2 py-4 hover:border-primary/30 hover:bg-primary/5 transition-colors" asChild>
+                                <Link to="/dashboard/schedule/calendar"><CalendarDaysIcon className="size-5" /><span className="text-xs">Розклад</span></Link>
+                            </Button>
+                            <Button variant="outline" className="h-auto flex-col gap-2 py-4 hover:border-primary/30 hover:bg-primary/5 transition-colors" asChild>
+                                <Link to="/dashboard/deadlines"><AlertCircleIcon className="size-5" /><span className="text-xs">Дедлайни</span></Link>
+                            </Button>
+                            <Button variant="outline" className="h-auto flex-col gap-2 py-4 hover:border-primary/30 hover:bg-primary/5 transition-colors" asChild>
+                                <Link to="/dashboard/files"><FolderOpenIcon className="size-5" /><span className="text-xs">Файли</span></Link>
+                            </Button>
+                            <Button variant="outline" className="h-auto flex-col gap-2 py-4 hover:border-primary/30 hover:bg-primary/5 transition-colors" asChild>
+                                <Link to="/dashboard/settings"><BookOpenIcon className="size-5" /><span className="text-xs">Налаштування</span></Link>
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
             </motion.section>
-
-            {/* ─── Recent files + Notes ─── */}
-            <div className="grid gap-6 lg:grid-cols-2">
-                <motion.section variants={item}>
-                    <Card className="h-full">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2"><FolderOpenIcon className="size-5 text-emerald-500" /><CardTitle>Останні файли</CardTitle></div>
-                                <Button variant="ghost" size="sm" className="text-xs gap-1">Всі файли <ArrowRightIcon className="size-3" /></Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {recentFiles.map((file, i) => (
-                                <div key={i}>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                                            <file.icon className="size-4 text-muted-foreground" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium truncate">{file.name}</p>
-                                            <p className="text-muted-foreground text-xs">{file.subject}</p>
-                                        </div>
-                                        <span className="text-muted-foreground text-xs shrink-0">{file.date}</span>
-                                    </div>
-                                    {i < recentFiles.length - 1 && <Separator className="mt-3" />}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </motion.section>
-
-                <motion.section variants={item}>
-                    <Card className="h-full">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2"><StickyNoteIcon className="size-5 text-pink-500" /><CardTitle>Нотатки</CardTitle></div>
-                                <Button variant="ghost" size="sm" className="text-xs gap-1">Всі нотатки <ArrowRightIcon className="size-3" /></Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {recentNotes.map((note, i) => (
-                                <div key={i}>
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-pink-500/10 text-base">{note.emoji}</div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium leading-tight">{note.title}</p>
-                                            <p className="text-muted-foreground text-xs mt-0.5 line-clamp-1">{note.snippet}</p>
-                                        </div>
-                                        <span className="text-muted-foreground text-[11px] shrink-0">{note.date}</span>
-                                    </div>
-                                    {i < recentNotes.length - 1 && <Separator className="mt-3" />}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </motion.section>
-            </div>
         </motion.div>
     );
 }

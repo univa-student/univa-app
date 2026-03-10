@@ -2,7 +2,7 @@ import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import type {
     FileItem, FolderItem, CreateFolderPayload, UpdateFolderPayload, UpdateFilePayload,
-    FolderTreeResponse
+    FolderTreeResponse, StorageInfoResponse
 } from "../model/types";
 
 // ─── Files ────────────────────────────────────────────────────────────────────
@@ -117,6 +117,17 @@ export const folderQueries = {
         return {
             queryKey: ["folders", "tree"],
             queryFn: () => apiFetch<FolderTreeResponse>(ENDPOINTS.folders.tree),
+        };
+    },
+};
+
+// ─── Storage ──────────────────────────────────────────────────────────────────
+
+export const storageQueries = {
+    info() {
+        return {
+            queryKey: ["storage", "info"],
+            queryFn: () => apiFetch<StorageInfoResponse>(ENDPOINTS.storage.info),
         };
     },
 };
