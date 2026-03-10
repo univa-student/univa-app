@@ -14,9 +14,9 @@ export function AppearanceTab({ tab }: { tab: TabDef }) {
     if (isLoading) return <SettingsLoadingShell />
     if (!data) return null
 
-    const themeSettings = data.filter(s => s.key === "appearance.theme")
-    const langSettings = data.filter(s => s.key === "appearance.language")
-    const ifaceSettings = data.filter(s => !["appearance.theme", "appearance.language"].includes(s.key))
+    const themeSettings = data.filter(s => s.key === "theme")
+    const langSettings = data.filter(s => s.key === "language")
+    const ifaceSettings = data.filter(s => !["theme", "language"].includes(s.key))
 
     return (
         <TabShell showSave onSave={onSave} isSaving={isSaving} isDirty={isDirty} error={error}>

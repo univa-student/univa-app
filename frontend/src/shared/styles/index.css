@@ -47,126 +47,139 @@
     --radius: 0.75rem;
 
     /* Base */
-    --background: oklch(0.985 0.005 293);
-    --foreground: oklch(0.22 0.015 270);
+    --background: oklch(0.985 0.004 285);
+    --foreground: oklch(0.22 0.012 270);
 
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.22 0.015 270);
+    --card-foreground: oklch(0.22 0.012 270);
 
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.22 0.015 270);
+    --popover-foreground: oklch(0.22 0.012 270);
 
-    --primary: oklch(0.54 0.24 293);
+    /* Less saturated, more strict */
+    --primary: oklch(0.55 0.16 285);
     --primary-foreground: white;
 
-    --secondary: oklch(0.96 0.008 293);
-    --secondary-foreground: oklch(0.35 0.06 293);
+    --secondary: oklch(0.962 0.006 285);
+    --secondary-foreground: oklch(0.36 0.035 285);
 
-    --muted: oklch(0.95 0.006 293);
-    --muted-foreground: oklch(0.55 0.03 270);
+    --muted: oklch(0.952 0.004 285);
+    --muted-foreground: oklch(0.54 0.02 270);
 
-    --accent: oklch(0.94 0.04 293);
-    --accent-foreground: oklch(0.35 0.15 293);
+    --accent: oklch(0.94 0.018 285);
+    --accent-foreground: oklch(0.36 0.08 285);
 
     --destructive: oklch(0.58 0.22 29);
     --destructive-foreground: white;
 
-    --border: oklch(0.90 0.006 293);
-    --input: oklch(0.91 0.006 293);
+    --border: oklch(0.88 0.004 285);
+    --input: oklch(0.90 0.004 285);
     --ring: var(--primary);
 
-    --chart-1: oklch(0.54 0.24 293);
-    --chart-2: oklch(0.60 0.20 280);
-    --chart-3: oklch(0.66 0.17 265);
-    --chart-4: oklch(0.72 0.14 255);
-    --chart-5: oklch(0.78 0.10 250);
+    --chart-1: oklch(0.55 0.16 285);
+    --chart-2: oklch(0.60 0.13 270);
+    --chart-3: oklch(0.66 0.11 255);
+    --chart-4: oklch(0.72 0.09 245);
+    --chart-5: oklch(0.78 0.07 235);
 
-    --sidebar: oklch(0.97 0.006 293);
+    --sidebar: oklch(0.975 0.004 285);
     --sidebar-foreground: var(--foreground);
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: oklch(0.95 0.01 293);
+    --sidebar-accent: oklch(0.95 0.008 285);
     --sidebar-accent-foreground: var(--foreground);
     --sidebar-border: var(--border);
     --sidebar-ring: var(--ring);
 
-    --u-bg: #fafbfc;
-    --u-card: #ffffff;
-    --u-text: #111827;
-    --u-muted: #6b7280;
-    --u-faint: #d1d5db;
-    --u-border: #e5e7eb;
+    /* Aliases instead of separate parallel palette */
+    --u-bg: var(--background);
+    --u-card: var(--card);
+    --u-text: var(--foreground);
+    --u-muted: var(--muted-foreground);
+    --u-faint: var(--border);
+    --u-border: var(--border);
 
-    --u-accent: #7c3aed;
-    --u-accent-light: #ede9fe;
-    --u-accent-mid: #c4b5fd;
+    --u-accent: var(--primary);
+    --u-accent-light: color-mix(in oklch, var(--primary) 14%, white);
+    --u-accent-mid: color-mix(in oklch, var(--primary) 38%, white);
 
-    --u-gradient: linear-gradient(135deg, #7c3aed, #6366f1, #3b82f6);
+    --u-gradient: linear-gradient(
+            135deg,
+            color-mix(in oklch, var(--primary) 92%, black),
+            color-mix(in oklch, var(--primary) 72%, blue 18%),
+            color-mix(in oklch, var(--primary) 56%, cyan 14%)
+    );
 
-    /* для glow в OrbitHero */
-    --u-orbit-glow: rgba(124, 58, 237, 0.12);
+    --u-orbit-glow: color-mix(in srgb, var(--primary) 14%, transparent);
 }
 
 .dark {
-    --background: #0c0a14;
-    --foreground: #e8e4f0;
+    --background: #0f1014;
+    --foreground: #e7e9ee;
 
-    --card: #13101e;
-    --card-foreground: #e8e4f0;
+    --card: #151821;
+    --card-foreground: #e7e9ee;
 
-    --popover: #13101e;
-    --popover-foreground: #e8e4f0;
+    --popover: #151821;
+    --popover-foreground: #e7e9ee;
 
-    --secondary: #1a1528;
-    --secondary-foreground: #a89ec0;
+    --secondary: #1b1f2a;
+    --secondary-foreground: #a6adbb;
 
-    --muted: #150f22;
-    --muted-foreground: #8e85a0;
+    --muted: #171b24;
+    --muted-foreground: #8c94a3;
 
-    --border: #251e38;
-    --input: #251e38;
+    --border: #262c38;
+    --input: #262c38;
 
-    --primary: #8b5cf6;
+    /* More restrained accent */
+    --primary: #7a6af0;
     --primary-foreground: #ffffff;
 
-    --accent: #6d28d9;
-    --accent-foreground: #ede9fe;
+    --accent: #5e52c9;
+    --accent-foreground: #ece9ff;
 
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
 
-    --ring: #8b5cf6;
+    --ring: #7a6af0;
 
-    --chart-1: #8b5cf6;
-    --chart-2: #7c3aed;
-    --chart-3: #6366f1;
-    --chart-4: #818cf8;
-    --chart-5: #a5b4fc;
+    --chart-1: #7a6af0;
+    --chart-2: #6b6ff0;
+    --chart-3: #5d79eb;
+    --chart-4: #4d84e0;
+    --chart-5: #7997f2;
 
     /* Sidebar */
-    --sidebar: #0c0a14;
-    --sidebar-foreground: #e8e4f0;
-    --sidebar-primary: #8b5cf6;
+    --sidebar: #0f1014;
+    --sidebar-foreground: #e7e9ee;
+    --sidebar-primary: #7a6af0;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-ring: #8b5cf6;
-    --sidebar-accent: #1a1528;
-    --sidebar-accent-foreground: #e8e4f0;
-    --sidebar-border: #251e38;
+    --sidebar-ring: #7a6af0;
+    --sidebar-accent: #1b1f2a;
+    --sidebar-accent-foreground: #e7e9ee;
+    --sidebar-border: #262c38;
 
-    --u-bg: #0c0a14;
-    --u-card: #13101e;
-    --u-text: #f3f0fa;
-    --u-muted: #a89ec0;
-    --u-faint: #3b2d5c;
-    --u-border: #251e38;
+    /* Aliases */
+    --u-bg: var(--background);
+    --u-card: var(--card);
+    --u-text: var(--foreground);
+    --u-muted: var(--muted-foreground);
+    --u-faint: var(--border);
+    --u-border: var(--border);
 
-    --u-accent: #8b5cf6;
-    --u-accent-light: #312e81;
-    --u-accent-mid: #6366f1;
+    --u-accent: var(--primary);
+    --u-accent-light: color-mix(in oklch, var(--primary) 20%, black);
+    --u-accent-mid: color-mix(in oklch, var(--primary) 55%, #9fb3ff);
 
-    --u-gradient: linear-gradient(135deg, #7c3aed, #4f46e5, #2563eb);
+    --u-gradient: linear-gradient(
+            135deg,
+            color-mix(in oklch, var(--primary) 90%, black),
+            color-mix(in oklch, var(--primary) 72%, blue 18%),
+            color-mix(in oklch, var(--primary) 58%, cyan 12%)
+    );
 
-    --u-orbit-glow: rgba(139, 92, 246, 0.16);
+    --u-orbit-glow: color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
 @layer base {

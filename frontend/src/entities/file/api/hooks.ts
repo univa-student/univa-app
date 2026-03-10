@@ -27,7 +27,10 @@ export function useUploadFile() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (formData: FormData) => fileQueries.upload(formData).queryFn(),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ["files"] }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["files"] });
+            qc.invalidateQueries({ queryKey: ["folders", "tree"] });
+        },
     });
 }
 
@@ -44,7 +47,10 @@ export function useDeleteFile() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (id: number) => fileQueries.delete(id).queryFn(),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ["files"] }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["files"] });
+            qc.invalidateQueries({ queryKey: ["folders", "tree"] });
+        },
     });
 }
 

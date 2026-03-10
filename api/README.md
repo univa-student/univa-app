@@ -1,59 +1,975 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Univa Backend Code Recommendations
+## Рекомендації до коду бекенду
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> Backend: Laravel API + Sanctum  
+> Frontend: React SPA  
+> Project: Univa
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+# UA: Призначення
+# EN: Purpose
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Цей документ описує правила, підходи та рекомендації до написання бекенд-коду в проєкті **Univa**.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Його мета:
+- зробити код однаково зрозумілим для всіх розробників;
+- зберегти єдиний стиль архітектури;
+- спростити підтримку, тестування та масштабування;
+- зменшити кількість прихованої логіки, дублювання та нестабільних рішень.
 
-## Learning Laravel
+Ці рекомендації стосуються всіх модулів бекенду, зокрема:
+- Auth
+- Account
+- Files
+- Schedule
+- Settings
+- System
+- майбутніх модулів AI, Notifications, Group Spaces, Organizer
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# UA: Базові принципи
+# EN: Core Principles
 
-## Laravel Sponsors
+## 1. Один клас — одна відповідальність
+Кожен клас повинен вирішувати одну чітку задачу.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+**Приклади:**
+- Controller — приймає HTTP-запит і повертає HTTP-відповідь;
+- Request — валідує вхідні дані;
+- Action — виконує конкретний бізнес-сценарій;
+- Service — містить повторно використовувану доменну логіку;
+- Resource — форматує вихідні дані API;
+- Policy — перевіряє права доступу.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 2. Тонкі контролери
+Контролери не повинні містити бізнес-логіку.
 
-## Contributing
+### Добре:
+- авторизація;
+- виклик policy;
+- отримання валідованих даних;
+- виклик action/service;
+- повернення resource/response.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Погано:
+- складні `if/else`;
+- ручна робота з кількома моделями;
+- транзакції прямо в контролері;
+- формування великої відповіді вручну;
+- бізнес-правила всередині endpoint-методу.
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 3. Явна бізнес-логіка
+Будь-яка важлива бізнес-логіка має бути винесена в окремий шар.
 
-## Security Vulnerabilities
+**Використовуємо:**
+- `Actions` — для конкретного use case;
+- `Services` — для спільної логіки;
+- `Policies` — для доступів;
+- `Resources` — для відповіді API.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Не можна ховати критичну логіку:
+- у контролерах;
+- у ресурсах;
+- у middleware;
+- у випадкових helper-функціях;
+- у фронтенді.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 4. Прогнозованість важливіша за “магію”
+Код повинен бути очевидним.
+
+Краще:
+- явні назви методів;
+- короткі сервіси;
+- передбачуваний flow;
+- окремі перевірки;
+- зрозумілі DTO/масиви вхідних даних.
+
+Гірше:
+- занадто розумні абстракції;
+- приховані сайд-ефекти;
+- логіка в accessors/mutators без очевидної причини;
+- неочікувані зміни стану моделі під час простого читання.
+
+---
+
+## 5. Модульність
+Код має групуватись за доменом, а не хаотично.
+
+Поточна структура вже рухається в правильному напрямку:
+- `app/Http/Controllers/...`
+- `app/Http/Requests/...`
+- `app/Http/Resources/...`
+- `app/Actions/...`
+- `app/Services/...`
+- `app/Policies/...`
+- `app/Models/...`
+
+Цей підхід потрібно зберігати і розвивати.
+
+---
+
+# UA: Архітектурний підхід
+# EN: Architectural Approach
+
+## Загальна схема потоку
+```text
+Request -> Controller -> Policy -> Action -> Service/Model -> Resource -> API Response
+````
+
+## Ролі шарів
+
+### Controller
+
+Відповідає за HTTP-рівень:
+
+* прийом запиту;
+* виклик авторизації;
+* делегування бізнес-логіки;
+* повернення відповіді.
+
+### Request
+
+Відповідає за:
+
+* валідацію;
+* нормалізацію простих вхідних даних;
+* підготовку безпечного payload для action.
+
+### Action
+
+Відповідає за:
+
+* один завершений бізнес-сценарій;
+* координацію моделей, сервісів, транзакцій;
+* чіткий результат виконання.
+
+### Service
+
+Відповідає за:
+
+* повторно використовувану логіку;
+* допоміжні доменні операції;
+* обчислення, роботу з файлами, налаштуваннями, календарем тощо.
+
+### Model
+
+Відповідає за:
+
+* зв’язки;
+* scopes;
+* базові атрибути;
+* мінімальну доменну поведінку, якщо вона справді належить моделі.
+
+### Resource
+
+Відповідає лише за:
+
+* стабільне API-представлення даних;
+* формат полів;
+* вкладені ресурси.
+
+### Policy
+
+Відповідає лише за доступи:
+
+* хто може переглядати;
+* хто може створювати;
+* хто може оновлювати;
+* хто може видаляти.
+
+---
+
+# UA: Рекомендована структура модулів
+
+# EN: Recommended Module Structure
+
+Для кожного домену бажано тримати однаковий підхід:
+
+```text
+app/
+  Actions/
+    Files/
+    Schedule/
+    Settings/
+  Http/
+    Controllers/
+    Requests/
+    Resources/
+  Models/
+  Policies/
+  Services/
+```
+
+Для нових модулів бажано дотримуватись того ж патерну.
+
+**Приклад:**
+
+```text
+app/Actions/Schedule/CreateScheduleLessonAction.php
+app/Http/Controllers/Schedule/ScheduleLessonController.php
+app/Http/Requests/Schedule/StoreScheduleLessonRequest.php
+app/Http/Resources/Schedule/ScheduleLessonResource.php
+app/Models/Schedule/ScheduleLesson.php
+app/Policies/Schedule/ScheduleLessonPolicy.php
+app/Services/Schedule/ScheduleService.php
+```
+
+---
+
+# UA: Naming conventions
+
+# EN: Naming Rules
+
+## Класи
+
+Назви класів мають бути зрозумілими та конкретними.
+
+### Правильно:
+
+* `CreateApplicationAction`
+* `ScheduleService`
+* `StoreFolderRequest`
+* `SelectedSettingResource`
+* `FilePolicy`
+
+### Неправильно:
+
+* `Helper`
+* `CommonService`
+* `MainManager`
+* `UniversalClass`
+
+---
+
+## Методи
+
+Назва методу має описувати дію.
+
+### Правильно:
+
+* `create()`
+* `update()`
+* `delete()`
+* `syncPermissions()`
+* `generatePreview()`
+* `getUserSettings()`
+* `buildScheduleForWeek()`
+
+### Неправильно:
+
+* `handleStuff()`
+* `processData()`
+* `doWork()`
+* `run()`, якщо незрозуміло що саме виконується
+
+---
+
+## Змінні
+
+Назви змінних повинні бути предметними.
+
+### Добре:
+
+* `$validatedData`
+* `$currentUser`
+* `$scheduleLesson`
+* `$folderId`
+* `$applicationSettingValue`
+
+### Погано:
+
+* `$data1`
+* `$tmp`
+* `$result`
+* `$obj`
+* `$item`, якщо контекст неочевидний
+
+---
+
+# UA: Controllers
+
+# EN: Controller Rules
+
+## Controller повинен:
+
+* бути коротким;
+* працювати через dependency injection;
+* використовувати form request;
+* викликати policy;
+* делегувати логіку в action/service;
+* повертати resource або стандартизовану response-структуру.
+
+## Controller не повинен:
+
+* напряму будувати складні query з купою умов;
+* містити бізнес-розрахунки;
+* керувати кількома моделями вручну;
+* робити файлову логіку;
+* містити велику try/catch-логіку без потреби.
+
+### Приклад хорошого контролера:
+
+```php
+public function store(StoreFolderRequest $request, CreateFolderAction $action): JsonResponse
+{
+    $this->authorize('create', Folder::class);
+
+    $folder = $action->handle($request->validated());
+
+    return ApiResponse::success($folder, 'Folder created successfully.');
+}
+```
+
+---
+
+# UA: Requests
+
+# EN: Request Rules
+
+Form Request — єдина точка валідації HTTP-входу.
+
+## Request повинен:
+
+* містити тільки правила валідації;
+* за потреби — просту нормалізацію;
+* не містити великої бізнес-логіки;
+* повертати зрозумілі правила.
+
+## Рекомендації:
+
+* використовуй `exists`, `nullable`, `sometimes`, `boolean`, `array`, `date` чітко і свідомо;
+* не змішуй бізнес-умови з базовою валідацією;
+* складні перевірки винось в action/service або custom rule.
+
+### Добре:
+
+```php
+public function rules(): array
+{
+    return [
+        'name' => ['required', 'string', 'max:255'],
+        'parent_id' => ['nullable', 'integer', 'exists:folders,id'],
+    ];
+}
+```
+
+### Погано:
+
+* виконувати запити до кількох таблиць прямо в `rules()` без реальної потреби;
+* писати довгу бізнес-умову в `prepareForValidation()`.
+
+---
+
+# UA: Actions
+
+# EN: Action Rules
+
+Action — це окремий завершений сценарій.
+
+## Використовувати action потрібно коли:
+
+* створення/оновлення зачіпає кілька сутностей;
+* є транзакція;
+* є бізнес-послідовність кроків;
+* цей сценарій важливий як окрема операція.
+
+## Хороший action:
+
+* має чіткий вхід;
+* має чіткий результат;
+* не робить зайвого;
+* легко тестується.
+
+### Приклад:
+
+```php
+class CreateApplicationAction
+{
+    public function handle(array $data): Application
+    {
+        return DB::transaction(function () use ($data) {
+            $application = new Application();
+            $application->fill($data);
+            $application->save();
+
+            return $application;
+        });
+    }
+}
+```
+
+## Рекомендації:
+
+* один action = один сценарій;
+* не перетворюй action на “все-в-одному” сервіс;
+* якщо частина логіки повторюється в кількох actions — винеси її в service.
+
+---
+
+# UA: Services
+
+# EN: Service Rules
+
+Service — це шар повторного використання логіки.
+
+Він потрібен там, де одна й та сама логіка застосовується:
+
+* в кількох actions;
+* в різних контролерах;
+* в jobs/events/listeners;
+* у майбутніх інтеграціях.
+
+## Приклади з проєкту:
+
+* `FileService`
+* `FolderService`
+* `ScheduleService`
+* `SettingsService`
+
+## Service має:
+
+* не залежати від HTTP;
+* не повертати JsonResponse;
+* працювати з доменними об’єктами;
+* бути максимально нейтральним до способу виклику.
+
+## Не роби service, якщо:
+
+* логіка використовується лише в одному місці і дуже проста;
+* це просто обгортка над одним `Model::create()` без жодної цінності.
+
+---
+
+# UA: Models
+
+# EN: Model Rules
+
+Модель — це не смітник для всієї логіки.
+
+## У моделі доречно тримати:
+
+* relationships;
+* scopes;
+* casts;
+* constants/enums mapping;
+* короткі доменні методи, які природно належать сутності.
+
+## У моделі не варто тримати:
+
+* логіку API-відповідей;
+* великі бізнес-сценарії;
+* файлові операції;
+* інтеграції;
+* складні багатокрокові процеси.
+
+### Добре:
+
+```php
+public function subject(): BelongsTo
+{
+    return $this->belongsTo(Subject::class);
+}
+```
+
+### Добре:
+
+```php
+public function scopeOwnedBy(Builder $query, int $userId): Builder
+{
+    return $query->where('user_id', $userId);
+}
+```
+
+### Погано:
+
+* модель, яка сама керує всією системою доступів, файлами, нотифікаціями і логуванням одразу.
+
+---
+
+# UA: Policies
+
+# EN: Authorization Rules
+
+Усі перевірки доступу мають проходити через policy, якщо це доступ до сутності.
+
+## Policy повинна:
+
+* бути простою;
+* працювати з конкретною моделлю;
+* не містити важкої бізнес-логіки;
+* повертати чітке `true/false`.
+
+## Не можна:
+
+* дублювати ту саму умову доступу по контролерах;
+* ховати авторизацію в service без явного виклику policy;
+* змішувати доступ і бізнес-стан у випадкових місцях.
+
+---
+
+# UA: Resources
+
+# EN: API Resource Rules
+
+Resource — це єдина точка формування відповіді для сутності.
+
+## Resource повинна:
+
+* повертати стабільну структуру;
+* не виконувати складну бізнес-логіку;
+* не робити важкі запити;
+* не змінювати стан даних.
+
+## Рекомендації:
+
+* не повертати сирі моделі напряму;
+* не тягнути зайві поля;
+* використовувати вкладені ресурси для зв’язків.
+
+---
+
+# UA: API Response Format
+
+# EN: Response Format
+
+Проєкт вже має власний шар відповіді (`ApiResponse`, `ResponseState`), тому важливо дотримуватись єдиного формату.
+
+## Усі відповіді повинні бути:
+
+* консистентними;
+* передбачуваними для фронтенду;
+* однаково структурованими для success/error.
+
+### Бажаний формат:
+
+```json
+{
+  "status": 200,
+  "message": "Folder created successfully.",
+  "data": {}
+}
+```
+
+### Для помилок:
+
+```json
+{
+  "status": 422,
+  "message": "Validation failed.",
+  "errors": {
+    "name": ["The name field is required."]
+  }
+}
+```
+
+## Правила:
+
+* не повертати хаотичні структури;
+* не міксувати різні формати помилок;
+* текст повідомлень має бути коротким і зрозумілим.
+
+---
+
+# UA: Validation vs Business Rules
+
+# EN: Validation vs Domain Logic
+
+Дуже важливо розділяти:
+
+* **валідацію форми запиту**;
+* **бізнес-правила домену**.
+
+## Валідація відповідає на питання:
+
+* чи поле обов’язкове?
+* чи це число?
+* чи існує запис?
+* чи це дата?
+* чи формат правильний?
+
+## Бізнес-логіка відповідає на питання:
+
+* чи має користувач право створити це в такому стані?
+* чи можна редагувати об’єкт після публікації?
+* чи можна перемістити файл у цю папку?
+* чи не конфліктує новий розклад із поточним?
+
+**Висновок:**
+Form Request не повинен вирішувати весь домен.
+
+---
+
+# UA: Database Rules
+
+# EN: Database Rules
+
+## Основні правила
+
+* використовуй транзакції там, де змінюється кілька сутностей;
+* не роби зайві запити в циклах;
+* завжди думай про `N+1`;
+* використовуй eager loading там, де це потрібно;
+* не покладайся на випадковий порядок записів;
+* явно визначай індекси для полів пошуку та зв’язків.
+
+## Рекомендації:
+
+* складні зміни даних — через action + transaction;
+* масові оновлення — обережно, з розумінням side effects;
+* не змішуй бізнес-умови з сирими SQL-запитами без потреби;
+* якщо використовуєш raw SQL — поясни це коментарем.
+
+---
+
+# UA: Eloquent Recommendations
+
+# EN: Eloquent Recommendations
+
+## Добре:
+
+* scopes для повторюваних фільтрів;
+* relations для всіх зв’язків;
+* `with()` для оптимізації;
+* `firstOrFail()` якщо відсутність — це помилка;
+* `findOrFail()` для простого доступу по id;
+* casts для дат, json, bool.
+
+## Обережно:
+
+* масове `update()` без розуміння, що події моделі можуть не спрацювати;
+* приховані зміни через accessors/mutators;
+* важкі query прямо в ресурсах;
+* гігантські query builder ланцюжки в контролері.
+
+---
+
+# UA: Error Handling
+
+# EN: Error Handling
+
+## Помилки повинні бути:
+
+* контрольованими;
+* зрозумілими;
+* однаково обробленими;
+* без витоку внутрішніх деталей у production.
+
+## Рекомендації:
+
+* використовуй власні винятки для доменних ситуацій;
+* для HTTP-помилок користуйся єдиним підходом;
+* логуй технічні деталі окремо від користувацького повідомлення;
+* не кидай сирі `Exception` без сенсу.
+
+### Добре:
+
+* `UnivaHttpException`
+* доменні exception-класи під конкретні сценарії
+
+### Погано:
+
+```php
+throw new \Exception('Something went wrong');
+```
+
+---
+
+# UA: Logging
+
+# EN: Logging Rules
+
+Логування має допомагати відновити хід подій.
+
+## Логувати потрібно:
+
+* неочікувані помилки;
+* важливі фейли інтеграцій;
+* критичні зміни стану;
+* фонові задачі;
+* потенційно проблемні сценарії.
+
+## Не потрібно логувати:
+
+* усе підряд;
+* приватні дані користувача без потреби;
+* паролі, токени, секрети;
+* великі blob/file payloads.
+
+## Бажано:
+
+* correlation id;
+* контекст модуля;
+* id сутності;
+* user id;
+* назву сценарію.
+
+---
+
+# UA: File Handling
+
+# EN: File Module Recommendations
+
+Оскільки в Univa файловий модуль — один із ключових, для нього потрібна особлива дисципліна. Концепція проєкту прямо виділяє файлове сховище як окремий основний модуль MVP.
+
+## Правила:
+
+* логіка збереження файлів — тільки через service/adapter;
+* контролер не повинен напряму працювати з filesystem;
+* метадані файлу і фізичне збереження мають бути чітко розділені;
+* доступ до файлів — тільки через policy/permission layer;
+* назви файлів і MIME-типи потрібно перевіряти;
+* усі файлові операції повинні бути прогнозованими та безпечними.
+
+## Рекомендації:
+
+* використовувати `StorageServiceInterface`;
+* реалізації типу `LocalStorageAdapter` тримати ізольовано;
+* готувати архітектуру під майбутній `File Storage Service` у 3.0.
+
+---
+
+# UA: Schedule Module Recommendations
+
+# EN: Schedule Module Recommendations
+
+Розклад і дедлайни — центральний модуль продукту, тому тут критично важливі чистота логіки й консистентність дат, повторів, винятків та подій.
+
+## Правила:
+
+* окремо зберігати базове правило повторення;
+* окремо зберігати винятки;
+* не змішувати lesson, exam event, exception в одному хаотичному сценарії;
+* усі обчислення календаря виносити в service;
+* фронтенд не повинен сам “вгадувати” логіку повторів.
+
+## Рекомендації:
+
+* єдине джерело істини для recurrence logic;
+* окремі action для create/update/delete;
+* обчислення календарного представлення — в `ScheduleService`.
+
+---
+
+# UA: Settings Module Recommendations
+
+# EN: Settings Module Recommendations
+
+Модуль налаштувань у майбутньому стане ще важливішим через персоналізацію, AI та розширення ролей. У дереві вже є окремі моделі і сервіси для settings.
+
+## Правила:
+
+* не змішувати системні та користувацькі налаштування;
+* ключі налаштувань мають бути стабільними;
+* тип значення має бути контрольованим;
+* оновлення налаштувань повинно проходити через service;
+* валідація типів і допустимих значень повинна бути централізованою.
+
+---
+
+# UA: Security Recommendations
+
+# EN: Security Rules
+
+Оскільки бекенд працює як API із Sanctum, безпека не повинна бути “потім”.
+
+## Обов’язково:
+
+* авторизація для кожного захищеного endpoint;
+* перевірка policy для доступу до сутностей;
+* валідація всіх вхідних даних;
+* обмеження доступу до чужих ресурсів;
+* не довіряти id, які прийшли з фронтенду;
+* не повертати зайві поля користувача;
+* токени, секрети, env-дані ніколи не комітити.
+
+## Бажано:
+
+* rate limiting;
+* audit trail для важливих дій;
+* централізоване логування security-подій;
+* окремі правила для upload/download доступу.
+
+---
+
+# UA: Testing Recommendations
+
+# EN: Testing Rules
+
+Код, який не тестується, дуже швидко деградує.
+
+## Мінімум, що треба тестувати:
+
+* actions із бізнес-логікою;
+* policies;
+* services із критичними обчисленнями;
+* API endpoints для основних сценаріїв;
+* edge cases у schedule/files/settings.
+
+## Рекомендований підхід:
+
+* feature tests — для endpoint flow;
+* unit tests — для isolated логіки;
+* factories — для моделей;
+* seed/test helpers — для типових сценаріїв.
+
+## Пріоритет тестів:
+
+1. критичні бізнес-сценарії;
+2. доступи;
+3. створення/оновлення/видалення;
+4. edge cases;
+5. помилки та відмови.
+
+---
+
+# UA: Migration & Schema Rules
+
+# EN: Database Schema Rules
+
+## Рекомендації:
+
+* назви таблиць і колонок мають бути послідовними;
+* зовнішні ключі — всюди, де це доцільно;
+* soft deletes — тільки там, де це реально потрібно;
+* nullable поля — не “про всяк випадок”;
+* нові міграції не повинні ламати старі дані;
+* перейменування колонок/таблиць робити обережно і перевіряти під підтримувану БД.
+
+## При зміні схеми:
+
+* спочатку думай про сумісність;
+* продумуй міграцію даних;
+* не змішуй структурні зміни і велику бізнес-логіку в одній міграції.
+
+---
+
+# UA: Code Style
+
+# EN: Code Style Rules
+
+## Загальні правила стилю
+
+* PSR-12;
+* один клас — один файл;
+* короткі методи;
+* ранні повернення замість глибокої вкладеності;
+* мінімум вкладених `if`;
+* осмислені коментарі тільки там, де вони справді додають цінність.
+
+## Рекомендації:
+
+* не пиши “розумні” скорочення в назвах;
+* не використовуй однобуквені змінні;
+* не залишай закоментований мертвий код;
+* не використовуй helper-функції як смітник для всього.
+
+---
+
+# UA: Антипатерни
+
+# EN: Anti-patterns
+
+Нижче те, чого в коді Univa бути не повинно.
+
+## Заборонені або небажані підходи:
+
+* жирні контролери;
+* бізнес-логіка в request/resource;
+* “універсальні” helper-класи без домену;
+* дублювання однакової логіки в різних модулях;
+* сирі масиви без зрозумілої структури скрізь;
+* випадковий raw SQL без пояснення;
+* приховані side effects;
+* змішування доменної та HTTP-логіки;
+* використання моделі як god object;
+* методи на 200+ рядків;
+* сервіси, які знають усе про все.
+
+---
+
+# UA: Рекомендації для майбутнього масштабування
+
+# EN: Future Scalability Notes
+
+Roadmap Univa прямо передбачає розширення модульності у 2.0 та перехід до service architecture у 3.0, зокрема для notifications, files і bot integrations. Тому бекенд-код уже зараз треба писати так, ніби його частини в майбутньому будуть виноситись у окремі сервіси.
+
+## Уже зараз варто:
+
+* не прив’язувати бізнес-логіку до HTTP;
+* мати чіткі контракти між шарами;
+* ізолювати файлову логіку;
+* готувати подієвий підхід;
+* уніфікувати помилки;
+* уникати жорсткого зв’язування між модулями.
+
+## Це спростить:
+
+* винесення Notification Service;
+* винесення File Storage Service;
+* інтеграцію AI;
+* Telegram Bot;
+* розширення ролей і доступів;
+* масштабування платформи.
+
+---
+
+# UA: Pull Request Checklist
+
+# EN: PR Checklist
+
+Перед злиттям змін перевір:
+
+* [ ] Controller не містить бізнес-логіки
+* [ ] Валідація винесена в Form Request
+* [ ] Авторизація проходить через Policy
+* [ ] Сценарій винесений в Action або Service
+* [ ] Відповідь API консистентна
+* [ ] Немає дублювання коду
+* [ ] Немає N+1 проблем
+* [ ] Додані або оновлені тести
+* [ ] Назви класів і методів зрозумілі
+* [ ] Немає витоку секретів, токенів або приватних даних
+* [ ] Код відповідає структурі модуля
+* [ ] Зміни не ламають архітектурний напрям проєкту
+
+---
+
+# UA: Короткий підсумок
+
+# EN: Summary
+
+Хороший бекенд-код у Univa — це код, який:
+
+* легко читати;
+* легко тестувати;
+* легко змінювати;
+* не ховає критичну логіку;
+* не ламає модульність;
+* готовий до росту продукту.
+
+Головний принцип простий:
+
+**Контролер керує запитом.
+Action виконує сценарій.
+Service перевикористовує логіку.
+Model описує сутність.
+Policy перевіряє доступ.
+Resource форматує відповідь.**
+
+---
+
+# UA: Version
+# EN: Version
+
+**Current version:** 1.0
+**Project:** Univa Backend Standards
+**Stack:** Laravel API + Sanctum / React SPA
+
