@@ -1,0 +1,50 @@
+﻿src/features/deadlines/create-deadline/create-deadline-dialog.tsx(1,1): error TS6133: 'useState' is declared but its value is never read.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(2,25): error TS2307: Cannot find module 'react-hook-form' or its corresponding type declarations.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(4,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(9,1): error TS6192: All imports in import declaration are unused.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(15,80): error TS2307: Cannot find module '@/shared/shadcn/ui/form' or its corresponding type declarations.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(17,26): error TS2307: Cannot find module '@/shared/shadcn/ui/textarea' or its corresponding type declarations.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(18,79): error TS2307: Cannot find module '@/shared/shadcn/ui/select' or its corresponding type declarations.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(19,57): error TS2307: Cannot find module '@/shared/shadcn/ui/popover' or its corresponding type declarations.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(20,26): error TS2307: Cannot find module '@/shared/shadcn/ui/calendar' or its corresponding type declarations.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(28,22): error TS2353: Object literal may only specify known properties, and 'required_error' does not exist in type '{ error?: string | $ZodErrorMap<$ZodIssueInvalidType<unknown>> | undefined; message?: string | undefined; }'.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(57,34): error TS2345: Argument of type '{ due_at: string; status: "new"; subject_id: number; title: string; type: "presentation" | "other" | "exam" | "practice" | "lab" | "homework" | "essay" | "module" | "coursework" | "credit"; priority: "medium" | ... 2 more ... | "critical"; description?: string | undefined; }' is not assignable to parameter of type 'CreateDeadlinePayload'.
+  Property 'completed_at' is missing in type '{ due_at: string; status: "new"; subject_id: number; title: string; type: "presentation" | "other" | "exam" | "practice" | "lab" | "homework" | "essay" | "module" | "coursework" | "credit"; priority: "medium" | ... 2 more ... | "critical"; description?: string | undefined; }' but required in type 'CreateDeadlinePayload'.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(80,40): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(93,40): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(116,44): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(138,44): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(161,40): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(180,60): error TS7006: Parameter 'date' implicitly has an 'any' type.
+src/features/deadlines/create-deadline/create-deadline-dialog.tsx(197,40): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(2,25): error TS2307: Cannot find module 'react-hook-form' or its corresponding type declarations.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(4,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(9,25): error TS6196: 'DeadlinePriority' is declared but never used.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(9,43): error TS6196: 'DeadlineType' is declared but never used.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(15,80): error TS2307: Cannot find module '@/shared/shadcn/ui/form' or its corresponding type declarations.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(17,26): error TS2307: Cannot find module '@/shared/shadcn/ui/textarea' or its corresponding type declarations.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(18,79): error TS2307: Cannot find module '@/shared/shadcn/ui/select' or its corresponding type declarations.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(19,57): error TS2307: Cannot find module '@/shared/shadcn/ui/popover' or its corresponding type declarations.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(20,26): error TS2307: Cannot find module '@/shared/shadcn/ui/calendar' or its corresponding type declarations.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(28,22): error TS2353: Object literal may only specify known properties, and 'required_error' does not exist in type '{ error?: string | $ZodErrorMap<$ZodIssueInvalidType<unknown>> | undefined; message?: string | undefined; }'.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(101,40): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(114,40): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(137,44): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(159,44): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(183,44): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(202,64): error TS7006: Parameter 'date' implicitly has an 'any' type.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(219,44): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/features/deadlines/update-deadline/edit-deadline-dialog.tsx(243,40): error TS7031: Binding element 'field' implicitly has an 'any' type.
+src/shared/shadcn/components/app/app.page.sidebar.tsx(21,5): error TS2300: Duplicate identifier 'ListChecksIcon'.
+src/shared/shadcn/components/app/app.page.sidebar.tsx(22,5): error TS2300: Duplicate identifier 'ListChecksIcon'.
+src/widgets/deadlines-board/deadlines-filters.tsx(1,29): error TS6133: 'SlidersHorizontalIcon' is declared but its value is never read.
+src/widgets/deadlines-board/deadlines-filters.tsx(4,79): error TS2307: Cannot find module '@/shared/shadcn/ui/select' or its corresponding type declarations.
+src/widgets/deadlines-board/deadlines-filters.tsx(42,77): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/widgets/deadlines-board/deadlines-filters.tsx(52,73): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/widgets/deadlines-board/deadlines-filters.tsx(65,75): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/widgets/deadlines-board/deadlines-filters.tsx(77,71): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/widgets/deadlines-board/index.tsx(4,29): error TS2307: Cannot find module '@/entities/subject/api/hooks' or its corresponding type declarations.
+src/widgets/deadlines-board/index.tsx(73,56): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/widgets/dev-bar/tabs/NetworkTab.tsx(235,44): error TS2367: This comparison appears to be unintentional because the types 'string | null' and 'number' have no overlap.
+src/widgets/dev-bar/tabs/NetworkTab.tsx(241,69): error TS2345: Argument of type 'number | null' is not assignable to parameter of type 'SetStateAction<string | null>'.
+  Type 'number' is not assignable to type 'SetStateAction<string | null>'.

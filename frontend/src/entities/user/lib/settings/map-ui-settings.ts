@@ -33,19 +33,24 @@ export function mapUiSettings(items: UserSettingsApiResponse): UserSettings {
 
         switch (key) {
             case "theme":
+            case "appearance.theme":
                 out.theme = parseTheme(raw);
                 break;
 
             case "language":
+            case "appearance.language":
                 out.language = parseLanguage(raw);
                 break;
 
-            case "compact_mode":
+            case "compactMode":
             case "compact":
+            case "appearance.compactMode":
+            case "appearance.compact":
                 out.compact = parseBool(raw);
                 break;
 
             case "animations":
+            case "appearance.animations":
                 out.animations = parseBool(raw);
                 break;
 

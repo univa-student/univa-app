@@ -15,9 +15,14 @@ import { RegisterPage } from "@/pages/auth/register.page.tsx";
 import { AuthGuard } from "@/processes/auth-guard/auth-guard.tsx";
 import { GuestGuard } from "@/processes/guest-guard/guest-guard.tsx";
 import { SubjectsPage } from "@/pages/schedule/subjects/subjects.page.tsx";
+import { SubjectDetailPage } from "@/pages/schedule/subjects/subject-detail.page.tsx";
 import { TodoPage } from "@/pages/dashboard/organizer/todo.page.tsx";
 import { SchedulePage } from "@/pages/schedule/schedule.page.tsx";
 import { PlaceholderPage } from "@/pages/dashboard/placeholder.page.tsx";
+import { FilesPage } from "@/pages/files/files.page";
+import { ChatPage } from "@/pages/chat/chat.page";
+import { DeadlinesPage } from "@/pages/deadlines/deadlines.page";
+import { SpacesPage } from "@/pages/spaces/spaces.page";
 
 export const router = createBrowserRouter([
     {
@@ -160,6 +165,24 @@ export const router = createBrowserRouter([
         errorElement: <RouterErrorPage />,
     },
     {
+        path: "/dashboard/schedule/subjects/:id",
+        element: (
+            <LazyBoundary>
+                <AuthGuard>
+                    <DashboardLayout breadcrumbs={[
+                        { label: "Головна", href: "/dashboard" },
+                        { label: "Розклад" },
+                        { label: "Предмети", href: "/dashboard/schedule/subjects" },
+                        { label: "Деталі" },
+                    ]}>
+                        <SubjectDetailPage />
+                    </DashboardLayout>
+                </AuthGuard>
+            </LazyBoundary>
+        ),
+        errorElement: <RouterErrorPage />,
+    },
+    {
         path: "/dashboard/files",
         element: (
             <LazyBoundary>
@@ -168,7 +191,7 @@ export const router = createBrowserRouter([
                         { label: "Головна", href: "/dashboard" },
                         { label: "Файли" },
                     ]}>
-                        <PlaceholderPage title="Файли" />
+                        <FilesPage />
                     </DashboardLayout>
                 </AuthGuard>
             </LazyBoundary>
@@ -184,7 +207,39 @@ export const router = createBrowserRouter([
                         { label: "Головна", href: "/dashboard" },
                         { label: "Чати" },
                     ]}>
-                        <PlaceholderPage title="Чати" />
+                        <ChatPage />
+                    </DashboardLayout>
+                </AuthGuard>
+            </LazyBoundary>
+        ),
+        errorElement: <RouterErrorPage />,
+    },
+    {
+        path: "/dashboard/deadlines",
+        element: (
+            <LazyBoundary>
+                <AuthGuard>
+                    <DashboardLayout breadcrumbs={[
+                        { label: "Головна", href: "/dashboard" },
+                        { label: "Дедлайни" },
+                    ]}>
+                        <DeadlinesPage />
+                    </DashboardLayout>
+                </AuthGuard>
+            </LazyBoundary>
+        ),
+        errorElement: <RouterErrorPage />,
+    },
+    {
+        path: "/dashboard/spaces",
+        element: (
+            <LazyBoundary>
+                <AuthGuard>
+                    <DashboardLayout breadcrumbs={[
+                        { label: "Головна", href: "/dashboard" },
+                        { label: "Спейси" },
+                    ]}>
+                        <SpacesPage />
                     </DashboardLayout>
                 </AuthGuard>
             </LazyBoundary>

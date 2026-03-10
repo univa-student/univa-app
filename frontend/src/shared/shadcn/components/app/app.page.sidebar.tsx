@@ -20,6 +20,7 @@ import {
     BotIcon,
     ListChecksIcon,
     Settings2Icon,
+    AlertCircleIcon,
 } from "lucide-react"
 
 import { useAuthUser } from "@/entities/user/model/useAuthUser"
@@ -40,6 +41,12 @@ const navMain = [
             { title: "Календар", url: "/dashboard/schedule/calendar" },
             { title: "Предмети", url: "/dashboard/schedule/subjects" },
         ],
+    },
+    {
+        title: "Дедлайни",
+        url: "/dashboard/deadlines",
+        icon: <AlertCircleIcon />,
+        items: [],
     },
     {
         title: "Файли",

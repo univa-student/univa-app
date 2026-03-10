@@ -2,6 +2,7 @@ import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import type {
     LessonInstance,
+    ScheduleLesson,
     Subject,
     ExamEvent,
     LessonType,
@@ -56,6 +57,11 @@ export const subjectQueries = {
 // ─── Lessons ──────────────────────────────────────────────────────────────────
 
 export const lessonQueries = {
+    show: (id: number) => ({
+        queryKey: ["schedule", "lesson", id],
+        queryFn: () => apiFetch<ScheduleLesson>(ENDPOINTS.lessons.show(id)),
+        staleTime: 1000 * 60 * 5,
+    }),
     create: (payload: CreateLessonPayload) => ({
         queryKey: [] as const,
         queryFn: () => apiFetch<unknown>(ENDPOINTS.lessons.create, {

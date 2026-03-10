@@ -114,7 +114,7 @@ export function useSettingsDraft(groupId: number) {
                         if (newVal === undefined) return item
                         const match = item.values.find(v => v.value === newVal)
                         if (!match) return item
-                        return { ...item, selected_value_id: match.id }
+                        return { ...item, selectedValueId: match.id }
                     })
                 }
             )

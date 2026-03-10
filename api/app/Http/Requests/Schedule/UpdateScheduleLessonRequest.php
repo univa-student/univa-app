@@ -13,8 +13,8 @@ class UpdateScheduleLessonRequest extends FormRequest
         return [
             'subject_id'         => ['sometimes', 'integer', 'exists:subjects,id'],
             'weekday'            => ['sometimes', 'integer', 'min:1', 'max:7'],
-            'starts_at'          => ['sometimes', 'date_format:H:i'],
-            'ends_at'            => ['sometimes', 'date_format:H:i'],
+            'starts_at'          => ['sometimes', 'date_format:H:i:s'],
+            'ends_at'            => ['sometimes', 'date_format:H:i:s'],
             'lesson_type_id'     => ['sometimes', 'integer', 'exists:lesson_types,id'],
             'delivery_mode_id'   => ['sometimes', 'integer', 'exists:delivery_modes,id'],
             'location_text'      => ['nullable', 'string', 'max:255'],

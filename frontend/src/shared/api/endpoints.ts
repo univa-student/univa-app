@@ -29,6 +29,7 @@ export const ENDPOINTS = {
     },
     lessons: {
         create: `${API}/schedule-lessons`,
+        show: (id: number) => `${API}/schedule-lessons/${id}`,
         update: (id: number) => `${API}/schedule-lessons/${id}`,
         delete: (id: number) => `${API}/schedule-lessons/${id}`,
         createException: (lessonId: number) => `${API}/schedule-lessons/${lessonId}/exceptions`,
@@ -46,5 +47,41 @@ export const ENDPOINTS = {
         examTypes: `${API}/dictionaries/exam-types`,
         recurrenceRules: `${API}/dictionaries/recurrence-rules`,
     },
+    // ── Files module ─────────────────────────────────────────────────────────
+    files: {
+        list: (folderId?: number | null, subjectId?: number | null) => {
+            const params = new URLSearchParams();
+            if (folderId) params.set("folder_id", String(folderId));
+            if (subjectId) params.set("subject_id", String(subjectId));
+            const qs = params.toString();
+            return `${API}/files${qs ? `?${qs}` : ""}`;
+        },
+        upload: `${API}/files`,
+        show: (id: number) => `${API}/files/${id}`,
+        update: (id: number) => `${API}/files/${id}`,
+        delete: (id: number) => `${API}/files/${id}`,
+        download: (id: number) => `${API}/files/${id}/download`,
+        search: (q: string, subjectId?: number | null) => {
+            const params = new URLSearchParams({ q });
+            if (subjectId) params.set("subject_id", String(subjectId));
+            return `${API}/files/search?${params}`;
+        },
+        recent: `${API}/files/recent`,
+    },
+    storage: {
+        info: `${API}/storage/info`,
+    },
+    folders: {
+        list: (parentId?: number | null) =>
+            parentId ? `${API}/folders?parent_id=${parentId}` : `${API}/folders`,
+        tree: `${API}/folders/tree`,
+        create: `${API}/folders`,
+        update: (id: number) => `${API}/folders/${id}`,
+        delete: (id: number) => `${API}/folders/${id}`,
+    },
+    deadlines: {
+        base: "/api/v1/deadlines",
+        stats: "/api/v1/deadlines/stats",
+        id: (id: number) => `/api/v1/deadlines/${id}`,
+    },
 } as const;
-

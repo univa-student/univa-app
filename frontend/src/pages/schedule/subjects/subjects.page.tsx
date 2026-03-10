@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     BookOpenIcon, Edit2Icon, PlusIcon,
     SearchIcon, Trash2Icon, UserIcon,
@@ -159,11 +160,12 @@ interface CardProps {
 
 function SubjectCard({ subject, onEdit, onDelete }: CardProps) {
     const accent = subject.color || "#6366f1";
+    const navigate = useNavigate();
 
     return (
         <div
             className="group relative rounded-2xl border border-border overflow-hidden cursor-pointer transition-all duration-150 hover:shadow-md hover:-translate-y-px active:translate-y-0"
-            onClick={onEdit}
+            onClick={() => navigate(`/dashboard/schedule/subjects/${subject.id}`)}
         >
             {/* Top accent line */}
             <div
