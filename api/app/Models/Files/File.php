@@ -4,10 +4,12 @@ namespace App\Models\Files;
 
 use App\Enums\FileScope;
 use App\Enums\FileStatus;
+use App\Models\Deadlines\Deadline;
 use App\Models\Schedule\Subject;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -52,6 +54,11 @@ class File extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    public function deadlines(): BelongsToMany
+    {
+        return $this->belongsToMany(Deadline::class, 'deadline_file');
     }
 
     public function permissions(): HasMany

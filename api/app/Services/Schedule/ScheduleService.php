@@ -44,7 +44,7 @@ class ScheduleService
                   ->orWhere('active_to', '>=', $from->toDateString());
             })
             ->with([
-                'subject',
+                //'subject' => fn ($q) => $q->withCount('files'),
                 'lessonType',
                 'deliveryMode',
                 'recurrenceRule',
@@ -110,7 +110,8 @@ class ScheduleService
 
         $lesson->update($data);
         return $lesson->fresh([
-            'subject', 'lessonType', 'deliveryMode', 'recurrenceRule',
+            'subject' => fn ($q) => $q->withCount('files'),
+            'lessonType', 'deliveryMode', 'recurrenceRule',
         ]);
     }
 
@@ -249,6 +250,7 @@ class ScheduleService
             'name'         => $subject->name,
             'teacher_name' => $subject->teacher_name,
             'color'        => $subject->color,
+            'files_count'  => $subject->files_count ?? 0,
         ];
     }
 

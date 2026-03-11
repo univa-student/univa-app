@@ -53,9 +53,11 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' 
     Route::post('/subjects', [SubjectController::class, 'store']);
     Route::patch('/subjects/{subject}', [SubjectController::class, 'update']);
     Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy']);
+    Route::get('/subjects/{subject}/folder', [SubjectController::class, 'folder']);
 
     // Schedule lesson rules
     Route::get('/schedule-lessons/{lesson}', [ScheduleLessonController::class, 'show']);
+    Route::get('/schedule-lessons/{lesson}/materials', [ScheduleLessonController::class, 'materials']);
     Route::post('/schedule-lessons', [ScheduleLessonController::class, 'store']);
     Route::patch('/schedule-lessons/{lesson}', [ScheduleLessonController::class, 'update']);
     Route::delete('/schedule-lessons/{lesson}', [ScheduleLessonController::class, 'destroy']);

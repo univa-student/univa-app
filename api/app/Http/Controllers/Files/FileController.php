@@ -12,6 +12,7 @@ use App\Models\Files\File;
 use App\Services\Files\FileService;
 use App\Http\Resources\Files\FileResource;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
@@ -120,6 +121,10 @@ class FileController extends Controller
 
         if (array_key_exists('folder_id', $data)) {
             $file = $this->service->move($file, $data['folder_id']);
+        }
+
+        if (array_key_exists('subject_id', $data)) {
+            $file = $this->service->moveToSubject($file, $data['subject_id']);
         }
 
         if (isset($data['is_pinned'])) {

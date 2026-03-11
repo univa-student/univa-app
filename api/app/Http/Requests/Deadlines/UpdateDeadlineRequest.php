@@ -53,6 +53,8 @@ class UpdateDeadlineRequest extends FormRequest
             ])],
             'due_at' => ['sometimes', 'required', 'date'],
             'completed_at' => ['nullable', 'date'],
+            'file_ids' => ['sometimes', 'array'],
+            'file_ids.*' => ['integer', 'exists:files,id'],
         ];
     }
 }

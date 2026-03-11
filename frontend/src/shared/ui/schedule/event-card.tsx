@@ -3,7 +3,7 @@ import type { LessonInstance } from "@/entities/schedule/model/types";
 import { fmtTime } from "@/widgets/schedule-calendar/schedule.utils";
 import { ModeBadge } from "./mode-badge";
 import { LessonTypeIcon } from "./lesson-type-icon";
-import { MapPinIcon, UserIcon } from "lucide-react";
+import { MapPinIcon, UserIcon, PaperclipIcon } from "lucide-react";
 
 interface EventCardProps {
     inst: LessonInstance;
@@ -50,9 +50,19 @@ export function EventCard({ inst, style, compact, onClick }: EventCardProps) {
                     </div>
                 </div>
 
-                {/* Subject name */}
-                <div className="text-[14px] font-bold leading-tight" style={{ color: accent }}>
-                    {inst.subject?.name ?? "Предмет"}
+                {/* Subject name and indicators */}
+                <div className="flex items-start justify-between gap-1">
+                    <div className="text-[14px] font-bold leading-tight line-clamp-2" style={{ color: accent }}>
+                        {inst.subject?.name ?? "Предмет"}
+                    </div>
+                    {(inst.subject?.files_count ?? 0) > 0 && (
+                        <div
+                            className="flex items-center justify-center shrink-0 w-5 h-5 rounded-full bg-background/60 shadow-sm border border-border/30"
+                            title="Є матеріали"
+                        >
+                            <PaperclipIcon className="w-3 h-3" style={{ color: accent }} />
+                        </div>
+                    )}
                 </div>
 
                 {!compact && (

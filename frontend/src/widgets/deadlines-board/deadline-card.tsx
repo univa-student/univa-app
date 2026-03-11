@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { MoreVerticalIcon, PencilIcon, TrashIcon, CheckIcon } from "lucide-react";
+import { MoreVerticalIcon, PencilIcon, TrashIcon, CheckIcon, PaperclipIcon } from "lucide-react";
 import type { Deadline } from "@/entities/deadline/model/types";
 import { useDeleteDeadline, useUpdateDeadline } from "@/entities/deadline/api/hooks";
 import { DeadlineTypeIcon } from "@/shared/ui/deadlines/deadline-type-icon";
 import { DeadlinePriorityBadge } from "@/shared/ui/deadlines/deadline-priority-badge";
 import { DeadlineStatusBadge } from "@/shared/ui/deadlines/deadline-status-badge";
 import { EditDeadlineDialog } from "@/features/deadlines/update-deadline/edit-deadline-dialog";
+import { FilePreviewDialog } from "@/features/files/preview-file/file-preview-dialog";
+import type { FileItem } from "@/entities/file/model/types";
+import { isPreviewable } from "@/shared/ui/files/file-type-icon";
+import { API_BASE_URL } from "@/app/config/app.config";
+import { ENDPOINTS } from "@/shared/api/endpoints";
 
 import { Card } from "@/shared/shadcn/ui/card";
 import { Button } from "@/shared/shadcn/ui/button";
@@ -23,6 +28,7 @@ export function DeadlineCard({ deadline, subjectName, subjects, viewMode = "list
     const { mutate: deleteDeadline } = useDeleteDeadline();
     const { mutate: updateDeadline } = useUpdateDeadline();
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
 
     const isCompleted = deadline.status === "completed";
     const iconBg = isCompleted ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary";
@@ -56,12 +62,32 @@ export function DeadlineCard({ deadline, subjectName, subjects, viewMode = "list
         <Button
             variant="outline"
             size="sm"
-            className="h-9 gap-2 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950"
+            className="h-9 gap-2 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950 shrink-0"
             onClick={() => updateDeadline({ id: deadline.id, payload: { status: "completed" } })}
         >
             <CheckIcon className="size-4" />
             <span className="hidden sm:inline">Виконано</span>
         </Button>
+    );
+
+    const attachmentsList = deadline.files && deadline.files.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+            {deadline.files.map(f => (
+                <button
+                    key={f.id}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (isPreviewable(f.mimeType)) setPreviewFile(f);
+                        else window.open(`${API_BASE_URL}${ENDPOINTS.files.download(f.id)}`, "_blank");
+                    }}
+                    className="flex items-center gap-1 text-[11px] font-medium bg-muted/40 hover:bg-muted/80 border border-border/50 px-2 py-1 rounded-md transition-colors text-foreground max-w-[150px] sm:max-w-[200px]"
+                    title={f.originalName}
+                >
+                    <PaperclipIcon className="size-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{f.originalName}</span>
+                </button>
+            ))}
+        </div>
     );
 
     // ── GRID view ────────────────────────────────────────────
@@ -94,6 +120,7 @@ export function DeadlineCard({ deadline, subjectName, subjects, viewMode = "list
                         {deadline.description && (
                             <p className="text-xs text-muted-foreground/70 mt-1.5 line-clamp-2">{deadline.description}</p>
                         )}
+                        {attachmentsList}
                     </div>
 
                     {/* Badges row */}
@@ -172,6 +199,7 @@ export function DeadlineCard({ deadline, subjectName, subjects, viewMode = "list
                                 {deadline.description}
                             </p>
                         )}
+                        {attachmentsList}
                     </div>
 
                     {/* Right */}
@@ -190,6 +218,7 @@ export function DeadlineCard({ deadline, subjectName, subjects, viewMode = "list
                     subjects={subjects}
                 />
             )}
+            <FilePreviewDialog file={previewFile} open={!!previewFile} onOpenChange={(v) => !v && setPreviewFile(null)} />
         </>
     );
 }

@@ -11,8 +11,10 @@ use App\Http\Requests\Deadlines\UpdateDeadlineRequest;
 use App\Http\Resources\Deadlines\DeadlineResource;
 use App\Models\Deadlines\Deadline;
 use App\Services\Deadlines\DeadlineQueryService;
+use Carbon\Constants\UnitValue;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class DeadlineController extends Controller
 {
@@ -33,11 +35,11 @@ class DeadlineController extends Controller
         $this->authorize('viewAny', Deadline::class);
         $user = $request->user();
 
-        $now = \Illuminate\Support\Carbon::now();
-        $weekEnd = $now->copy()->endOfWeek(\Illuminate\Support\Carbon::SUNDAY);
+        $now = Carbon::now();
+        $weekEnd = $now->copy()->endOfWeek(UnitValue::SUNDAY);
 
         return ApiResponse::data([
-            'all' => $queryService->getFilteredDeadlines($user, [])->count(),
+            'all' => $queryService->getFilteredDeadlines($user)->count(),
             'today' => $queryService->getFilteredDeadlines($user, ['time_frame' => 'today'])->count(),
             'upcoming' => $queryService->getFilteredDeadlines($user, ['time_frame' => 'upcoming'])->count(),
             'overdue' => $queryService->getFilteredDeadlines($user, ['time_frame' => 'overdue'])->count(),
@@ -69,6 +71,8 @@ class DeadlineController extends Controller
     public function show(Deadline $deadline): JsonResponse
     {
         $this->authorize('view', $deadline);
+
+        $deadline->load(['subject', 'files']);
 
         return ApiResponse::data(new DeadlineResource($deadline));
     }

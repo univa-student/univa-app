@@ -29,6 +29,10 @@ class CreateDeadlineAction
 
             $deadline->save();
 
+            if (isset($data['file_ids'])) {
+                $deadline->files()->sync($data['file_ids']);
+            }
+
             return $deadline;
         });
     }

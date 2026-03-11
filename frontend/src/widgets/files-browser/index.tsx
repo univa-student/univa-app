@@ -113,10 +113,16 @@ function downloadUrl(fileId: number): string {
 
 // ── FilesBrowser Widget ───────────────────────────────────────
 
-export function FilesBrowser() {
+interface FilesBrowserProps {
+    baseFolder?: { id: number | null; name: string };
+}
+
+export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
-    const [folderStack, setFolderStack] = useState<{ id: number | null; name: string }[]>([{ id: null, name: "Мої файли" }]);
+
+    const defaultStack = baseFolder ? [baseFolder] : [{ id: null, name: "Мої файли" }];
+    const [folderStack, setFolderStack] = useState<{ id: number | null; name: string }[]>(defaultStack);
     const currentFolderId = folderStack[folderStack.length - 1].id;
 
     const [showUpload, setShowUpload] = useState(false);
@@ -142,7 +148,7 @@ export function FilesBrowser() {
 
     const navigateToFolder = useCallback((id: number | null, name: string) => {
         if (id === null) {
-            setFolderStack([{ id: null, name: "Мої файли" }]);
+            setFolderStack(baseFolder ? [baseFolder] : [{ id: null, name: "Мої файли" }]);
         } else {
             setFolderStack(s => {
                 const existingIdx = s.findIndex(c => c.id === id);
@@ -179,7 +185,7 @@ export function FilesBrowser() {
     return (
         <div className="flex min-h-0 flex-1 -mr-4 -mb-4">
             {/* ── Main content ───────────────────────────────────── */}
-            <div className="flex flex-1 flex-col min-w-0 p-5 pr-8 gap-4">
+            <div className="flex flex-1 flex-col min-w-0 p-5 gap-4 pr-[350px]">
                 {/* Header */}
                 <div className="flex items-center gap-3 flex-wrap">
                     <nav className="flex items-center gap-1 text-sm mr-auto flex-wrap">
@@ -188,12 +194,12 @@ export function FilesBrowser() {
                                 {i > 0 && <ChevronRightIcon className="size-3.5 text-border" />}
                                 {i < folderStack.length - 1 ? (
                                     <button onClick={() => goToBreadcrumb(i)} className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors">
-                                        {i === 0 && <HomeIcon className="size-3.5" />}
+                                        {i === 0 && !baseFolder && <HomeIcon className="size-3.5" />}
                                         {crumb.name}
                                     </button>
                                 ) : (
                                     <span className="flex items-center gap-1.5 font-semibold text-foreground px-1.5 py-0.5">
-                                        {i === 0 && <HomeIcon className="size-3.5" />}
+                                        {i === 0 && !baseFolder && <HomeIcon className="size-3.5" />}
                                         {crumb.name}
                                     </span>
                                 )}

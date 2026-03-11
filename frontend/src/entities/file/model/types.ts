@@ -58,6 +58,7 @@ export interface UpdateFolderPayload {
 export interface UpdateFilePayload {
     name?: string;
     folderId?: number | null;
+    subjectId?: number | null;
     isPinned?: boolean;
 }
 

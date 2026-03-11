@@ -39,6 +39,10 @@ class UpdateDeadlineAction
 
             $deadline->update($data);
 
+            if (array_key_exists('file_ids', $data)) {
+                $deadline->files()->sync($data['file_ids']);
+            }
+
             return $deadline->fresh();
         });
     }
