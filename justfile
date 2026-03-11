@@ -14,4 +14,15 @@ api-seed:
     docker exec gateway_php_fpm php artisan db:seed
 
 frontend-build:
-    npm run build
+    cd frontend && npm run build
+
+frontend-dev:
+    cd frontend && npm run dev
+
+api-dev:
+    cd api && php artisan serve
+
+start:
+    just frontend-dev &
+    just api-dev &
+    wait
