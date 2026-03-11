@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { format } from "date-fns";
 import {
     BookOpenIcon, CalendarIcon, ClockIcon,
@@ -26,7 +26,7 @@ const WEEKDAYS = [
 ];
 
 /* ── Field wrapper ── */
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
     return (
         <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
@@ -51,17 +51,17 @@ export function AddLessonModal({ onClose }: Props) {
     const today = format(new Date(), "yyyy-MM-dd");
 
     const [form, setForm] = useState({
-        subject_id:        0,
-        weekday:           1,
-        starts_at:         "08:30",
-        ends_at:           "10:05",
-        lesson_type_id:    0,
-        delivery_mode_id:  0,
-        location_text:     "",
-        note:              "",
-        recurrence_rule_id: 0,
-        active_from:       today,
-        active_to:         "",
+        subjectId:       0,
+        weekday:         1,
+        startsAt:        "08:30",
+        endsAt:          "10:05",
+        lessonTypeId:    0,
+        deliveryModeId:  0,
+        locationText:    "",
+        note:            "",
+        recurrenceRuleId: 0,
+        activeFrom:      today,
+        activeTo:        "",
     });
 
     const { data: subjects        = [] } = useSubjects();
@@ -75,28 +75,28 @@ export function AddLessonModal({ onClose }: Props) {
     }
 
     const isValid =
-        form.subject_id > 0 &&
-        form.lesson_type_id > 0 &&
-        form.delivery_mode_id > 0 &&
-        form.recurrence_rule_id > 0 &&
-        !!form.starts_at &&
-        !!form.ends_at;
+        form.subjectId > 0 &&
+        form.lessonTypeId > 0 &&
+        form.deliveryModeId > 0 &&
+        form.recurrenceRuleId > 0 &&
+        !!form.startsAt &&
+        !!form.endsAt;
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!isValid) return;
         await createLesson.mutateAsync({
-            subject_id:         form.subject_id,
-            weekday:            form.weekday,
-            starts_at:          form.starts_at,
-            ends_at:            form.ends_at,
-            lesson_type_id:     form.lesson_type_id,
-            delivery_mode_id:   form.delivery_mode_id,
-            location_text:      form.location_text || null,
-            note:               form.note || null,
-            recurrence_rule_id: form.recurrence_rule_id,
-            active_from:        form.active_from,
-            active_to:          form.active_to || null,
+            subjectId:        form.subjectId,
+            weekday:          form.weekday,
+            startsAt:         form.startsAt,
+            endsAt:           form.endsAt,
+            lessonTypeId:     form.lessonTypeId,
+            deliveryModeId:   form.deliveryModeId,
+            locationText:     form.locationText || null,
+            note:             form.note || null,
+            recurrenceRuleId: form.recurrenceRuleId,
+            activeFrom:       form.activeFrom,
+            activeTo:         form.activeTo || null,
         });
         onClose();
     }
@@ -127,8 +127,8 @@ export function AddLessonModal({ onClose }: Props) {
                         <BookOpenIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
                         <select
                             className={selectCls + " pl-9"}
-                            value={form.subject_id}
-                            onChange={e => set("subject_id", +e.target.value)}
+                            value={form.subjectId}
+                            onChange={e => set("subjectId", +e.target.value)}
                             required
                         >
                             <option value={0} disabled>Оберіть предмет</option>
@@ -159,8 +159,8 @@ export function AddLessonModal({ onClose }: Props) {
                             <input
                                 type="time"
                                 className={inputCls + " pl-9"}
-                                value={form.starts_at}
-                                onChange={e => set("starts_at", e.target.value)}
+                                value={form.startsAt}
+                                onChange={e => set("startsAt", e.target.value)}
                                 required
                             />
                         </div>
@@ -171,8 +171,8 @@ export function AddLessonModal({ onClose }: Props) {
                             <input
                                 type="time"
                                 className={inputCls + " pl-9"}
-                                value={form.ends_at}
-                                onChange={e => set("ends_at", e.target.value)}
+                                value={form.endsAt}
+                                onChange={e => set("endsAt", e.target.value)}
                                 required
                             />
                         </div>
@@ -186,8 +186,8 @@ export function AddLessonModal({ onClose }: Props) {
                             <FlaskConicalIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
                             <select
                                 className={selectCls + " pl-9"}
-                                value={form.lesson_type_id}
-                                onChange={e => set("lesson_type_id", +e.target.value)}
+                                value={form.lessonTypeId}
+                                onChange={e => set("lessonTypeId", +e.target.value)}
                                 required
                             >
                                 <option value={0} disabled>Тип</option>
@@ -198,8 +198,8 @@ export function AddLessonModal({ onClose }: Props) {
                     <Field label="Формат" required>
                         <select
                             className={selectCls}
-                            value={form.delivery_mode_id}
-                            onChange={e => set("delivery_mode_id", +e.target.value)}
+                            value={form.deliveryModeId}
+                            onChange={e => set("deliveryModeId", +e.target.value)}
                             required
                         >
                             <option value={0} disabled>Формат</option>
@@ -214,8 +214,8 @@ export function AddLessonModal({ onClose }: Props) {
                         <RefreshCwIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
                         <select
                             className={selectCls + " pl-9"}
-                            value={form.recurrence_rule_id}
-                            onChange={e => set("recurrence_rule_id", +e.target.value)}
+                            value={form.recurrenceRuleId}
+                            onChange={e => set("recurrenceRuleId", +e.target.value)}
                             required
                         >
                             <option value={0} disabled>Оберіть правило</option>
@@ -232,8 +232,8 @@ export function AddLessonModal({ onClose }: Props) {
                             type="text"
                             className={inputCls + " pl-9"}
                             placeholder="А-201 або https://meet..."
-                            value={form.location_text}
-                            onChange={e => set("location_text", e.target.value)}
+                            value={form.locationText}
+                            onChange={e => set("locationText", e.target.value)}
                         />
                     </div>
                 </Field>
@@ -246,8 +246,8 @@ export function AddLessonModal({ onClose }: Props) {
                             <input
                                 type="date"
                                 className={inputCls}
-                                value={form.active_from}
-                                onChange={e => set("active_from", e.target.value)}
+                                value={form.activeFrom}
+                                onChange={e => set("activeFrom", e.target.value)}
                                 required
                             />
                         </Field>
@@ -255,8 +255,8 @@ export function AddLessonModal({ onClose }: Props) {
                             <input
                                 type="date"
                                 className={inputCls}
-                                value={form.active_to}
-                                onChange={e => set("active_to", e.target.value)}
+                                value={form.activeTo}
+                                onChange={e => set("activeTo", e.target.value)}
                             />
                         </Field>
                     </div>

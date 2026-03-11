@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { GraduationCapIcon, MapPinIcon, StickyNoteIcon, ClockIcon, BookOpenIcon } from "lucide-react";
 import { useSubjects, useCreateExam, useExamTypes } from "@/entities/schedule/api/hooks";
 import { ModalShell } from "@/shared/ui/modal-shell";
@@ -8,7 +8,7 @@ interface Props {
 }
 
 /* ── Shared field wrapper ── */
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
     return (
         <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
@@ -31,12 +31,12 @@ const inputCls =
 
 export function AddExamModal({ onClose }: Props) {
     const [form, setForm] = useState({
-        subject_id: 0,
-        exam_type_id: 0,
-        starts_at: "",
-        ends_at: "",
-        location_text: "",
-        note: "",
+        subjectId:    0,
+        examTypeId:   0,
+        startsAt:     "",
+        endsAt:       "",
+        locationText: "",
+        note:         "",
     });
 
     const { data: subjects  = [] } = useSubjects();
@@ -51,21 +51,21 @@ export function AddExamModal({ onClose }: Props) {
         return v ? v.replace("T", " ") : "";
     }
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!form.subject_id || !form.exam_type_id || !form.starts_at) return;
+        if (!form.subjectId || !form.examTypeId || !form.startsAt) return;
         await createExam.mutateAsync({
-            subject_id:    form.subject_id,
-            exam_type_id:  form.exam_type_id,
-            starts_at:     toApiDateTime(form.starts_at),
-            ends_at:       form.ends_at ? toApiDateTime(form.ends_at) : null,
-            location_text: form.location_text || null,
-            note:          form.note || null,
+            subjectId:    form.subjectId,
+            examTypeId:   form.examTypeId,
+            startsAt:     toApiDateTime(form.startsAt),
+            endsAt:       form.endsAt ? toApiDateTime(form.endsAt) : null,
+            locationText: form.locationText || null,
+            note:         form.note || null,
         });
         onClose();
     }
 
-    const isValid = form.subject_id > 0 && form.exam_type_id > 0 && !!form.starts_at;
+    const isValid = form.subjectId > 0 && form.examTypeId > 0 && !!form.startsAt;
 
     return (
         <ModalShell
@@ -92,8 +92,8 @@ export function AddExamModal({ onClose }: Props) {
                         <BookOpenIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
                         <select
                             className={selectCls + " pl-9"}
-                            value={form.subject_id}
-                            onChange={e => set("subject_id", +e.target.value)}
+                            value={form.subjectId}
+                            onChange={e => set("subjectId", +e.target.value)}
                             required
                         >
                             <option value={0} disabled>Оберіть предмет</option>
@@ -105,8 +105,8 @@ export function AddExamModal({ onClose }: Props) {
                 <Field label="Тип" required>
                     <select
                         className={selectCls}
-                        value={form.exam_type_id}
-                        onChange={e => set("exam_type_id", +e.target.value)}
+                        value={form.examTypeId}
+                        onChange={e => set("examTypeId", +e.target.value)}
                         required
                     >
                         <option value={0} disabled>Оберіть тип</option>
@@ -121,8 +121,8 @@ export function AddExamModal({ onClose }: Props) {
                             <input
                                 type="datetime-local"
                                 className={inputCls + " pl-9"}
-                                value={form.starts_at}
-                                onChange={e => set("starts_at", e.target.value)}
+                                value={form.startsAt}
+                                onChange={e => set("startsAt", e.target.value)}
                                 required
                             />
                         </div>
@@ -133,8 +133,8 @@ export function AddExamModal({ onClose }: Props) {
                             <input
                                 type="datetime-local"
                                 className={inputCls + " pl-9"}
-                                value={form.ends_at}
-                                onChange={e => set("ends_at", e.target.value)}
+                                value={form.endsAt}
+                                onChange={e => set("endsAt", e.target.value)}
                             />
                         </div>
                     </Field>
@@ -147,8 +147,8 @@ export function AddExamModal({ onClose }: Props) {
                             type="text"
                             className={inputCls + " pl-9"}
                             placeholder="А-201 або https://meet..."
-                            value={form.location_text}
-                            onChange={e => set("location_text", e.target.value)}
+                            value={form.locationText}
+                            onChange={e => set("locationText", e.target.value)}
                         />
                     </div>
                 </Field>
