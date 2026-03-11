@@ -7,7 +7,6 @@ import { SettingsProvider } from "@/app/providers/settings-provider.tsx";
 import { WsProvider } from "@/app/providers/ws-provider.tsx";
 import { ThemeProvider } from "@/app/providers/theme-provider.tsx";
 import { useUserSettings } from "@/entities/user/hooks/use-user-settings";
-import { DevBar } from "@/widgets/dev-bar";
 
 /**
  * Inner wrapper — lives inside SettingsProvider so useUserSettings can
@@ -35,7 +34,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
                                 <ToastProvider>
                                     {children}
                                     {/* DevBar is only rendered in IS_DEV mode — see widget */}
-                                    <DevBar />
+                                    {/*<DevBar />*/}
                                 </ToastProvider>
                             </TooltipProvider>
                         </AnimationProvider>
