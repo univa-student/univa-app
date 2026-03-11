@@ -7,10 +7,11 @@ use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Files\StoreFileRequest;
 use App\Http\Requests\Files\UpdateFileRequest;
+use App\Http\Requests\Files\SearchFileRequest;
 use App\Models\Files\File;
 use App\Services\Files\FileService;
+use App\Http\Resources\Files\FileResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
@@ -30,7 +31,7 @@ class FileController extends Controller
             $request->integer('subject_id') ?: null,
         );
 
-        return ApiResponse::ok('Files loaded.', $files);
+        return ApiResponse::data(FileResource::collection($files));
     }
 
     /**
@@ -41,7 +42,7 @@ class FileController extends Controller
         /** @var \App\Models\User $user */
         $user = auth()->user();
 
-        return ApiResponse::ok('Storage info.', [
+        return ApiResponse::data([
             'used'  => (int) $user->storage_used,
             'limit' => (int) $user->storage_limit,
         ]);
@@ -54,18 +55,14 @@ class FileController extends Controller
     {
         $files = $this->service->recent((int) auth()->id());
 
-        return ApiResponse::ok('Recent files loaded.', $files);
+        return ApiResponse::data(FileResource::collection($files));
     }
 
     /**
      * GET /files/search?q=&subject_id=
      */
-    public function search(Request $request): JsonResponse
+    public function search(SearchFileRequest $request): JsonResponse
     {
-        $request->validate([
-            'q' => ['required', 'string', 'min:2'],
-            'subject_id' => ['nullable', 'integer'],
-        ]);
 
         $files = $this->service->search(
             (int) auth()->id(),
@@ -73,7 +70,7 @@ class FileController extends Controller
             $request->integer('subject_id') ?: null,
         );
 
-        return ApiResponse::ok('Search results.', $files);
+        return ApiResponse::data(FileResource::collection($files));
     }
 
     /**
@@ -85,7 +82,7 @@ class FileController extends Controller
 
         $file->load(['folder', 'subject']);
 
-        return ApiResponse::ok('File details.', $file);
+        return ApiResponse::data(new FileResource($file));
     }
 
     /**

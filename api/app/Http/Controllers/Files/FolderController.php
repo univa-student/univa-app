@@ -8,8 +8,8 @@ use App\Http\Requests\Files\StoreFolderRequest;
 use App\Http\Requests\Files\UpdateFolderRequest;
 use App\Models\Files\Folder;
 use App\Services\Files\FolderService;
+use App\Http\Resources\Files\FolderResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class FolderController extends Controller
 {
@@ -27,7 +27,7 @@ class FolderController extends Controller
             $request->integer('parent_id') ?: null,
         );
 
-        return ApiResponse::ok('Folders loaded.', $folders);
+        return ApiResponse::data(FolderResource::collection($folders));
     }
 
     /**
@@ -37,7 +37,7 @@ class FolderController extends Controller
     {
         $tree = $this->service->tree((int) auth()->id());
 
-        return ApiResponse::ok('Folder tree loaded.', $tree);
+        return ApiResponse::data(FolderResource::collection($tree));
     }
 
     /**

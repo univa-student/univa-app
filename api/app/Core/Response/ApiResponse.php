@@ -10,15 +10,18 @@ class ApiResponse
 {
     public static function make(
         ResponseState $state,
-        string $message = '',
+        ?string $message = null,
         mixed $data = null,
         mixed $errors = null,
         array $meta = []
     ): JsonResponse {
         $payload = [
             'status' => $state->value,
-            'message' => $message,
         ];
+
+        if (!is_null($message)) {
+            $payload['message'] = $message;
+        }
 
         if (!is_null($data)) {
             $payload['data'] = $data;
@@ -33,6 +36,11 @@ class ApiResponse
         }
 
         return response()->json($payload, $state->value);
+    }
+
+    public static function data(mixed $data = null, array $meta = []): JsonResponse
+    {
+        return self::make(ResponseState::OK, null, $data, null, $meta);
     }
 
     public static function ok(string $message = 'OK', mixed $data = null, array $meta = []): JsonResponse

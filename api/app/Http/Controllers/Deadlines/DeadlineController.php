@@ -22,10 +22,7 @@ class DeadlineController extends Controller
 
         $deadlines = $queryService->getFilteredDeadlines($request->user(), $request->all())->get();
 
-        return ApiResponse::ok(
-            'Deadlines retrieved successfully.',
-            DeadlineResource::collection($deadlines),
-        );
+        return ApiResponse::data(DeadlineResource::collection($deadlines));
     }
 
     /**
@@ -39,7 +36,7 @@ class DeadlineController extends Controller
         $now = \Illuminate\Support\Carbon::now();
         $weekEnd = $now->copy()->endOfWeek(\Illuminate\Support\Carbon::SUNDAY);
 
-        return ApiResponse::ok('Deadline stats retrieved.', [
+        return ApiResponse::data([
             'all' => $queryService->getFilteredDeadlines($user, [])->count(),
             'today' => $queryService->getFilteredDeadlines($user, ['time_frame' => 'today'])->count(),
             'upcoming' => $queryService->getFilteredDeadlines($user, ['time_frame' => 'upcoming'])->count(),
@@ -73,10 +70,7 @@ class DeadlineController extends Controller
     {
         $this->authorize('view', $deadline);
 
-        return ApiResponse::ok(
-            'Deadline retrieved successfully.',
-            new DeadlineResource($deadline)
-        );
+        return ApiResponse::data(new DeadlineResource($deadline));
     }
 
     /**

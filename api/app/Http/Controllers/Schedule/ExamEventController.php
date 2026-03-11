@@ -7,10 +7,11 @@ use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Schedule\StoreExamEventRequest;
 use App\Http\Requests\Schedule\UpdateExamEventRequest;
+use App\Http\Requests\Schedule\IndexExamEventRequest;
 use App\Models\Schedule\ExamEvent;
 use App\Services\Schedule\ExamEventService;
+use App\Http\Resources\Schedule\ExamEventResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ExamEventController extends Controller
 {
@@ -18,12 +19,8 @@ class ExamEventController extends Controller
         private readonly ExamEventService $service,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(IndexExamEventRequest $request): JsonResponse
     {
-        $request->validate([
-            'from' => ['required', 'date'],
-            'to'   => ['required', 'date', 'after_or_equal:from'],
-        ]);
 
         $exams = $this->service->listForUser(
             (int) auth()->id(),
@@ -31,7 +28,7 @@ class ExamEventController extends Controller
             $request->query('to'),
         );
 
-        return ApiResponse::ok('Exams retrieved.', $exams);
+        return ApiResponse::data(ExamEventResource::collection($exams));
     }
 
     public function store(StoreExamEventRequest $request): JsonResponse

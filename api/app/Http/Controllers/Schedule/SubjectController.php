@@ -13,6 +13,8 @@ use App\Services\Schedule\SubjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Http\Resources\Schedule\SubjectResource;
+
 class SubjectController extends Controller
 {
     public function __construct(
@@ -23,7 +25,7 @@ class SubjectController extends Controller
     {
         $subjects = $this->service->listForUser((int) auth()->id());
 
-        return ApiResponse::ok('Subjects retrieved.', $subjects);
+        return ApiResponse::data(SubjectResource::collection($subjects));
     }
 
     /**
