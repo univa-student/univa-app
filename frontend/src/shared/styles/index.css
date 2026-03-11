@@ -47,51 +47,50 @@
     --radius: 0.75rem;
 
     /* Base */
-    --background: oklch(0.985 0.004 285);
-    --foreground: oklch(0.22 0.012 270);
+    --background: oklch(0.982 0 0);
+    --foreground: oklch(0.18 0 0);
 
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.22 0.012 270);
+    --card-foreground: oklch(0.18 0 0);
 
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.22 0.012 270);
+    --popover-foreground: oklch(0.18 0 0);
 
-    /* Less saturated, more strict */
-    --primary: oklch(0.55 0.16 285);
+    /* Steel accent — neutral blue-grey */
+    --primary: oklch(0.38 0.022 250);
     --primary-foreground: white;
 
-    --secondary: oklch(0.962 0.006 285);
-    --secondary-foreground: oklch(0.36 0.035 285);
+    --secondary: oklch(0.955 0 0);
+    --secondary-foreground: oklch(0.32 0.008 250);
 
-    --muted: oklch(0.952 0.004 285);
-    --muted-foreground: oklch(0.54 0.02 270);
+    --muted: oklch(0.945 0 0);
+    --muted-foreground: oklch(0.52 0.008 250);
 
-    --accent: oklch(0.94 0.018 285);
-    --accent-foreground: oklch(0.36 0.08 285);
+    --accent: oklch(0.928 0.006 250);
+    --accent-foreground: oklch(0.28 0.018 250);
 
-    --destructive: oklch(0.58 0.22 29);
+    --destructive: oklch(0.57 0.21 27);
     --destructive-foreground: white;
 
-    --border: oklch(0.88 0.004 285);
-    --input: oklch(0.90 0.004 285);
+    --border: oklch(0.875 0 0);
+    --input: oklch(0.892 0 0);
     --ring: var(--primary);
 
-    --chart-1: oklch(0.55 0.16 285);
-    --chart-2: oklch(0.60 0.13 270);
-    --chart-3: oklch(0.66 0.11 255);
-    --chart-4: oklch(0.72 0.09 245);
-    --chart-5: oklch(0.78 0.07 235);
+    --chart-1: oklch(0.38 0.022 250);
+    --chart-2: oklch(0.48 0.016 245);
+    --chart-3: oklch(0.58 0.010 240);
+    --chart-4: oklch(0.68 0.006 235);
+    --chart-5: oklch(0.76 0.004 230);
 
-    --sidebar: oklch(0.975 0.004 285);
+    --sidebar: oklch(0.970 0 0);
     --sidebar-foreground: var(--foreground);
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: oklch(0.95 0.008 285);
+    --sidebar-accent: oklch(0.948 0.004 250);
     --sidebar-accent-foreground: var(--foreground);
     --sidebar-border: var(--border);
     --sidebar-ring: var(--ring);
 
-    /* Aliases instead of separate parallel palette */
     --u-bg: var(--background);
     --u-card: var(--card);
     --u-text: var(--foreground);
@@ -100,67 +99,65 @@
     --u-border: var(--border);
 
     --u-accent: var(--primary);
-    --u-accent-light: color-mix(in oklch, var(--primary) 14%, white);
-    --u-accent-mid: color-mix(in oklch, var(--primary) 38%, white);
+    --u-accent-light: color-mix(in oklch, var(--primary) 12%, white);
+    --u-accent-mid: color-mix(in oklch, var(--primary) 35%, white);
 
     --u-gradient: linear-gradient(
             135deg,
-            color-mix(in oklch, var(--primary) 92%, black),
-            color-mix(in oklch, var(--primary) 72%, blue 18%),
-            color-mix(in oklch, var(--primary) 56%, cyan 14%)
+            oklch(0.36 0.024 252),
+            oklch(0.42 0.016 248),
+            oklch(0.50 0.010 244)
     );
 
-    --u-orbit-glow: color-mix(in srgb, var(--primary) 14%, transparent);
+    --u-orbit-glow: color-mix(in srgb, var(--primary) 10%, transparent);
 }
 
 .dark {
-    --background: #0f1014;
-    --foreground: #e7e9ee;
+    --background: #101214;
+    --foreground: #e4e6ea;
 
-    --card: #151821;
-    --card-foreground: #e7e9ee;
+    --card: #16191e;
+    --card-foreground: #e4e6ea;
 
-    --popover: #151821;
-    --popover-foreground: #e7e9ee;
+    --popover: #16191e;
+    --popover-foreground: #e4e6ea;
 
-    --secondary: #1b1f2a;
-    --secondary-foreground: #a6adbb;
+    --secondary: #1c2028;
+    --secondary-foreground: #a0a8b4;
 
-    --muted: #171b24;
-    --muted-foreground: #8c94a3;
+    --muted: #181c22;
+    --muted-foreground: #8a919e;
 
-    --border: #262c38;
-    --input: #262c38;
+    --border: #272d38;
+    --input: #272d38;
 
-    /* More restrained accent */
-    --primary: #7a6af0;
+    /* Steel dark — cold grey with slight blue undertone */
+    --primary: #7b8799;
     --primary-foreground: #ffffff;
 
-    --accent: #5e52c9;
-    --accent-foreground: #ece9ff;
+    --accent: #5a6474;
+    --accent-foreground: #dde2ea;
 
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
 
-    --ring: #7a6af0;
+    --ring: #7b8799;
 
-    --chart-1: #7a6af0;
-    --chart-2: #6b6ff0;
-    --chart-3: #5d79eb;
-    --chart-4: #4d84e0;
-    --chart-5: #7997f2;
+    --chart-1: #7b8799;
+    --chart-2: #6b7888;
+    --chart-3: #5c6878;
+    --chart-4: #4e5a68;
+    --chart-5: #8e9daf;
 
-    /* Sidebar */
-    --sidebar: #0f1014;
-    --sidebar-foreground: #e7e9ee;
-    --sidebar-primary: #7a6af0;
+    --sidebar: #0d1013;
+    --sidebar-foreground: #e4e6ea;
+    --sidebar-primary: #7b8799;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-ring: #7a6af0;
-    --sidebar-accent: #1b1f2a;
-    --sidebar-accent-foreground: #e7e9ee;
-    --sidebar-border: #262c38;
+    --sidebar-ring: #7b8799;
+    --sidebar-accent: #1c2028;
+    --sidebar-accent-foreground: #e4e6ea;
+    --sidebar-border: #272d38;
 
-    /* Aliases */
     --u-bg: var(--background);
     --u-card: var(--card);
     --u-text: var(--foreground);
@@ -169,17 +166,17 @@
     --u-border: var(--border);
 
     --u-accent: var(--primary);
-    --u-accent-light: color-mix(in oklch, var(--primary) 20%, black);
-    --u-accent-mid: color-mix(in oklch, var(--primary) 55%, #9fb3ff);
+    --u-accent-light: color-mix(in oklch, var(--primary) 18%, black);
+    --u-accent-mid: color-mix(in oklch, var(--primary) 52%, #c8d0dc);
 
     --u-gradient: linear-gradient(
             135deg,
-            color-mix(in oklch, var(--primary) 90%, black),
-            color-mix(in oklch, var(--primary) 72%, blue 18%),
-            color-mix(in oklch, var(--primary) 58%, cyan 12%)
+            #6b7888,
+            #5c6878,
+            #4e5a68
     );
 
-    --u-orbit-glow: color-mix(in srgb, var(--primary) 18%, transparent);
+    --u-orbit-glow: color-mix(in srgb, var(--primary) 14%, transparent);
 }
 
 @layer base {

@@ -1,6 +1,6 @@
 // LandingHeader.tsx — Premium frosted-glass nav with refined spacing
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { themedLogo } from "@/app/config/logo.config"
@@ -34,7 +34,7 @@ export function LandingHeader() {
                     className="pointer-events-auto"
                     style={{
                         margin: scrolled ? "12px 16px 0" : "0",
-                        transition: "margin 0.4s cubic-bezier(0.22,1,0.36,1)",
+                        transition: "margin 0.4s cubic-bezier(0.22,1,0.36,1) all 0.4s cubic-bezier(0.22,1,0.36,1)",
                         borderRadius: scrolled ? 18 : 0,
                         background: scrolled
                             ? "rgba(248, 247, 255, 0.88)"
@@ -44,7 +44,6 @@ export function LandingHeader() {
                         borderBottom: scrolled ? "none" : `1px solid ${T.border}`,
                         border: scrolled ? `1px solid ${T.borderStrong}` : undefined,
                         boxShadow: scrolled ? "0 4px 32px rgba(109,40,217,0.08), 0 1px 0 rgba(255,255,255,0.8) inset" : "none",
-                        transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)",
                     }}
                 >
                     <div style={{ maxWidth: T.maxW, margin: "0 auto" }}>

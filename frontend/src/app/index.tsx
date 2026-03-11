@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { router } from "./router/router.tsx";
 import { queryClient } from "@/shared/api/query-client";
 import { AppProviders } from "./providers/providers";
+import { AlertContainer } from "@/shared/providers/toast-provider";
 
 import "@/shared/styles/index.css";
 
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <AppProviders>
                 <RouterProvider router={router} />
             </AppProviders>
+            <AlertContainer />
         </QueryClientProvider>
     </React.StrictMode>
 );

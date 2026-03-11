@@ -27,7 +27,6 @@ export function LoginPage() {
 
         try {
             await mutateAsync({ email, password });
-            toast({ variant: "success", message: "Ви успішно увійшли!" });
             nav(loc.state?.from ?? "/dashboard", { replace: true });
         } catch (err) {
             if (err instanceof ApiError) {
@@ -37,8 +36,6 @@ export function LoginPage() {
                         fieldErrors[key] = msgs[0];
                     }
                     setErrors(fieldErrors);
-                } else {
-                    toast({ variant: "destructive", message: err.body.message });
                 }
             } else {
                 toast({ variant: "destructive", message: "Щось пішло не так. Спробуйте пізніше." });

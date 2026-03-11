@@ -24,7 +24,7 @@ export const GOOGLE_FONTS_URL =
 
 // ─── React Query ──────────────────────────────────────────────────────────────
 export const QUERY_RETRY = 1;
-export const QUERY_STALE_MS = 30_000;
+export const QUERY_STALE_MS = 300_000; // 5 хвилин
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
 export const PAGE_SIZE_DEFAULT = 20;

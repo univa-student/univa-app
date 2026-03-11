@@ -1,5 +1,17 @@
 import { API_BASE_URL } from "@/app/config/app.config";
 import { ApiError } from "@/shared/types/api";
+import { toast } from "@/shared/lib/toast-store";
+
+function triggerAlert(status: number, message?: string) {
+    if (!message) return;
+
+    let variant: "success" | "warning" | "destructive" | "info" = "info";
+    if (status === 200 || status === 201) variant = "success";
+    else if (status === 400 || status === 422) variant = "warning";
+    else if (status >= 400) variant = "destructive";
+
+    toast({ variant, message });
+}
 
 // ─── XSRF token reader ──────────────────────────────────────────────────────
 function getXsrfToken(): string | null {
@@ -45,9 +57,11 @@ export async function apiFetch<T>(
     });
 
     if (!res.ok) {
-        const body = await res.json().catch(() => ({
-            message: `HTTP ${res.status}`,
-        }));
+        const body = await res.json().catch(() => ({}));
+
+        if (body.message && typeof body.message === "string") {
+            triggerAlert(res.status, body.message);
+        }
 
         throw new ApiError(res.status, {
             message: body.message ?? `HTTP ${res.status}`,
@@ -58,6 +72,11 @@ export async function apiFetch<T>(
     if (res.status === 204) return undefined as T;
 
     const json = await res.json();
+
+    if (json.message && typeof json.message === "string") {
+        triggerAlert(res.status, json.message);
+    }
+
     return (json.data !== undefined ? json.data : json) as T;
 }
 

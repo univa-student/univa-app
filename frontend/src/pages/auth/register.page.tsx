@@ -50,7 +50,6 @@ export function RegisterPage() {
 
         try {
             await mutateAsync(form);
-            toast({ variant: "success", message: "Акаунт створено! Ласкаво просимо." });
             nav("/dashboard", { replace: true });
         } catch (err) {
             if (err instanceof ApiError) {
@@ -60,8 +59,6 @@ export function RegisterPage() {
                         fieldErrors[key] = msgs[0];
                     }
                     setErrors(fieldErrors);
-                } else {
-                    toast({ variant: "destructive", message: err.body.message });
                 }
             } else {
                 toast({ variant: "destructive", message: "Щось пішло не так. Спробуйте пізніше." });
