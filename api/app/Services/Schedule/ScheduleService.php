@@ -43,6 +43,7 @@ class ScheduleService
                 $q->whereNull('active_to')
                   ->orWhere('active_to', '>=', $from->toDateString());
             })
+            
             ->with([
                 //'subject' => fn ($q) => $q->withCount('files'),
                 'lessonType',
