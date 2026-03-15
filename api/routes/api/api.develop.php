@@ -91,8 +91,10 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api'], 'prefix' => 'v1'
     Route::patch('/folders/{folder}', [FolderController::class, 'update']);
     Route::delete('/folders/{folder}', [FolderController::class, 'destroy']);
 
-
-    Route::post('ai/files/{file}/summary', [SummarizeFileController::class, 'store']);
+    Route::get('/summaries', [SummarizeFileController::class, 'index']);
+    Route::get('/summaries/{artifact}', [SummarizeFileController::class, 'show']);
+    Route::delete('/summaries/{artifact}', [SummarizeFileController::class, 'destroy']);
+    Route::post('/{file}/summary', [SummarizeFileController::class, 'store']);
 });
 
 Route::group(['prefix' => '/v1'], function () {

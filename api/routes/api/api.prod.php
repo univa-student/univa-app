@@ -18,6 +18,7 @@ use App\Http\Controllers\Schedule\SubjectController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\System\HealthController;
 use App\Http\Controllers\System\User\MeController;
+use App\Modules\Ai\Http\Controllers\SummarizeFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' => '/v1'], function () {
@@ -89,7 +90,10 @@ Route::group(['middleware' => ['auth:sanctum', 'throttle:api', 'web'], 'prefix' 
     Route::patch('/folders/{folder}', [FolderController::class, 'update']);
     Route::delete('/folders/{folder}', [FolderController::class, 'destroy']);
 
-
+    Route::get('/summaries', [SummarizeFileController::class, 'index']);
+    Route::get('/summaries/{artifact}', [SummarizeFileController::class, 'show']);
+    Route::delete('/summaries/{artifact}', [SummarizeFileController::class, 'destroy']);
+    Route::post('/{file}/summary', [SummarizeFileController::class, 'store']);
 });
 
 Route::group(['prefix' => '/v1', 'middleware' => ['web']], function () {

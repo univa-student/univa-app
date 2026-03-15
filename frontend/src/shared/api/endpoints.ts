@@ -86,4 +86,11 @@ export const ENDPOINTS = {
         stats: "/api/v1/deadlines/stats",
         id: (id: number) => `/api/v1/deadlines/${id}`,
     },
+    // ── AI / Summaries ────────────────────────────────────────────────────────
+    summaries: {
+        list: `${API}/summaries`,
+        show: (id: number) => `${API}/summaries/${id}`,
+        delete: (id: number) => `${API}/summaries/${id}`,
+        generate: (fileId: number) => `${API}/${fileId}/summary`,
+    },
 } as const;

@@ -25,6 +25,9 @@ import { SpacesPage } from "@/pages/spaces/spaces.page";
 
 import { PrivateRoot } from "./PrivateRoot.tsx";
 import { routesLoaders } from "./loaders.ts";
+import { AiHome } from "@/pages/ai/ai-home.tsx";
+import { SummariesListPage } from "@/pages/ai/summaries-list.tsx";
+import { SummaryViewPage } from "@/pages/ai/summary-view.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -242,11 +245,50 @@ export const router = createBrowserRouter([
                         element: (
                             <LazyBoundary>
                                 <AuthGuard>
-                                    <DashboardLayout breadcrumbs={[
-                                        { label: "Головна", href: "/dashboard" },
-                                        { label: "AI-помічник" },
-                                    ]}>
-                                        <PlaceholderPage title="AI-помічник" />
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "AI-помічник" },
+                                        ]}
+                                    >
+                                        <AiHome />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/ai/summaries",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "AI-помічник", href: "/dashboard/ai" },
+                                            { label: "Конспекти" },
+                                        ]}
+                                    >
+                                        <SummariesListPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/ai/summaries/:id",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "AI-помічник", href: "/dashboard/ai" },
+                                            { label: "Конспекти", href: "/dashboard/ai/summaries" },
+                                            { label: "Перегляд" },
+                                        ]}
+                                    >
+                                        <SummaryViewPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>

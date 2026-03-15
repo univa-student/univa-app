@@ -3,6 +3,7 @@ import {
     SearchIcon, LayoutGridIcon, LayoutListIcon,
     FolderIcon, ChevronRightIcon, HomeIcon, UploadCloudIcon
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/shared/shadcn/ui/input";
 import { Button } from "@/shared/shadcn/ui/button";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
@@ -22,6 +23,7 @@ import {
 import type { FileItem, FolderItem } from "@/entities/file/model/types";
 import { API_BASE_URL } from "@/app/config/app.config";
 import { ENDPOINTS } from "@/shared/api/endpoints";
+import { useSummaries, useGenerateSummary } from "@/entities/summary/api/hooks";
 
 import { isPreviewable } from "@/shared/ui/files/file-type-icon";
 import { FileCardGrid, FileRowList } from "./file-cards";
@@ -118,6 +120,7 @@ interface FilesBrowserProps {
 }
 
 export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
+    const navigate = useNavigate();
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -130,13 +133,16 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
     const [renameTarget, setRenameTarget] = useState<{ type: "file" | "folder"; id: number; name: string } | null>(null);
     const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
     const [dragOver, setDragOver] = useState(false);
+    const [generatingFileId, setGeneratingFileId] = useState<number | null>(null);
 
     const uploadMut = useUploadFile();
+    const generateSummary = useGenerateSummary();
     const isSearching = searchQuery.length >= 2;
 
     const { data: files, isLoading: filesLoading } = useFiles(currentFolderId);
     const { data: folders, isLoading: foldersLoading } = useFolders(currentFolderId);
     const { data: searchResults } = useSearchFiles(searchQuery);
+    const { data: summaries } = useSummaries();
     const deleteFile = useDeleteFile();
     const updateFile = useUpdateFile();
     const deleteFolder = useDeleteFolder();
@@ -145,6 +151,28 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
     const displayFolders = isSearching ? [] : (folders ?? []);
     const isLoading = filesLoading || foldersLoading;
     const isEmpty = displayFiles.length === 0 && displayFolders.length === 0 && !isLoading;
+
+    /** Find the summary artifact id for a given file, if it exists */
+    const getSummaryForFile = useCallback((fileId: number) => {
+        return summaries?.find(
+            (s) => s.sourceContextId === fileId && s.sourceContextType?.includes("File")
+        );
+    }, [summaries]);
+
+    const handleSummarize = useCallback(async (file: FileItem) => {
+        const existing = getSummaryForFile(file.id);
+        if (existing) {
+            navigate(`/dashboard/ai/summaries/${existing.id}`);
+            return;
+        }
+        setGeneratingFileId(file.id);
+        try {
+            const result = await generateSummary.mutateAsync(file.id);
+            navigate(`/dashboard/ai/summaries/${result.id}`);
+        } finally {
+            setGeneratingFileId(null);
+        }
+    }, [getSummaryForFile, generateSummary, navigate]);
 
     const navigateToFolder = useCallback((id: number | null, name: string) => {
         if (id === null) {
@@ -349,8 +377,10 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
                             ))}
 
                             {/* Files */}
-                            {displayFiles.map(file =>
-                                viewMode === "grid" ? (
+                            {displayFiles.map(file => {
+                                const existingSummary = getSummaryForFile(file.id);
+                                const isGenerating = generatingFileId === file.id;
+                                return viewMode === "grid" ? (
                                     <FileCardGrid
                                         key={file.id}
                                         file={file}
@@ -359,6 +389,9 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
                                         onRename={() => setRenameTarget({ type: "file", id: file.id, name: file.originalName })}
                                         onPin={() => updateFile.mutate({ id: file.id, payload: { isPinned: !file.isPinned } })}
                                         onDelete={() => deleteFile.mutate(file.id)}
+                                        onSummarize={() => handleSummarize(file)}
+                                        hasSummary={!!existingSummary}
+                                        isSummarizing={isGenerating}
                                     />
                                 ) : (
                                     <FileRowList
@@ -369,9 +402,12 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
                                         onRename={() => setRenameTarget({ type: "file", id: file.id, name: file.originalName })}
                                         onPin={() => updateFile.mutate({ id: file.id, payload: { isPinned: !file.isPinned } })}
                                         onDelete={() => deleteFile.mutate(file.id)}
+                                        onSummarize={() => handleSummarize(file)}
+                                        hasSummary={!!existingSummary}
+                                        isSummarizing={isGenerating}
                                     />
-                                )
-                            )}
+                                );
+                            })}
                         </div>
                     )}
                 </div>
