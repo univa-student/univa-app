@@ -6,9 +6,9 @@ use App\Core\Response\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Services\Schedule\ExamEventService;
 use App\Services\Schedule\ScheduleService;
+use App\Http\Requests\Schedule\IndexScheduleRequest;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
@@ -17,13 +17,8 @@ class ScheduleController extends Controller
         private readonly ExamEventService $examService,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(IndexScheduleRequest $request): JsonResponse
     {
-        $request->validate([
-            'from' => ['required', 'date'],
-            'to'   => ['required', 'date', 'after_or_equal:from'],
-        ]);
-
         $userId = (int) auth()->id();
         $from   = Carbon::parse($request->query('from'))->startOfDay();
         $to     = Carbon::parse($request->query('to'))->endOfDay();
@@ -65,6 +60,6 @@ class ScheduleController extends Controller
         $all = array_merge($lessons, $examInstances);
         usort($all, fn ($a, $b) => strcmp($a['date'] . $a['starts_at'], $b['date'] . $b['starts_at']));
 
-        return ApiResponse::ok('Schedule retrieved.', $all);
+        return ApiResponse::data($all);
     }
 }

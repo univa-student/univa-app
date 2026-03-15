@@ -39,7 +39,7 @@ class RegisterController extends Controller
 
             auth()->login($user);
 
-            (new CreateApplicationAction())
+            new CreateApplicationAction()
                 ->handle($user->id);
 
             $request->session()->regenerate();

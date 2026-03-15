@@ -2,6 +2,7 @@
 
 namespace App\Models\Schedule;
 
+use App\Models\Files\File;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,11 @@ class Subject extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function files(): BelongsTo
+    {
+        return $this->belongsTo(File::class);
     }
 
     public function lessons(): HasMany

@@ -25,6 +25,10 @@ export function useSubjects() {
     return useQuery(subjectQueries.list());
 }
 
+export function useSubjectFolder(id: number) {
+    return useQuery(subjectQueries.folder(id));
+}
+
 export function useCreateSubject() {
     const qc = useQueryClient();
     return useMutation({
@@ -59,6 +63,14 @@ export function useLesson(id: number | null) {
         enabled: id != null && id > 0,
     });
 }
+
+export function useLessonMaterials(id: number | null) {
+    return useQuery({
+        ...lessonQueries.materials(id!),
+        enabled: id != null && id > 0,
+    });
+}
+
 export function useCreateLesson() {
     const qc = useQueryClient();
     return useMutation({

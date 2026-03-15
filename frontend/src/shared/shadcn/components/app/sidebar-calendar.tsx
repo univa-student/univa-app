@@ -4,7 +4,6 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon,
     CalendarIcon,
-    ClockIcon,
     AlertCircleIcon,
     CalendarDaysIcon,
     LayoutGridIcon,

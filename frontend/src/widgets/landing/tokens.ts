@@ -1,19 +1,31 @@
-/** Design tokens shared across all landing widgets */
 export const T = {
-    bg: "#fafbfc",
+    // Layout
+    maxW: "1280px",
+
+    // Light surface
+    bg: "#f8f7ff",
     card: "#ffffff",
-    text: "#111827",
-    muted: "#6b7280",
-    faint: "#d1d5db",
-    border: "#e5e7eb",
-    accent: "#7c3aed",
-    accentLight: "#ede9fe",
-    accentMid: "#c4b5fd",
-    gradient: "linear-gradient(135deg,#7c3aed,#6366f1,#3b82f6)",
-    dark: "#0a0a0f",
-    darkCard: "#141419",
-    darkBorder: "#1f1f2e",
-    darkMuted: "#71717a",
-    /** Wider container width for full-scale feel */
-    maxW: 1400,
-} as const
+    border: "rgba(109,40,217,0.10)",
+    borderStrong: "rgba(109,40,217,0.18)",
+
+    // Typography
+    text: "#0d0b1e",
+    muted: "#6b6882",
+    faint: "#b5b3c8",
+
+    // Dark surface
+    dark: "#07050f",
+    darkCard: "rgba(255,255,255,0.04)",
+    darkBorder: "rgba(255,255,255,0.07)",
+    darkMuted: "rgba(255,255,255,0.45)",
+
+    // Brand
+    accent: "#6d28d9",
+    accentMid: "rgba(109,40,217,0.25)",
+    accentLight: "rgba(109,40,217,0.07)",
+
+    // Gradients
+    gradient: "linear-gradient(135deg, #6d28d9 0%, #4f46e5 50%, #7c3aed 100%)",
+    gradientSoft: "linear-gradient(135deg, rgba(109,40,217,0.12), rgba(79,70,229,0.08))",
+    gradientGlow: "radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.15) 0%, transparent 70%)",
+}

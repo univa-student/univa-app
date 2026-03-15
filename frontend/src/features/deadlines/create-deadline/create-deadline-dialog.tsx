@@ -10,6 +10,9 @@ import { Button } from "@/shared/shadcn/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/shadcn/ui/dialog";
 import { Input } from "@/shared/shadcn/ui/input";
 import { Label } from "@/shared/shadcn/ui/label";
+import { UploadCloudIcon, XIcon, FileIcon } from "lucide-react";
+import type { FileItem } from "@/entities/file/model/types";
+import { UploadDialog } from "@/features/files/upload-file/upload-dialog";
 
 interface Props {
     open: boolean;
@@ -28,6 +31,8 @@ export function CreateDeadlineDialog({ open, onOpenChange, prefillSubjectId, sub
     const [priority, setPriority] = useState<DeadlinePriority>("medium");
     const [dueAt, setDueAt] = useState<string>(format(new Date(), "yyyy-MM-dd"));
     const [dueTime, setDueTime] = useState<string>("23:59");
+    const [attachedFiles, setAttachedFiles] = useState<FileItem[]>([]);
+    const [showUpload, setShowUpload] = useState(false);
 
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,6 +53,7 @@ export function CreateDeadlineDialog({ open, onOpenChange, prefillSubjectId, sub
                 dueAt: date.toISOString(),
                 status: "new",
                 completedAt: null,
+                fileIds: attachedFiles.map(f => f.id),
             });
 
             // Reset form
@@ -56,6 +62,7 @@ export function CreateDeadlineDialog({ open, onOpenChange, prefillSubjectId, sub
             setSubjectId(prefillSubjectId || 0);
             setType("homework");
             setPriority("medium");
+            setAttachedFiles([]);
 
             onOpenChange(false);
         } catch (error) {
@@ -161,6 +168,35 @@ export function CreateDeadlineDialog({ open, onOpenChange, prefillSubjectId, sub
                         />
                     </div>
 
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label>Прикріплені файли</Label>
+                            <Button type="button" variant="outline" size="sm" onClick={() => setShowUpload(true)} className="h-7 text-xs gap-1.5" disabled={!subjectId}>
+                                <UploadCloudIcon className="size-3.5" />
+                                Додати файли
+                            </Button>
+                        </div>
+                        {attachedFiles.length > 0 ? (
+                            <div className="flex flex-col gap-1.5 mt-2">
+                                {attachedFiles.map(file => (
+                                    <div key={file.id} className="flex items-center justify-between bg-muted/30 p-2 rounded-md border border-border/50 text-sm">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <FileIcon className="size-4 text-muted-foreground shrink-0" />
+                                            <span className="truncate flex-1 text-sm font-medium">{file.originalName}</span>
+                                        </div>
+                                        <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" onClick={() => setAttachedFiles(prev => prev.filter(f => f.id !== file.id))}>
+                                            <XIcon className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-xs text-muted-foreground border border-dashed rounded-md p-3 text-center">
+                                {subjectId ? "Немає прикріплених файлів" : "Оберіть предмет, щоб додати файли"}
+                            </div>
+                        )}
+                    </div>
+
                     <div className="flex justify-end gap-2 pt-2">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                             Скасувати
@@ -171,6 +207,14 @@ export function CreateDeadlineDialog({ open, onOpenChange, prefillSubjectId, sub
                     </div>
                 </form>
             </DialogContent>
+
+            <UploadDialog
+                open={showUpload}
+                onOpenChange={setShowUpload}
+                subjectId={subjectId || undefined}
+                folderId={null} // By default, uploads to subject root
+                onUploadSuccess={(files) => setAttachedFiles(prev => [...prev, ...files])}
+            />
         </Dialog>
     );
 }

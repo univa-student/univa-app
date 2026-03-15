@@ -15,6 +15,7 @@ import type {
     CreateExamPayload,
     ScheduleException,
 } from "../model/types";
+import type { FolderItem, FileItem } from "@/entities/file/model/types";
 
 // ─── Schedule (built) ─────────────────────────────────────────────────────────
 
@@ -52,6 +53,10 @@ export const subjectQueries = {
         queryKey: [] as const,
         queryFn: () => apiFetch<void>(ENDPOINTS.subjects.delete(id), { method: "DELETE" }),
     }),
+    folder: (id: number) => ({
+        queryKey: ["subjects", id, "folder"],
+        queryFn: () => apiFetch<FolderItem>(ENDPOINTS.subjects.folder(id)),
+    }),
 };
 
 // ─── Lessons ──────────────────────────────────────────────────────────────────
@@ -60,6 +65,11 @@ export const lessonQueries = {
     show: (id: number) => ({
         queryKey: ["schedule", "lesson", id],
         queryFn: () => apiFetch<ScheduleLesson>(ENDPOINTS.lessons.show(id)),
+        staleTime: 1000 * 60 * 5,
+    }),
+    materials: (id: number) => ({
+        queryKey: ["schedule", "lesson", id, "materials"],
+        queryFn: () => apiFetch<FileItem[]>(ENDPOINTS.lessons.materials(id)),
         staleTime: 1000 * 60 * 5,
     }),
     create: (payload: CreateLessonPayload) => ({

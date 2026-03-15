@@ -1,5 +1,5 @@
 import { Button } from "@/shared/shadcn/ui/button.tsx";
-import { useToast } from "@/shared/providers/toast-provider.tsx";
+import { useToast } from "@/shared/hooks/useToast";
 import { themedLogo } from "@/app/config/logo.config";
 
 export function UiKitPage() {

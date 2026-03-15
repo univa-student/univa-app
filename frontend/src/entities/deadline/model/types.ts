@@ -1,3 +1,5 @@
+import type { FileItem } from "@/entities/file/model/types";
+
 export type DeadlineType =
     | "homework"
     | "lab"
@@ -26,7 +28,10 @@ export interface Deadline {
     completedAt: string | null;
     createdAt: string;
     updatedAt: string;
+    files?: FileItem[];
 }
 
-export type CreateDeadlinePayload = Omit<Deadline, "id" | "createdAt" | "updatedAt">;
+export interface CreateDeadlinePayload extends Omit<Deadline, "id" | "createdAt" | "updatedAt" | "files"> {
+    fileIds?: number[];
+}
 export type UpdateDeadlinePayload = Partial<CreateDeadlinePayload>;

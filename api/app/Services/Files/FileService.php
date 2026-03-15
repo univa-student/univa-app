@@ -38,6 +38,9 @@ class FileService
 
         if ($subjectId !== null) {
             $query->where('subject_id', $subjectId);
+        } else if ($folderId === null) {
+            // Hide files attached to subjects from the root folder
+            $query->whereNull('subject_id');
         }
 
         return $query
@@ -113,6 +116,24 @@ class FileService
 
         $storageKey = $this->generateStorageKey($uploadedFile);
 
+        if ($subjectId !== null && $folderId === null) {
+            $subject = \App\Models\Schedule\Subject::find($subjectId);
+            if ($subject && $subject->user_id === $userId) {
+                // Find or create a root folder for this subject
+                $folder = \App\Models\Files\Folder::firstOrCreate(
+                    [
+                        'user_id' => $userId,
+                        'subject_id' => $subjectId,
+                        'parent_id' => null,
+                    ],
+                    [
+                        'name' => $subject->name,
+                    ]
+                );
+                $folderId = $folder->id;
+            }
+        }
+
         // 1. Create metadata record with status "uploading"
         $file = File::create([
             'user_id'       => $userId,
@@ -179,6 +200,15 @@ class FileService
     public function move(File $file, ?int $folderId): File
     {
         $file->update(['folder_id' => $folderId]);
+        return $file->fresh();
+    }
+
+    /**
+     * Move (attach/detach) a file to a subject.
+     */
+    public function moveToSubject(File $file, ?int $subjectId): File
+    {
+        $file->update(['subject_id' => $subjectId]);
         return $file->fresh();
     }
 

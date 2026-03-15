@@ -33,6 +33,7 @@ export interface Subject {
     name: string;
     teacherName: string | null;
     color: string | null;
+    files_count?: number;
 }
 
 // ─── Schedule lesson (rule) ───────────────────────────────────────────────────
@@ -71,6 +72,7 @@ export interface LessonInstance {
         name: string;
         teacherName: string | null;
         color: string | null;
+        files_count?: number;
     };
     lessonType: {
         id: number;
