@@ -35,4 +35,8 @@ export const userQueries = {
                 body: JSON.stringify(payload),
             }),
     }),
+    logout: () => ({
+        mutationKey: ["logout"],
+        mutationFn: () => apiFetch<void>(ENDPOINTS.auth.logout, { method: "POST" }),
+    }),
 };

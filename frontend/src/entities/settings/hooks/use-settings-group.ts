@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchSettingsGroup, getSelectedValue, type SettingItem } from "@/entities/settings/api/settings.api";
-import { useAuth } from "@/app/providers/auth-provider";
+import { useAuth } from "@/app/context/auth-context";
 
 /**
  * Fetches settings for a specific group on demand (when the tab is opened).
