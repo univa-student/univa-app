@@ -13,6 +13,8 @@ use App\Services\Files\FileService;
 use App\Http\Resources\Files\FileResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Laravel\Ai\Enums\Lab;
+use function Laravel\Ai\agent;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
@@ -163,5 +165,16 @@ class FileController extends Controller
         }, $file->original_name, [
             'Content-Type' => $file->mime_type ?? 'application/octet-stream',
         ]);
+    }
+
+    public function test()
+    {
+        return agent(
+            instructions: 'Ти AI-помічник для студентів. Пояснюй коротко і просто.'
+        )->stream(
+            'Поясни що таке інтеграл простими словами',
+            provider: Lab::Gemini,
+            model: 'gemini-2.5-flash',
+        );
     }
 }
