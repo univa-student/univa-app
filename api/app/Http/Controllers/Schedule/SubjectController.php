@@ -8,10 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Schedule\StoreSubjectRequest;
 use App\Http\Requests\Schedule\UpdateSubjectRequest;
 use App\Models\Schedule\Subject;
-use App\Policies\Schedule\SubjectPolicy;
 use App\Services\Schedule\SubjectService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Http\Resources\Schedule\SubjectResource;
+use App\Http\Resources\Files\FolderResource;
+use App\Models\Files\Folder;
 
 class SubjectController extends Controller
 {
@@ -19,11 +20,11 @@ class SubjectController extends Controller
         private readonly SubjectService $service,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(): JsonResponse
     {
         $subjects = $this->service->listForUser((int) auth()->id());
 
-        return ApiResponse::ok('Subjects retrieved.', $subjects);
+        return ApiResponse::data(SubjectResource::collection($subjects));
     }
 
     /**
@@ -55,5 +56,25 @@ class SubjectController extends Controller
         $this->service->delete($subject);
 
         return ApiResponse::ok('Subject deleted.');
+    }
+
+    public function folder(Subject $subject): JsonResponse
+    {
+        if ($subject->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $folder = Folder::firstOrCreate(
+            [
+                'user_id' => auth()->id(),
+                'subject_id' => $subject->id,
+                'parent_id' => null,
+            ],
+            [
+                'name' => $subject->name,
+            ]
+        );
+
+        return ApiResponse::data(new FolderResource($folder));
     }
 }

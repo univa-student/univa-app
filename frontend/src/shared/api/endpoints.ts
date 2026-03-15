@@ -26,12 +26,14 @@ export const ENDPOINTS = {
         create: `${API}/subjects`,
         update: (id: number) => `${API}/subjects/${id}`,
         delete: (id: number) => `${API}/subjects/${id}`,
+        folder: (id: number) => `${API}/subjects/${id}/folder`,
     },
     lessons: {
         create: `${API}/schedule-lessons`,
         show: (id: number) => `${API}/schedule-lessons/${id}`,
         update: (id: number) => `${API}/schedule-lessons/${id}`,
         delete: (id: number) => `${API}/schedule-lessons/${id}`,
+        materials: (id: number) => `${API}/schedule-lessons/${id}/materials`,
         createException: (lessonId: number) => `${API}/schedule-lessons/${lessonId}/exceptions`,
         deleteException: (id: number) => `${API}/exceptions/${id}`,
     },
@@ -83,5 +85,12 @@ export const ENDPOINTS = {
         base: "/api/v1/deadlines",
         stats: "/api/v1/deadlines/stats",
         id: (id: number) => `/api/v1/deadlines/${id}`,
+    },
+    // ── AI / Summaries ────────────────────────────────────────────────────────
+    summaries: {
+        list: `${API}/summaries`,
+        show: (id: number) => `${API}/summaries/${id}`,
+        delete: (id: number) => `${API}/summaries/${id}`,
+        generate: (fileId: number) => `${API}/${fileId}/summary`,
     },
 } as const;

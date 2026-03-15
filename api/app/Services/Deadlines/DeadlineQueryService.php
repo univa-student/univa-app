@@ -15,7 +15,7 @@ class DeadlineQueryService
     public function getFilteredDeadlines(User $user, array $filters = []): Builder
     {
         $query = Deadline::ownedBy($user->id)
-            ->with('subject');
+            ->with(['subject', 'files']);
 
         if (!empty($filters['subject_id'])) {
             $val = is_string($filters['subject_id']) ? explode(',', $filters['subject_id']) : (array) $filters['subject_id'];

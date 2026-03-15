@@ -1,13 +1,12 @@
-import React, { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSignUp } from "@/features/auth/sign-up/use-sign-up";
-import { ApiError } from "@/shared/types/api";
-import { useToast } from "@/shared/providers/toast-provider";
-import usePageTitle from "@/shared/hooks/usePageTitle";
 
-import { OrbitHero } from "@/shared/ui/animations/orbit-hero.animations";
+import { useSignUp } from "@/features/auth/sign-up/use-sign-up";
+import { useToast } from "@/shared/hooks/useToast";
+import usePageTitle from "@/shared/hooks/usePageTitle";
 import { RegisterForm, type RegisterFormData } from "@/shared/shadcn/components/auth/register-form";
-import { themedLogo } from "@/app/config/logo.config";
+import { AuthPageShell } from "@/shared/ui/auth/auth-page-shell";
+import { extractApiFieldErrors } from "@/shared/lib/forms/extract-api-field-errors";
 
 export function RegisterPage() {
     usePageTitle("Реєстрація");
@@ -17,20 +16,13 @@ export function RegisterPage() {
     const { toast } = useToast();
 
     const [form, setForm] = useState<RegisterFormData>({
-        // Персональні
         last_name: "",
         first_name: "",
         middle_name: "",
-
-        // Акаунт
         username: "",
         email: "",
-
-        // Безпека
         password: "",
         password_confirmation: "",
-
-        // Згоди
         agree_terms: false,
         marketing_opt_in: false,
     });
@@ -44,58 +36,37 @@ export function RegisterPage() {
         setForm((prev) => ({ ...prev, [field]: value }));
     }
 
-    async function onSubmit(e: React.FormEvent) {
+    async function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setErrors({});
 
         try {
             await mutateAsync(form);
-            toast({ variant: "success", message: "Акаунт створено! Ласкаво просимо." });
             nav("/dashboard", { replace: true });
         } catch (err) {
-            if (err instanceof ApiError) {
-                if (err.isValidation && err.body.errors) {
-                    const fieldErrors: Record<string, string> = {};
-                    for (const [key, msgs] of Object.entries(err.body.errors)) {
-                        fieldErrors[key] = msgs[0];
-                    }
-                    setErrors(fieldErrors);
-                } else {
-                    toast({ variant: "destructive", message: err.body.message });
-                }
-            } else {
-                toast({ variant: "destructive", message: "Щось пішло не так. Спробуйте пізніше." });
+            const fieldErrors = extractApiFieldErrors(err);
+
+            if (fieldErrors) {
+                setErrors(fieldErrors);
+                return;
             }
+
+            toast({
+                variant: "destructive",
+                message: "Щось пішло не так. Спробуйте пізніше.",
+            });
         }
     }
 
     return (
-        <div className="grid min-h-svh lg:grid-cols-2">
-            <div className="flex flex-col gap-4 p-6 md:p-10">
-                <div className="flex justify-center gap-2 md:justify-center">
-                    <a href="#" className="flex items-center gap-2 font-medium">
-                        <div className="flex w-full h-16 items-center">
-                            <img src={themedLogo('full-no-bg')} alt="" className="w-48" />
-                        </div>
-                    </a>
-                </div>
-                <div className="flex flex-1 items-center justify-center">
-                    <div className="w-full">
-                        <RegisterForm
-                            form={form}
-                            onFieldChange={onFieldChange}
-                            onSubmit={onSubmit}
-                            isPending={isPending}
-                            errors={errors}
-                        />
-                    </div>
-                </div>
-            </div>
-            <div className="bg-muted relative hidden lg:block">
-                <div className="sticky top-1/2 -translate-y-1/2 flex justify-center">
-                    <OrbitHero size={600} />
-                </div>
-            </div>
-        </div>
+        <AuthPageShell>
+            <RegisterForm
+                form={form}
+                onFieldChange={onFieldChange}
+                onSubmit={onSubmit}
+                isPending={isPending}
+                errors={errors}
+            />
+        </AuthPageShell>
     );
 }

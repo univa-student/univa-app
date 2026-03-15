@@ -53,6 +53,8 @@ class StoreDeadlineRequest extends FormRequest
             ])],
             'due_at' => ['required', 'date'],
             'completed_at' => ['nullable', 'date'],
+            'file_ids' => ['nullable', 'array'],
+            'file_ids.*' => ['integer', 'exists:files,id'],
         ];
     }
 }

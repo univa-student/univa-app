@@ -1,262 +1,169 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import React, { useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { InfoIcon, CheckCircle2, AlertTriangle, XCircle, XIcon } from "lucide-react";
+import {
+    Info,
+    CheckCircle2,
+    AlertTriangle,
+    XCircle,
+    X,
+} from "lucide-react";
 
-export type ToastVariant = "default" | "info" | "success" | "warning" | "destructive";
+import {
+    toastStore,
+    toast as globalToast,
+    dismissToast,
+    clearToasts,
+    type ToastVariant,
+} from "@/shared/lib/toast-store";
+import {cn} from "@/shared/shadcn/lib/utils.ts";
 
-export type ToastInput = {
-    variant: ToastVariant;
-    title?: string;
-    message: string;
-    autoCloseMs?: number;
-};
+export type { ToastVariant, ToastInput, Toast } from "@/shared/lib/toast-store";
 
-export type Toast = ToastInput & {
-    id: string;
-};
+const DEFAULT_AUTOCLOSE = 3500;
 
-type ToastContextValue = {
-    toast: (data: ToastInput) => string;
-    dismiss: (id: string) => void;
-    clear: () => void;
-};
-
-const ToastContext = createContext<ToastContextValue | null>(null);
-
-/* ── Variant config ───────────────────────────────────────────── */
-
-const VARIANT_MAP: Record<ToastVariant, {
-    icon: React.FC<{ className?: string; size?: number }>;
-    accent: string;     // border-left + icon color
-    bg: string;         // background
-    glow: string;       // box-shadow glow
-}> = {
+const VARIANT_STYLES: Record<
+    ToastVariant,
+    {
+        icon: React.ComponentType<{ className?: string }>;
+        wrapper: string;
+        iconWrap: string;
+        iconColor: string;
+        progress: string;
+    }
+> = {
     success: {
         icon: CheckCircle2,
-        accent: "#22c55e",
-        bg: "rgba(10, 20, 14, 0.92)",
-        glow: "0 0 24px rgba(34,197,94,0.12)",
+        wrapper:
+            "border-emerald-500/25 bg-emerald-950/70 shadow-[0_10px_40px_rgba(16,185,129,0.12)]",
+        iconWrap: "bg-emerald-500/10 ring-1 ring-emerald-400/20",
+        iconColor: "text-emerald-400",
+        progress: "bg-emerald-400/80",
     },
     warning: {
         icon: AlertTriangle,
-        accent: "#f59e0b",
-        bg: "rgba(20, 16, 8, 0.92)",
-        glow: "0 0 24px rgba(245,158,11,0.12)",
+        wrapper:
+            "border-amber-500/25 bg-amber-950/70 shadow-[0_10px_40px_rgba(245,158,11,0.12)]",
+        iconWrap: "bg-amber-500/10 ring-1 ring-amber-400/20",
+        iconColor: "text-amber-400",
+        progress: "bg-amber-400/80",
     },
     destructive: {
         icon: XCircle,
-        accent: "#ef4444",
-        bg: "rgba(20, 10, 10, 0.92)",
-        glow: "0 0 24px rgba(239,68,68,0.12)",
+        wrapper:
+            "border-rose-500/25 bg-rose-950/70 shadow-[0_10px_40px_rgba(244,63,94,0.14)]",
+        iconWrap: "bg-rose-500/10 ring-1 ring-rose-400/20",
+        iconColor: "text-rose-400",
+        progress: "bg-rose-400/80",
     },
     info: {
-        icon: InfoIcon,
-        accent: "#3b82f6",
-        bg: "rgba(10, 14, 22, 0.92)",
-        glow: "0 0 24px rgba(59,130,246,0.12)",
+        icon: Info,
+        wrapper:
+            "border-sky-500/25 bg-sky-950/70 shadow-[0_10px_40px_rgba(59,130,246,0.12)]",
+        iconWrap: "bg-sky-500/10 ring-1 ring-sky-400/20",
+        iconColor: "text-sky-400",
+        progress: "bg-sky-400/80",
     },
     default: {
-        icon: InfoIcon,
-        accent: "#7c3aed",
-        bg: "rgba(14, 10, 22, 0.92)",
-        glow: "0 0 24px rgba(124,58,237,0.12)",
+        icon: Info,
+        wrapper:
+            "border-violet-500/25 bg-violet-950/70 shadow-[0_10px_40px_rgba(139,92,246,0.12)]",
+        iconWrap: "bg-violet-500/10 ring-1 ring-violet-400/20",
+        iconColor: "text-violet-400",
+        progress: "bg-violet-400/80",
     },
 };
 
-const MAX_TOASTS = 6;
-const DEFAULT_AUTOCLOSE = 3500;
-
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-    const [toasts, setToasts] = useState<Toast[]>([]);
-    const timersRef = useRef<Map<string, number>>(new Map());
-
-    const dismiss = useCallback((id: string) => {
-        const t = timersRef.current.get(id);
-        if (t) window.clearTimeout(t);
-        timersRef.current.delete(id);
-        setToasts((prev) => prev.filter((x) => x.id !== id));
-    }, []);
-
-    const clear = useCallback(() => {
-        timersRef.current.forEach((t) => window.clearTimeout(t));
-        timersRef.current.clear();
-        setToasts([]);
-    }, []);
-
-    const toast = useCallback(
-        (data: ToastInput) => {
-            const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-            const next: Toast = { id, ...data };
-
-            setToasts((prev) => {
-                const merged = [...prev, next];
-                return merged.slice(-MAX_TOASTS);
-            });
-
-            const ms = data.autoCloseMs ?? DEFAULT_AUTOCLOSE;
-            if (ms > 0) {
-                const timer = window.setTimeout(() => dismiss(id), ms);
-                timersRef.current.set(id, timer);
-            }
-
-            return id;
-        },
-        [dismiss]
-    );
-
-    const value = useMemo(() => ({ toast, dismiss, clear }), [toast, dismiss, clear]);
+export function AlertContainer() {
+    const toasts = useSyncExternalStore(toastStore.subscribe, toastStore.getSnapshot);
 
     return (
-        <ToastContext.Provider value={value}>
-            {children}
+        <div className="pointer-events-none fixed bottom-5 right-5 z-[9999] flex w-[380px] max-w-[calc(100vw-24px)] flex-col gap-3">
+            <AnimatePresence initial={false}>
+                {toasts.map((toast) => {
+                    const styles = VARIANT_STYLES[toast.variant];
+                    const Icon = styles.icon;
+                    const duration = toast.autoCloseMs ?? DEFAULT_AUTOCLOSE;
 
-            {/* ── Toast container ── */}
-            <div
-                style={{
-                    position: "fixed",
-                    bottom: 20,
-                    right: 20,
-                    zIndex: 9999,
-                    width: 380,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                    pointerEvents: "none",
-                }}
-            >
-                <AnimatePresence initial={false}>
-                    {toasts.map((t) => {
-                        const v = VARIANT_MAP[t.variant];
-                        const IconComp = v.icon;
-                        return (
-                            <motion.div
-                                key={t.id}
-                                initial={{ opacity: 0, y: 16, scale: 0.96 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, x: 80, scale: 0.95 }}
-                                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                                layout
-                                style={{
-                                    pointerEvents: "auto",
-                                    position: "relative",
-                                    display: "flex",
-                                    alignItems: "flex-start",
-                                    gap: 12,
-                                    padding: "14px 16px",
-                                    borderRadius: 14,
-                                    background: v.bg,
-                                    backdropFilter: "blur(20px)",
-                                    WebkitBackdropFilter: "blur(20px)",
-                                    border: "1px solid rgba(255,255,255,0.07)",
-                                    borderLeft: `3px solid ${v.accent}`,
-                                    boxShadow: `${v.glow}, 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
-                                    color: "#f0f0f5",
-                                    fontFamily: "Inter, system-ui, sans-serif",
-                                    overflow: "hidden",
-                                }}
-                            >
-                                {/* Accent icon */}
-                                <div style={{
-                                    flexShrink: 0,
-                                    marginTop: 1,
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: 8,
-                                    background: `${v.accent}15`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}>
-                                    <span style={{ color: v.accent }}>
-                                        <IconComp size={15} />
-                                    </span>
+                    return (
+                        <motion.div
+                            key={toast.id}
+                            layout
+                            initial={{ opacity: 0, y: 18, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 80, scale: 0.96 }}
+                            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                            className={cn(
+                                "pointer-events-auto relative overflow-hidden rounded-2xl border backdrop-blur-xl",
+                                "text-zinc-50",
+                                styles.wrapper,
+                            )}
+                        >
+                            {/* soft glow layer */}
+                            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_35%)]" />
+
+                            <div className="relative flex items-start gap-3 p-4 pr-11">
+                                <div
+                                    className={cn(
+                                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                                        styles.iconWrap,
+                                    )}
+                                >
+                                    <Icon className={cn("h-5 w-5", styles.iconColor)} />
                                 </div>
 
-                                {/* Content */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    {t.title && (
-                                        <div style={{
-                                            fontWeight: 600,
-                                            fontSize: 13,
-                                            letterSpacing: "-0.01em",
-                                            marginBottom: 2,
-                                            color: "rgba(255,255,255,0.95)",
-                                        }}>
-                                            {t.title}
+                                <div className="min-w-0 flex-1">
+                                    {toast.title && (
+                                        <div className="mb-1 text-sm font-semibold tracking-[-0.01em] text-white">
+                                            {toast.title}
                                         </div>
                                     )}
-                                    <div style={{
-                                        fontSize: 12.5,
-                                        lineHeight: 1.5,
-                                        color: "rgba(255,255,255,0.6)",
-                                    }}>
-                                        {t.message}
+
+                                    <div className="text-[13px] leading-5 text-zinc-300">
+                                        {toast.message}
                                     </div>
                                 </div>
 
-                                {/* Close button */}
                                 <button
                                     type="button"
-                                    onClick={() => dismiss(t.id)}
                                     aria-label="Закрити"
-                                    style={{
-                                        position: "absolute",
-                                        top: 10,
-                                        right: 10,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 22,
-                                        height: 22,
-                                        borderRadius: 6,
-                                        border: "none",
-                                        background: "rgba(255,255,255,0.06)",
-                                        color: "rgba(255,255,255,0.4)",
-                                        cursor: "pointer",
-                                        transition: "all 0.15s",
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = "rgba(255,255,255,0.12)";
-                                        e.currentTarget.style.color = "rgba(255,255,255,0.8)";
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                                        e.currentTarget.style.color = "rgba(255,255,255,0.4)";
-                                    }}
+                                    onClick={() => dismissToast(toast.id)}
+                                    className={cn(
+                                        "absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-lg",
+                                        "border border-white/5 bg-white/5 text-zinc-400 transition",
+                                        "hover:bg-white/10 hover:text-zinc-200",
+                                        "focus:outline-none focus:ring-2 focus:ring-white/15",
+                                    )}
                                 >
-                                    <XIcon size={12} />
+                                    <X className="h-4 w-4" />
                                 </button>
+                            </div>
 
-                                {/* Bottom progress bar */}
-                                <motion.div
-                                    initial={{ scaleX: 1 }}
-                                    animate={{ scaleX: 0 }}
-                                    transition={{ duration: (t.autoCloseMs ?? DEFAULT_AUTOCLOSE) / 1000, ease: "linear" }}
-                                    style={{
-                                        position: "absolute",
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: 2,
-                                        background: v.accent,
-                                        opacity: 0.5,
-                                        transformOrigin: "left",
-                                        borderBottomLeftRadius: 14,
-                                        borderBottomRightRadius: 14,
-                                    }}
-                                />
-                            </motion.div>
-                        );
-                    })}
-                </AnimatePresence>
-            </div>
-        </ToastContext.Provider>
+                            <motion.div
+                                initial={{ scaleX: 1 }}
+                                animate={{ scaleX: 0 }}
+                                transition={{ duration: duration / 1000, ease: "linear" }}
+                                className={cn(
+                                    "absolute bottom-0 left-0 h-[3px] w-full origin-left",
+                                    styles.progress,
+                                )}
+                            />
+                        </motion.div>
+                    );
+                })}
+            </AnimatePresence>
+        </div>
     );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
+// backward compatibility
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+    return <>{children}</>;
+}
+
 export function useToast() {
-    const ctx = useContext(ToastContext);
-    if (!ctx) throw new Error("useToast must be used within ToastProvider");
-    return ctx;
+    return {
+        toast: globalToast,
+        dismiss: dismissToast,
+        clear: clearToasts,
+    };
 }

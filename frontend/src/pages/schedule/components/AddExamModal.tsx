@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import React, { useState } from "react";
 import { GraduationCapIcon, MapPinIcon, StickyNoteIcon, ClockIcon, BookOpenIcon } from "lucide-react";
 import { useSubjects, useCreateExam, useExamTypes } from "@/entities/schedule/api/hooks";
 import { ModalShell } from "@/shared/ui/modal-shell";
@@ -31,12 +31,12 @@ const inputCls =
 
 export function AddExamModal({ onClose }: Props) {
     const [form, setForm] = useState({
-        subjectId:    0,
-        examTypeId:   0,
-        startsAt:     "",
-        endsAt:       "",
+        subjectId: 0,
+        examTypeId: 0,
+        startsAt: "",
+        endsAt: "",
         locationText: "",
-        note:         "",
+        note: "",
     });
 
     const { data: subjects  = [] } = useSubjects();
@@ -56,11 +56,11 @@ export function AddExamModal({ onClose }: Props) {
         if (!form.subjectId || !form.examTypeId || !form.startsAt) return;
         await createExam.mutateAsync({
             subjectId:    form.subjectId,
-            examTypeId:   form.examTypeId,
+            examTypeId:  form.examTypeId,
             startsAt:     toApiDateTime(form.startsAt),
             endsAt:       form.endsAt ? toApiDateTime(form.endsAt) : null,
             locationText: form.locationText || null,
-            note:         form.note || null,
+            note:          form.note || null,
         });
         onClose();
     }

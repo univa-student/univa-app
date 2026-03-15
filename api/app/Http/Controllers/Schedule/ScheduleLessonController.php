@@ -9,6 +9,8 @@ use App\Http\Requests\Schedule\StoreScheduleLessonRequest;
 use App\Http\Requests\Schedule\UpdateScheduleLessonRequest;
 use App\Models\Schedule\ScheduleLesson;
 use App\Services\Schedule\ScheduleService;
+use App\Http\Resources\Schedule\ScheduleLessonResource;
+use App\Http\Resources\Files\FileResource;
 use Illuminate\Http\JsonResponse;
 
 class ScheduleLessonController extends Controller
@@ -21,7 +23,15 @@ class ScheduleLessonController extends Controller
     {
         $lesson->load(['subject', 'lessonType', 'deliveryMode', 'recurrenceRule']);
 
-        return ApiResponse::ok('Lesson retrieved.', $lesson);
+        return ApiResponse::data(new ScheduleLessonResource($lesson));
+    }
+
+    public function materials(ScheduleLesson $lesson): JsonResponse
+    {
+        $subject = clone $lesson->subject;
+        $subject->load('files');
+
+        return ApiResponse::data(FileResource::collection($subject->files));
     }
 
     public function store(StoreScheduleLessonRequest $request): JsonResponse

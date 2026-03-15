@@ -1,4 +1,4 @@
-import { CalendarDaysIcon, MapPinIcon, PlusIcon, UserIcon } from "lucide-react";
+import { CalendarDaysIcon, MapPinIcon, PlusIcon, UserIcon, PaperclipIcon } from "lucide-react";
 import { format } from "date-fns";
 import { uk } from "date-fns/locale";
 import type { LessonInstance } from "@/entities/schedule/model/types";
@@ -148,9 +148,16 @@ export function DayView({
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs font-black leading-tight" style={{ color: accent }}>
-                                        {inst.subject?.name}
-                                    </p>
+                                    <div className="flex items-start justify-between gap-1">
+                                        <p className="text-xs font-black leading-tight" style={{ color: accent }}>
+                                            {inst.subject?.name}
+                                        </p>
+                                        {(inst.subject?.files_count ?? 0) > 0 && (
+                                            <span title="Є матеріали" className="flex">
+                                                <PaperclipIcon className="w-3 h-3 shrink-0" style={{ color: accent }} />
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="mt-1.5 flex flex-col gap-0.5">
                                         {inst.lessonType && (
                                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">

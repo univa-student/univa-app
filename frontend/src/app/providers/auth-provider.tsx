@@ -1,70 +1,55 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { apiFetch } from "@/shared/api/http";
-import { fetchCsrfToken } from "@/shared/api/csrf";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { authStore } from "@/entities/user/model/auth-store";
 import type { User } from "@/entities/user/model/types";
-
-// ─── Context ─────────────────────────────────────────────────────────────────
-
-interface AuthContextValue {
-    user: User | null;
-    isReady: boolean;
-    refetch: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue>({
-    user: null,
-    isReady: false,
-    refetch: async () => { },
-});
-
-export function useAuth(): AuthContextValue {
-    return useContext(AuthContext);
-}
-
-// ─── Provider ────────────────────────────────────────────────────────────────
+import { AuthContext } from "@/app/context/auth-context";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(() => authStore.getState().user);
-    const [isReady, setIsReady] = useState(() => authStore.getState().isReady);
+    const [isReady, setIsReadyState] = useState<boolean>(() => authStore.getState().isReady);
 
-    const fetchMe = useCallback(async () => {
-        try {
-            await fetchCsrfToken();
-            const data = await apiFetch<User>(ENDPOINTS.auth.me);
-            setUser(data);
-            authStore.setUser(data);
-        } catch {
-            setUser(null);
-            authStore.setUser(null);
-        } finally {
-            setIsReady(true);
-            authStore.setReady(true);
-        }
+    const setAuthenticatedUser = useCallback((nextUser: User | null) => {
+        setUser(nextUser);
+        authStore.setUser(nextUser);
     }, []);
 
-    useEffect(() => {
-        fetchMe();
-    }, [fetchMe]);
+    const setReady = useCallback((value: boolean) => {
+        setIsReadyState(value);
+        authStore.setReady(value);
+    }, []);
 
-    // Sync with external store changes (e.g., after login/logout in features)
+    const refetch = useCallback(async () => {
+        try {
+            const data = await apiFetch<User>(ENDPOINTS.auth.me, {
+                silent401: true,
+            });
+            setAuthenticatedUser(data);
+        } catch {
+            setAuthenticatedUser(null);
+        } finally {
+            setReady(true);
+        }
+    }, [setAuthenticatedUser, setReady]);
+
     useEffect(() => {
         return authStore.subscribe(() => {
             const s = authStore.getState();
             setUser(s.user);
-            setIsReady(s.isReady);
+            setIsReadyState(s.isReady);
         });
     }, []);
 
     const value = useMemo(
-        () => ({ user, isReady, refetch: fetchMe }),
-        [user, isReady, fetchMe],
+        () => ({
+            user,
+            isReady,
+            refetch,
+            setAuthenticatedUser,
+            setReady,
+        }),
+        [user, isReady, refetch, setAuthenticatedUser, setReady],
     );
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

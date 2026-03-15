@@ -1,6 +1,6 @@
 import {
     MoreVerticalIcon, PinIcon,
-    DownloadIcon, PencilIcon, Trash2Icon, EyeIcon,
+    DownloadIcon, PencilIcon, Trash2Icon, EyeIcon, ScanText, FileText,
 } from "lucide-react";
 import { Button } from "@/shared/shadcn/ui/button";
 import {
@@ -22,9 +22,12 @@ interface Props {
     onRename: () => void;
     onPin: () => void;
     onDelete: () => void;
+    onSummarize: () => void;
+    hasSummary?: boolean;
+    isSummarizing?: boolean;
 }
 
-export function FileCardGrid({ file, onPreview, onDownload, onRename, onPin, onDelete }: Props) {
+export function FileCardGrid({ file, onPreview, onDownload, onRename, onPin, onDelete, onSummarize, hasSummary, isSummarizing }: Props) {
     const handleClick = () => {
         if (isPreviewable(file.mimeType)) onPreview();
         else onDownload();
@@ -68,11 +71,17 @@ export function FileCardGrid({ file, onPreview, onDownload, onRename, onPin, onD
                             <MoreVerticalIcon className="size-3" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuContent align="end" className="w-52">
                         {isPreviewable(file.mimeType) && (
                             <DropdownMenuItem onClick={onPreview}><EyeIcon className="size-4" /> Переглянути</DropdownMenuItem>
                         )}
                         <DropdownMenuItem onClick={onDownload}><DownloadIcon className="size-4" /> Завантажити</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={onSummarize} disabled={isSummarizing}>
+                            {hasSummary ? <FileText className="size-4" /> : <ScanText className="size-4" />}
+                            {isSummarizing ? "Генерація..." : hasSummary ? "Відкрити конспект" : "Створити конспект"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={onRename}><PencilIcon className="size-4" /> Перейменувати</DropdownMenuItem>
                         <DropdownMenuItem onClick={onPin}><PinIcon className="size-4" /> {file.isPinned ? "Відкріпити" : "Закріпити"}</DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -84,7 +93,7 @@ export function FileCardGrid({ file, onPreview, onDownload, onRename, onPin, onD
     );
 }
 
-export function FileRowList({ file, onPreview, onDownload, onRename, onPin, onDelete }: Props) {
+export function FileRowList({ file, onPreview, onDownload, onRename, onPin, onDelete, onSummarize, hasSummary, isSummarizing }: Props) {
     const handleClick = () => {
         if (isPreviewable(file.mimeType)) onPreview();
         else onDownload();
@@ -111,11 +120,17 @@ export function FileRowList({ file, onPreview, onDownload, onRename, onPin, onDe
                             <MoreVerticalIcon className="size-3.5" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuContent align="end" className="w-52">
                         {isPreviewable(file.mimeType) && (
                             <DropdownMenuItem onClick={onPreview}><EyeIcon className="size-4" /> Переглянути</DropdownMenuItem>
                         )}
                         <DropdownMenuItem onClick={onDownload}><DownloadIcon className="size-4" /> Завантажити</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={onSummarize} disabled={isSummarizing}>
+                            {hasSummary ? <FileText className="size-4" /> : <ScanText className="size-4" />}
+                            {isSummarizing ? "Генерація..." : hasSummary ? "Відкрити конспект" : "Створити конспект"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={onRename}><PencilIcon className="size-4" /> Перейменувати</DropdownMenuItem>
                         <DropdownMenuItem onClick={onPin}><PinIcon className="size-4" /> {file.isPinned ? "Відкріпити" : "Закріпити"}</DropdownMenuItem>
                         <DropdownMenuSeparator />

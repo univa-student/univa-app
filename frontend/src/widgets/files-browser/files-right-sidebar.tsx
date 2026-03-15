@@ -37,7 +37,7 @@ export function FilesRightSidebar({
     const fillPercent = storage && storage.limit > 0 ? Math.min(100, (storage.used / storage.limit) * 100) : 0;
 
     return (
-        <aside className="w-[280px] shrink-0 flex flex-col border-l bg-card/30">
+        <aside className="fixed top-0 right-0 w-[310px] h-screen flex flex-col border-l bg-card/30">
             {/* Quick actions */}
             <div className="p-4 space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Дії</p>

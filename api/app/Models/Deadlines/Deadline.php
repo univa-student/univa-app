@@ -2,12 +2,14 @@
 
 namespace App\Models\Deadlines;
 
+use App\Models\Files\File;
 use App\Models\Schedule\Subject;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Deadline extends Model
@@ -61,6 +63,11 @@ class Deadline extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    public function files(): BelongsToMany
+    {
+        return $this->belongsToMany(File::class, 'deadline_file');
     }
 
     public function scopeOwnedBy(Builder $query, int $userId): Builder

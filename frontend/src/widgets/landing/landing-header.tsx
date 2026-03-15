@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react"
+// LandingHeader.tsx — Premium frosted-glass nav with refined spacing
+
+import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { themedLogo } from "@/app/config/logo.config"
 import { MenuIcon, XIcon } from "lucide-react"
 import { T } from "./tokens"
 
 const navLinks = [
     { label: "Можливості", href: "#можливості" },
+    { label: "Як це працює", href: "#як-це-працює" },
+    { label: "Відгуки", href: "#відгуки" },
     { label: "Про нас", to: "/about" },
-    { label: "Документація", to: "/docs" },
 ]
 
 export function LandingHeader() {
@@ -16,7 +19,7 @@ export function LandingHeader() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     useEffect(() => {
-        const fn = () => setScrolled(window.scrollY > 40)
+        const fn = () => setScrolled(window.scrollY > 32)
         window.addEventListener("scroll", fn, { passive: true })
         return () => window.removeEventListener("scroll", fn)
     }, [])
@@ -24,145 +27,113 @@ export function LandingHeader() {
     return (
         <>
             <div className="fixed inset-x-0 top-0 z-50 pointer-events-none">
-                <div className={`mx-auto transition-all duration-500 ${scrolled ? "px-4 pt-3 sm:px-6" : "px-0 pt-0"}`} style={{ maxWidth: T.maxW }}>
-                    <nav
-                        className={`pointer-events-auto transition-all duration-500 ${scrolled ? "rounded-2xl shadow-lg shadow-black/5" : ""}`}
-                        style={{
-                            background: scrolled
-                                ? "rgba(255, 255, 255, 0.82)"
-                                : "rgba(255, 255, 255, 0.6)",
-                            backdropFilter: "blur(20px) saturate(180%)",
-                            WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                            borderBottom: scrolled ? "none" : `1px solid ${T.border}`,
-                            border: scrolled ? `1px solid rgba(0,0,0,0.06)` : undefined,
-                        }}
-                    >
-                        <div className="flex h-16 items-center justify-between px-6 lg:px-8">
+                <motion.div
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="pointer-events-auto"
+                    style={{
+                        margin: scrolled ? "12px 16px 0" : "0",
+                        transition: "margin 0.4s cubic-bezier(0.22,1,0.36,1) all 0.4s cubic-bezier(0.22,1,0.36,1)",
+                        borderRadius: scrolled ? 18 : 0,
+                        background: scrolled
+                            ? "rgba(248, 247, 255, 0.88)"
+                            : "rgba(248, 247, 255, 0.72)",
+                        backdropFilter: "blur(24px) saturate(200%)",
+                        WebkitBackdropFilter: "blur(24px) saturate(200%)",
+                        borderBottom: scrolled ? "none" : `1px solid ${T.border}`,
+                        border: scrolled ? `1px solid ${T.borderStrong}` : undefined,
+                        boxShadow: scrolled ? "0 4px 32px rgba(109,40,217,0.08), 0 1px 0 rgba(255,255,255,0.8) inset" : "none",
+                    }}
+                >
+                    <div style={{ maxWidth: T.maxW, margin: "0 auto" }}>
+                        <div className="flex h-[62px] items-center justify-between px-5 lg:px-8">
+                            {/* Logo */}
                             <Link to="/" className="flex items-center gap-2.5" style={{ textDecoration: "none" }}>
-                                <img src={themedLogo("full-no-bg")} alt="Univa" style={{ height: 32 }} />
+                                <img src={themedLogo("full-no-bg")} alt="Univa" style={{ height: 30 }} />
                             </Link>
 
                             {/* Desktop Nav */}
-                            <div className="hidden md:flex items-center gap-1">
+                            <nav className="hidden md:flex items-center gap-0.5">
                                 {navLinks.map((l) => {
-                                    const commonStyle: React.CSSProperties = {
+                                    const base: React.CSSProperties = {
                                         color: T.muted, background: "transparent",
-                                        fontSize: 14, fontWeight: 500, padding: "8px 16px",
-                                        borderRadius: 10, transition: "all 0.2s", textDecoration: "none",
-                                        cursor: "pointer", border: "none",
+                                        fontSize: 14, fontWeight: 500,
+                                        padding: "7px 14px", borderRadius: 10,
+                                        transition: "all 0.18s", textDecoration: "none",
+                                        cursor: "pointer", border: "none", letterSpacing: "-0.01em",
                                     }
                                     if (l.href) {
                                         return (
-                                            <button
-                                                key={l.label}
-                                                onClick={() => {
-                                                    const id = l.href!.replace("#", "")
-                                                    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
-                                                }}
-                                                style={commonStyle}
-                                                onMouseEnter={e => { e.currentTarget.style.color = T.text; e.currentTarget.style.background = "rgba(0,0,0,0.04)" }}
-                                                onMouseLeave={e => { e.currentTarget.style.color = T.muted; e.currentTarget.style.background = "transparent" }}
-                                            >
-                                                {l.label}
-                                            </button>
+                                            <button key={l.label} onClick={() => {
+                                                document.getElementById(l.href!.replace("#", ""))?.scrollIntoView({ behavior: "smooth" })
+                                            }} style={base}
+                                                    onMouseEnter={e => { e.currentTarget.style.color = T.text; e.currentTarget.style.background = T.accentLight }}
+                                                    onMouseLeave={e => { e.currentTarget.style.color = T.muted; e.currentTarget.style.background = "transparent" }}
+                                            >{l.label}</button>
                                         )
                                     }
                                     return (
-                                        <Link
-                                            key={l.label}
-                                            to={l.to!}
-                                            style={commonStyle}
-                                            onMouseEnter={e => { e.currentTarget.style.color = T.text; e.currentTarget.style.background = "rgba(0,0,0,0.04)" }}
-                                            onMouseLeave={e => { e.currentTarget.style.color = T.muted; e.currentTarget.style.background = "transparent" }}
-                                        >
-                                            {l.label}
-                                        </Link>
+                                        <Link key={l.label} to={l.to!} style={base}
+                                              onMouseEnter={e => { e.currentTarget.style.color = T.text; e.currentTarget.style.background = T.accentLight }}
+                                              onMouseLeave={e => { e.currentTarget.style.color = T.muted; e.currentTarget.style.background = "transparent" }}
+                                        >{l.label}</Link>
                                     )
                                 })}
-                            </div>
+                            </nav>
 
-                            <div className="flex items-center gap-3">
-                                {/* Single CTA */}
-                                <Link
-                                    to="/login"
-                                    className="hidden sm:inline-flex items-center gap-1.5"
-                                    style={{
-                                        padding: "9px 22px", borderRadius: 12, fontWeight: 600, fontSize: 14,
-                                        textDecoration: "none",
-                                        background: T.gradient, color: "#fff",
-                                        boxShadow: "0 2px 12px rgba(124,58,237,0.3)",
-                                        transition: "box-shadow 0.2s, transform 0.15s",
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 20px rgba(124,58,237,0.45)"; e.currentTarget.style.transform = "translateY(-1px)" }}
-                                    onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(124,58,237,0.3)"; e.currentTarget.style.transform = "translateY(0)" }}
+                            {/* Actions */}
+                            <div className="flex items-center gap-2.5">
+                                <Link to="/login" className="hidden sm:inline-flex"
+                                      style={{ padding: "7px 16px", borderRadius: 10, fontWeight: 500, fontSize: 14, textDecoration: "none", color: T.muted, border: `1px solid ${T.border}`, background: "transparent", transition: "all 0.18s", letterSpacing: "-0.01em" }}
+                                      onMouseEnter={e => { e.currentTarget.style.borderColor = T.accentMid; e.currentTarget.style.color = T.accent; e.currentTarget.style.background = T.accentLight }}
+                                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; e.currentTarget.style.background = "transparent" }}
                                 >
                                     Увійти
                                 </Link>
 
-                                {/* Mobile menu toggle */}
-                                <button
-                                    className="md:hidden p-2 rounded-lg"
-                                    style={{ color: T.text, background: "rgba(0,0,0,0.04)", border: "none", cursor: "pointer" }}
-                                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                <Link to="/dashboard" className="hidden sm:inline-flex items-center gap-1.5"
+                                      style={{
+                                          padding: "8px 20px", borderRadius: 10, fontWeight: 600, fontSize: 14,
+                                          textDecoration: "none", background: T.gradient, color: "#fff",
+                                          boxShadow: "0 2px 14px rgba(109,40,217,0.32)",
+                                          transition: "all 0.2s", letterSpacing: "-0.01em",
+                                      }}
+                                      onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 22px rgba(109,40,217,0.48)"; e.currentTarget.style.transform = "translateY(-1px)" }}
+                                      onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 14px rgba(109,40,217,0.32)"; e.currentTarget.style.transform = "translateY(0)" }}
                                 >
-                                    {mobileMenuOpen ? <XIcon size={18} /> : <MenuIcon size={18} />}
+                                    Почати
+                                </Link>
+
+                                <button className="md:hidden p-2 rounded-lg" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                        style={{ color: T.text, background: T.accentLight, border: `1px solid ${T.border}`, cursor: "pointer" }}>
+                                    {mobileMenuOpen ? <XIcon size={17} /> : <MenuIcon size={17} />}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Mobile Menu */}
-                        {mobileMenuOpen && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="md:hidden px-6 pb-4"
-                                style={{ borderTop: `1px solid ${T.border}` }}
-                            >
-                                {navLinks.map(l => {
-                                    if (l.href) {
-                                        return (
-                                            <button
-                                                key={l.label}
-                                                onClick={() => {
-                                                    const id = l.href!.replace("#", "")
-                                                    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
-                                                    setMobileMenuOpen(false)
-                                                }}
-                                                style={{ display: "block", width: "100%", textAlign: "left", padding: "12px 0", color: T.muted, fontSize: 15, background: "transparent", border: "none", cursor: "pointer" }}
-                                            >
-                                                {l.label}
-                                            </button>
-                                        )
-                                    }
-                                    return (
-                                        <Link
-                                            key={l.label}
-                                            to={l.to!}
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            style={{ display: "block", padding: "12px 0", color: T.muted, fontSize: 15, textDecoration: "none" }}
-                                        >
-                                            {l.label}
+                        {/* Mobile menu */}
+                        <AnimatePresence>
+                            {mobileMenuOpen && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                                            className="md:hidden px-5 pb-5" style={{ borderTop: `1px solid ${T.border}` }}>
+                                    <div style={{ paddingTop: 12, display: "flex", flexDirection: "column", gap: 2 }}>
+                                        {navLinks.map(l => {
+                                            const s: React.CSSProperties = { display: "block", padding: "10px 12px", color: T.muted, fontSize: 15, background: "transparent", border: "none", cursor: "pointer", textAlign: "left", width: "100%", borderRadius: 10, textDecoration: "none", fontWeight: 500 }
+                                            if (l.href) return <button key={l.label} onClick={() => { document.getElementById(l.href!.replace("#", ""))?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false) }} style={s}>{l.label}</button>
+                                            return <Link key={l.label} to={l.to!} onClick={() => setMobileMenuOpen(false)} style={s}>{l.label}</Link>
+                                        })}
+                                        <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} style={{ display: "block", textAlign: "center", marginTop: 8, padding: "12px", borderRadius: 12, fontWeight: 600, fontSize: 14, background: T.gradient, color: "#fff", textDecoration: "none" }}>
+                                            Почати безкоштовно
                                         </Link>
-                                    )
-                                })}
-                                <Link
-                                    to="/login"
-                                    style={{
-                                        display: "block", textAlign: "center", marginTop: 8,
-                                        padding: "12px 0", borderRadius: 12, fontWeight: 600, fontSize: 14,
-                                        background: T.gradient, color: "#fff", textDecoration: "none",
-                                    }}
-                                >
-                                    Увійти
-                                </Link>
-                            </motion.div>
-                        )}
-                    </nav>
-                </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </motion.div>
             </div>
-            {/* spacer */}
-            <div className="h-[76px]" />
+            <div className="h-[62px]" />
         </>
     )
 }
