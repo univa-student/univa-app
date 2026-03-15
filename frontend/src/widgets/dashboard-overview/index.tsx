@@ -4,7 +4,7 @@ import {
     CalendarDaysIcon, ClockIcon, FolderOpenIcon,
     AlertCircleIcon, ArrowRightIcon, TrendingUpIcon,
     BookOpenIcon, CheckCircle2Icon, AlertTriangleIcon,
-    CalendarCheckIcon, MapPinIcon, FileTextIcon,
+    CalendarCheckIcon, FileTextIcon,
     FileSpreadsheetIcon, FileIcon, PresentationIcon,
     HardDriveIcon, GraduationCapIcon,
 } from "lucide-react";
@@ -24,7 +24,6 @@ import { useSchedule, useSubjects } from "@/entities/schedule/api/hooks";
 import { useRecentFiles, useStorageInfo } from "@/entities/file/api/hooks";
 import { priorityConfig } from "@/shared/ui/deadlines/deadline-priority-badge";
 import { GreetingHeader } from "@/shared/ui/dashboard/greeting-header";
-import type { LessonInstance } from "@/entities/schedule/model/types";
 import type { FileItem } from "@/entities/file/model/types";
 
 // ── Helpers ──────────────────────────────────────────────────

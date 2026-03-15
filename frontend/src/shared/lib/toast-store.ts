@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 export type ToastVariant = "default" | "info" | "success" | "warning" | "destructive";
 
 export type ToastInput = {
