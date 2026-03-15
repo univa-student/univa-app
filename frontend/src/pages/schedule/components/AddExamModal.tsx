@@ -8,7 +8,7 @@ interface Props {
 }
 
 /* ── Shared field wrapper ── */
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
     return (
         <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
@@ -51,7 +51,7 @@ export function AddExamModal({ onClose }: Props) {
         return v ? v.replace("T", " ") : "";
     }
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!form.subjectId || !form.examTypeId || !form.startsAt) return;
         await createExam.mutateAsync({

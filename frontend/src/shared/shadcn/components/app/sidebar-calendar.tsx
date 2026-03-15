@@ -159,9 +159,9 @@ function mapDeadlines(deadlines: Deadline[]): CalendarEvent[] {
             return {
                 id: `deadline-${d.id}`,
                 date: format(dt, "yyyy-MM-dd"),
-                title: d.title,
                 time: fmtTime(format(dt, "HH:mm")),
                 type: "deadline" as EventType,
+                title: d.title,
                 isOverdue: dt < now && d.status !== "completed",
                 isCompleted: d.status === "completed",
             }
