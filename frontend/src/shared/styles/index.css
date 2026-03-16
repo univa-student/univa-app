@@ -349,34 +349,49 @@ html, body, #root {
 
 .island-canvas {
     position: relative;
-
     background:
-        /* сильний верхній glow */
             radial-gradient(
                     1400px 800px at -10% -20%,
                     rgba(90, 110, 180, 0.35),
                     transparent 60%
             ),
-
-                /* правий glow */
             radial-gradient(
                     1200px 700px at 120% 110%,
                     rgba(90, 110, 180, 0.30),
                     transparent 65%
             ),
-
-                /* центральний glow */
             radial-gradient(
                     900px 600px at 50% 120%,
                     rgba(90, 110, 180, 0.22),
                     transparent 70%
             ),
-
             var(--island-canvas);
-
     height: 100dvh;
     display: flex;
     overflow: hidden;
+}
+
+.dark .island-canvas {
+    background:
+            radial-gradient(
+                    1200px 700px at -10% -20%,
+                    rgba(120, 150, 255, 0.18),
+                    transparent 60%
+            ),
+
+            radial-gradient(
+                    1000px 600px at 110% 110%,
+                    rgba(120, 150, 255, 0.15),
+                    transparent 65%
+            ),
+
+            radial-gradient(
+                    900px 500px at 50% 120%,
+                    rgba(120, 150, 255, 0.12),
+                    transparent 70%
+            ),
+
+            var(--island-canvas);
 }
 
 .island-canvas::before {
@@ -385,33 +400,20 @@ html, body, #root {
     inset: 0;
 
     background-image:
-            linear-gradient(
-                    rgba(0,0,0,0.04) 1px,
-                    transparent 1px
-            ),
-            linear-gradient(
-                    90deg,
-                    rgba(0,0,0,0.04) 1px,
-                    transparent 1px
-            );
+            linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
 
-    background-size: 40px 40px;
+    background-size: 36px 36px;
 
     pointer-events: none;
 }
 
 .dark .island-canvas::before {
     background-image:
-            linear-gradient(
-                    rgba(255,255,255,0.05) 1px,
-                    transparent 1px
-            ),
-            linear-gradient(
-                    90deg,
-                    rgba(255,255,255,0.05) 1px,
-                    transparent 1px
-            );
+            linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
 }
+
 .island {
     background: var(--island-bg);
     border: var(--island-border);

@@ -1,7 +1,7 @@
 import { format, isWeekend } from "date-fns";
 import type { LessonInstance } from "@/entities/schedule/model/types";
 import type { Deadline } from "@/entities/deadline/model/types";
-import { PX_PER_MIN, toMin, minToTop, durationToPx } from "./schedule.utils";
+import {PX_PER_MIN, toMin, minToTop, durationToPx, GRID_TOP_PADDING} from "./schedule.utils";
 import { NowLine } from "@/shared/ui/schedule/now-line";
 import { EventCard } from "@/shared/ui/schedule/event-card";
 
@@ -20,22 +20,13 @@ interface Props {
     onLessonClick?: (lessonId: number) => void;
 }
 
-const TIME_COL_WIDTH = 72;
-const MIN_DAY_WIDTH = 170;
+const TIME_COL_WIDTH = 50;
+const MIN_DAY_WIDTH = 140;
 
 export function WeekView({
-                             weekDays,
-                             weekdayLabels,
-                             byDate,
-                             deadlinesByDate,
-                             now,
-                             slotStart,
-                             slotEnd,
-                             hours,
-                             gridHeight,
-                             showNowLine,
-                             onDayClick,
-                             onLessonClick,
+                             weekDays, weekdayLabels, byDate, deadlinesByDate,
+                             now, slotStart, slotEnd, hours, gridHeight, showNowLine,
+                             onDayClick, onLessonClick,
                          }: Props) {
     const todayStr = format(new Date(), "yyyy-MM-dd");
     const hourBands = hours.slice(0, -1);
@@ -43,17 +34,17 @@ export function WeekView({
     const gridTemplateColumns = `${TIME_COL_WIDTH}px repeat(${weekDays.length}, minmax(${MIN_DAY_WIDTH}px, 1fr))`;
 
     return (
-        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-border/70 bg-card shadow-sm">
-            <div className="flex-1 overflow-auto">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-background shadow-sm">
+            <div className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-border/40 scrollbar-hidden">
                 <div style={{ minWidth: minGridWidth }}>
-                    {/* Sticky header */}
+
+                    {/* ── Sticky header ── */}
                     <div
-                        className="sticky top-0 z-30 grid border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+                        className="sticky top-0 z-30 grid border-b border-border/60 bg-background/95 backdrop-blur"
                         style={{ gridTemplateColumns }}
                     >
-                        <div className="flex items-center justify-center border-r border-border/60 bg-muted/20 px-2 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
-                            Час
-                        </div>
+                        {/* Corner cell */}
+                        <div className="border-r border-border/40 px-2 py-4" />
 
                         {weekDays.map((day, idx) => {
                             const dateStr = format(day, "yyyy-MM-dd");
@@ -67,53 +58,54 @@ export function WeekView({
                                     key={dateStr}
                                     onClick={() => onDayClick(day)}
                                     className={[
-                                        "group relative border-l border-border/60 px-2 py-3 transition-colors",
-                                        "hover:bg-muted/40",
-                                        isToday ? "bg-primary/[0.06]" : "",
-                                        isDayWeekend && !isToday ? "bg-muted/[0.18]" : "",
+                                        "group relative border-l border-border/40 px-3 py-3 text-left",
+                                        "transition-colors hover:bg-muted/30",
+                                        isDayWeekend && !isToday ? "bg-muted/[0.15]" : "",
                                     ].join(" ")}
                                 >
-                                    <div className="flex flex-col items-center gap-1.5">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/70">
-                                            {weekdayLabels[idx]}
+                                    {/* Today indicator bar */}
+                                    {isToday && (
+                                        <div className="absolute inset-x-0 top-0 h-[2px] bg-primary rounded-b" />
+                                    )}
+
+                                    <div className="flex items-center gap-2.5">
+                                        {/* Day number */}
+                                        <span
+                                            className={[
+                                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-bold transition-all",
+                                                isToday
+                                                    ? "bg-primary text-primary-foreground"
+                                                    : "text-foreground group-hover:bg-muted",
+                                            ].join(" ")}
+                                        >
+                                            {format(day, "d")}
                                         </span>
 
-                                        <div className="relative">
-                                            <span
-                                                className={[
-                                                    "flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-all",
-                                                    isToday
-                                                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                                                        : "text-foreground group-hover:bg-muted",
-                                                ].join(" ")}
-                                            >
-                                                {format(day, "d")}
+                                        <div className="flex flex-col min-w-0">
+                                            {/* Weekday label */}
+                                            <span className={[
+                                                "text-[10px] font-semibold uppercase tracking-widest",
+                                                isToday ? "text-primary" : "text-muted-foreground/60",
+                                            ].join(" ")}>
+                                                {weekdayLabels[idx]}
                                             </span>
 
-                                            {deadlinesCount > 0 && (
-                                                <span
-                                                    className="absolute -right-1 -top-1 flex min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-background"
-                                                    title={`${deadlinesCount} дедлайнів`}
-                                                >
-                                                    {deadlinesCount}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="flex min-h-4 items-center gap-1">
-                                            {lessonsCount > 0 ? (
-                                                <span className="text-[10px] tabular-nums text-muted-foreground">
-                                                    {lessonsCount} пар{lessonsCount === 1 ? "а" : lessonsCount < 5 ? "и" : ""}
-                                                </span>
-                                            ) : (
-                                                <span className="text-[10px] text-muted-foreground/35">вільно</span>
-                                            )}
-
-                                            {deadlinesCount > 0 && (
-                                                <span className="rounded-full bg-red-500/10 px-1.5 py-0.5 text-[9px] font-medium text-red-500">
-                                                    {deadlinesCount} ддл
-                                                </span>
-                                            )}
+                                            {/* Indicators row */}
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                {lessonsCount > 0 ? (
+                                                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                                                        {lessonsCount} {lessonsCount === 1 ? "пара" : lessonsCount < 5 ? "пари" : "пар"}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[10px] text-muted-foreground/30">вільно</span>
+                                                )}
+                                                {deadlinesCount > 0 && (
+                                                    <span className="flex items-center gap-0.5 rounded-full bg-red-500/10 px-1.5 py-px text-[9px] font-semibold text-red-500">
+                                                        <span className="size-1 rounded-full bg-red-500 inline-block" />
+                                                        {deadlinesCount}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </button>
@@ -121,21 +113,21 @@ export function WeekView({
                         })}
                     </div>
 
-                    {/* Body grid */}
-                    <div className="grid" style={{ gridTemplateColumns }}>
+                    {/* ── Body grid ── */}
+                    <div className="grid " style={{ gridTemplateColumns }}>
+
                         {/* Time rail */}
                         <div
-                            className="sticky left-0 z-20 border-r border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+                            className="sticky left-0 z-20 border-r border-border/40 bg-background"
                             style={{ height: gridHeight }}
                         >
                             {hourBands.map((hour, i) => (
                                 <div
                                     key={hour}
                                     className="absolute inset-x-0"
-                                    style={{ top: i * 60 * PX_PER_MIN }}
+                                    style={{ top: GRID_TOP_PADDING + i * 60 * PX_PER_MIN }}
                                 >
-                                    <div className="absolute inset-x-0 top-0 border-t border-border/50" />
-                                    <span className="absolute -top-2 right-3 rounded bg-background px-1.5 text-[10px] font-medium tabular-nums text-muted-foreground shadow-sm">
+                                    <span className="absolute right-2 -top-2 text-[10px] tabular-nums text-muted-foreground/50 font-medium">
                                         {String(hour).padStart(2, "0")}:00
                                     </span>
                                 </div>
@@ -154,41 +146,29 @@ export function WeekView({
                                 <div
                                     key={dateStr}
                                     className={[
-                                        "relative border-l border-border/60",
+                                        "relative border-l border-border/40",
                                         isToday
-                                            ? "bg-primary/[0.03]"
+                                            ? "bg-primary/[0.02]"
                                             : isDayWeekend
-                                                ? "bg-muted/[0.12]"
+                                                ? "bg-muted/[0.08]"
                                                 : "bg-background",
                                     ].join(" ")}
                                     style={{ height: gridHeight }}
                                 >
-                                    {/* Alternating hour bands */}
-                                    {hourBands.map((_, i) => (
-                                        <div
-                                            key={`band-${dateStr}-${i}`}
-                                            className={i % 2 === 0 ? "absolute inset-x-0 bg-muted/[0.12]" : "absolute inset-x-0 bg-transparent"}
-                                            style={{
-                                                top: i * 60 * PX_PER_MIN,
-                                                height: 60 * PX_PER_MIN,
-                                            }}
-                                        />
-                                    ))}
-
                                     {/* Hour lines */}
                                     {hours.map((_, i) => (
                                         <div
                                             key={`line-${dateStr}-${i}`}
                                             className={`absolute left-0 right-0 border-t ${
-                                                i % 2 === 0 ? "border-border/50" : "border-border/20"
+                                                i % 2 === 0 ? "border-border/40" : "border-border/15"
                                             }`}
-                                            style={{ top: i * 60 * PX_PER_MIN }}
+                                            style={{ top: GRID_TOP_PADDING + i * 60 * PX_PER_MIN }}
                                         />
                                     ))}
 
-                                    {/* Today accent */}
+                                    {/* Today left accent */}
                                     {isToday && (
-                                        <div className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-primary/70" />
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-primary/40" />
                                     )}
 
                                     {isToday && showNowLine && (
@@ -197,23 +177,22 @@ export function WeekView({
 
                                     {/* Empty state */}
                                     {items.length === 0 && deadlines.length === 0 && (
-                                        <div className="pointer-events-none absolute inset-x-3 top-12 flex justify-center">
-                                            <div className="rounded-full border border-dashed border-border/70 bg-background/80 px-3 py-1 text-[11px] text-muted-foreground shadow-sm">
+                                        <div className="pointer-events-none absolute inset-x-2 top-8 flex justify-center">
+                                            <span className="rounded-full border border-dashed border-border/50 px-3 py-1 text-[10px] text-muted-foreground/40">
                                                 Вільний день
-                                            </div>
+                                            </span>
                                         </div>
                                     )}
 
-                                    {/* Lesson cards */}
+                                    {/* Event cards */}
                                     {items.map((inst, ii) => {
                                         const sm = toMin(inst.startsAt);
                                         const em = inst.endsAt ? toMin(inst.endsAt) : sm + 90;
-
                                         return (
                                             <EventCard
                                                 key={`${inst.source}-${inst.id}-${ii}`}
                                                 inst={inst}
-                                                compact={durationToPx(sm, em) < 78}
+                                                compact={durationToPx(sm, em) < 72}
                                                 style={{
                                                     top: minToTop(sm, slotStart),
                                                     height: durationToPx(sm, em),

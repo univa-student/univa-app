@@ -36,6 +36,7 @@ import { SemesterView } from "./semester-view";
 import { MonthView } from "./month-view";
 import { WeekView } from "./week-view";
 import { DayView } from "./day-view";
+import {ScheduleRightSidebar} from "@/pages/schedule/subjects/components/ScheduleRightSidebar.tsx";
 
 export function ScheduleCalendar() {
     const [viewMode, setViewMode] = useState<ViewMode>("week");
@@ -209,8 +210,8 @@ export function ScheduleCalendar() {
     }, [range, anchorDate, viewMode]);
 
     return (
-        <div className="flex flex-col h-full min-h-0 gap-0">
-            {/* ── Top bar ─────────────────────────────────────────── */}
+        <div className="flex flex-col h-full min-h-0 gap-0 p-4">
+            {/* ── Top bar ── */}
             <div className="flex items-center justify-between pb-4 flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                     <div className="flex items-center rounded-xl border border-border bg-card overflow-hidden shadow-sm">
@@ -262,7 +263,7 @@ export function ScheduleCalendar() {
                 </div>
             </div>
 
-            {/* ── Status strip ────────────────────────────────────── */}
+            {/* ── Status strip ── */}
             {!isLoading && todayInstances.length > 0 && (
                 <div className="flex items-center gap-3 pb-3 flex-wrap">
                     {nextLesson ? (
@@ -304,7 +305,7 @@ export function ScheduleCalendar() {
                 </div>
             )}
 
-            {/* ── Content ─────────────────────────────────────────── */}
+            {/* ── Content ── */}
             <div className="flex-1 min-h-0 overflow-hidden">
                 {isLoading ? (
                     <div className="grid grid-cols-5 gap-2">
@@ -364,6 +365,19 @@ export function ScheduleCalendar() {
                     />
                 )}
             </div>
+
+            {viewMode === "day" && (
+                <ScheduleRightSidebar
+                    now={now}
+                    todayStr={todayStr}
+                    activeDayStr={activeDayStr}
+                    instances={activeDayInstances}
+                    deadlines={deadlinesByDate[activeDayStr] ?? []}
+                    nextLesson={nextLesson}
+                    minutesUntilNext={minutesUntilNext}
+                    onLessonClick={setEditingLessonId}
+                />
+            )}
 
             {showAddLesson && <AddLessonModal onClose={() => setShowAddLesson(false)} />}
             {showAddExam && <AddExamModal onClose={() => setShowAddExam(false)} />}

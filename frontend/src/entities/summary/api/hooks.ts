@@ -23,13 +23,12 @@ export function useGenerateSummary() {
     return useMutation({
         mutationFn: async (fileId: number) => {
             const result = await summaryQueries.generate(fileId).queryFn();
-            // Guard: if the backend didn't return an id, log and throw so we
-            // don't navigate to /summaries/NaN
-            if (!result || typeof result.id !== "number") {
-                console.warn("[useGenerateSummary] unexpected response shape:", result);
+            const summaryId = result?.artifact?.id;
+            if (typeof summaryId !== "number") {
+                console.warn("[useGenerateSummary] unexpected response:", result);
                 throw new Error("Summary generated but ID was missing in response");
             }
-            return result;
+            return result.artifact; // повертаємо SummaryArtifact
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["summaries"] });

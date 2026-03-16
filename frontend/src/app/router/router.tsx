@@ -136,11 +136,14 @@ export const router = createBrowserRouter([
                         element: (
                             <LazyBoundary>
                                 <AuthGuard>
-                                    <DashboardLayout breadcrumbs={[
-                                        { label: "Головна", href: "/dashboard" },
-                                        { label: "Розклад" },
-                                        { label: "Календар" },
-                                    ]}>
+                                    <DashboardLayout
+                                        fullHeight
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Розклад" },
+                                            { label: "Календар" },
+                                        ]}
+                                    >
                                         <SchedulePage />
                                     </DashboardLayout>
                                 </AuthGuard>
