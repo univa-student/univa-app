@@ -28,7 +28,8 @@ export const mimeColorMap: Record<MimeGroup, string> = {
 
 export function isPreviewable(mime: string | null): boolean {
     if (!mime) return false;
-    return mime.startsWith("image/") || mime === "application/pdf";
+    const g = mimeGroup(mime);
+    return g === "img" || g === "pdf" || g === "doc" || g === "xls" || g === "ppt";
 }
 
 export function FileTypeIcon({ mime }: { mime: string | null }) {

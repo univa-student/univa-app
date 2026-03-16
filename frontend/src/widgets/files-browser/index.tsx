@@ -211,9 +211,9 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
     }, []);
 
     return (
-        <div className="flex min-h-0 flex-1 -mr-4 -mb-4">
+        <div className="flex flex-col flex-1 min-h-0 overflow-y-auto scrollbar-hidden">
             {/* ── Main content ───────────────────────────────────── */}
-            <div className="flex flex-1 flex-col min-w-0 p-5 gap-4 pr-[350px]">
+            <div className="flex flex-1 flex-col min-w-0 p-5 gap-4">
                 {/* Header */}
                 <div className="flex items-center gap-3 flex-wrap">
                     <nav className="flex items-center gap-1 text-sm mr-auto flex-wrap">

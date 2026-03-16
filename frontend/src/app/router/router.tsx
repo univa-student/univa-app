@@ -185,10 +185,13 @@ export const router = createBrowserRouter([
                         element: (
                             <LazyBoundary>
                                 <AuthGuard>
-                                    <DashboardLayout breadcrumbs={[
-                                        { label: "Головна", href: "/dashboard" },
-                                        { label: "Файли" },
-                                    ]}>
+                                    <DashboardLayout
+                                        fullHeight
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Файли" },
+                                        ]}
+                                    >
                                         <FilesPage />
                                     </DashboardLayout>
                                 </AuthGuard>
