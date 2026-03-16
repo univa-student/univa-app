@@ -3,7 +3,8 @@ import { getSelectedValue } from "@/entities/settings/api/settings.api";
 
 // ── Constants ─────────────────────────────────────────────────
 
-export const PX_PER_MIN = 1.2;
+export const PX_PER_MIN = 2.2;
+export const GRID_TOP_PADDING = 8;
 
 export type ViewMode = "semester" | "month" | "week" | "day";
 export type WeekParityAnchor = "even" | "odd";
@@ -43,15 +44,15 @@ export function fmtTime(t: string | null | undefined): string {
 }
 
 export function minToTop(min: number, slotStart: number): number {
-    return (min - slotStart) * PX_PER_MIN;
+    return GRID_TOP_PADDING + (min - slotStart) * PX_PER_MIN;
 }
 
 export function durationToPx(sm: number, em: number): number {
-    return Math.max((em - sm) * PX_PER_MIN - 2, 32);
+    return Math.max((em - sm) * PX_PER_MIN - 4, 44);
 }
 
 export function getGridHeight(slotStart: number, slotEnd: number): number {
-    return (slotEnd - slotStart) * PX_PER_MIN;
+    return GRID_TOP_PADDING + (slotEnd - slotStart) * PX_PER_MIN + 16;
 }
 
 export function getHours(slotStart: number, slotEnd: number): number[] {
