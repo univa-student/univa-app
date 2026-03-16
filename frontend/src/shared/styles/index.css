@@ -110,6 +110,17 @@
     );
 
     --u-orbit-glow: color-mix(in srgb, var(--primary) 10%, transparent);
+
+    /* ── Island Workspace tokens ── */
+    --island-radius: 0.875rem;
+    --island-gap: 0.625rem;
+    --island-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 3px 10px rgba(0, 0, 0, 0.07),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    --island-border: 1px solid var(--border);
+    --island-bg: var(--card);
+    --island-canvas: oklch(0.952 0.003 250);
 }
 
 .dark {
@@ -177,6 +188,15 @@
     );
 
     --u-orbit-glow: color-mix(in srgb, var(--primary) 14%, transparent);
+
+    /* ── Island Workspace tokens (dark) ── */
+    --island-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.35),
+        0 6px 20px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+    --island-border: 1px solid var(--border);
+    --island-bg: var(--card);
+    --island-canvas: oklch(0.93 0.006 250);
 }
 
 @layer base {
@@ -219,11 +239,15 @@
     }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   COMPACT MODE  —  html[data-compact="1"]
-   Tightens spacing, reduces paddings/gaps/element sizes globally.
-   Pure CSS — no component changes required.
-═══════════════════════════════════════════════════════════════════════════ */
+html, body, #root {
+    height: 100%;
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
+}
+
 :root[data-compact="1"] {
     --radius: 0.6rem;
 }
@@ -315,4 +339,153 @@
 [data-animations="0"] [style*="translateX"],
 [data-animations="0"] [style*="scale("] {
     transform: none !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ISLAND WORKSPACE UI
+   Floating panel layout similar to JetBrains / Linear / Notion
+═══════════════════════════════════════════════════════════════════════════ */
+
+.island-canvas {
+    position: relative;
+
+    background:
+        /* сильний верхній glow */
+            radial-gradient(
+                    1400px 800px at -10% -20%,
+                    rgba(90, 110, 180, 0.35),
+                    transparent 60%
+            ),
+
+                /* правий glow */
+            radial-gradient(
+                    1200px 700px at 120% 110%,
+                    rgba(90, 110, 180, 0.30),
+                    transparent 65%
+            ),
+
+                /* центральний glow */
+            radial-gradient(
+                    900px 600px at 50% 120%,
+                    rgba(90, 110, 180, 0.22),
+                    transparent 70%
+            ),
+
+            var(--island-canvas);
+
+    height: 100dvh;
+    display: flex;
+    overflow: hidden;
+}
+
+.island-canvas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background-image:
+            linear-gradient(
+                    rgba(0,0,0,0.04) 1px,
+                    transparent 1px
+            ),
+            linear-gradient(
+                    90deg,
+                    rgba(0,0,0,0.04) 1px,
+                    transparent 1px
+            );
+
+    background-size: 40px 40px;
+
+    pointer-events: none;
+}
+
+.dark .island-canvas::before {
+    background-image:
+            linear-gradient(
+                    rgba(255,255,255,0.05) 1px,
+                    transparent 1px
+            ),
+            linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.05) 1px,
+                    transparent 1px
+            );
+}
+.island {
+    background: var(--island-bg);
+    border: var(--island-border);
+    border-radius: var(--island-radius);
+
+    box-shadow:
+            0 2px 6px rgba(0,0,0,0.05),
+            0 8px 24px rgba(0,0,0,0.06),
+            0 0 0 1px rgba(0,0,0,0.04);
+}
+
+[data-island-layout] [data-slot="sidebar-container"] {
+    inset-block: var(--island-gap) !important;
+    inset-inline-start: var(--island-gap) !important;
+    height: calc(100dvh - 2 * var(--island-gap)) !important;
+}
+
+[data-island-layout] [data-sidebar="sidebar"] {
+    border-radius: var(--island-radius) !important;
+    box-shadow: var(--island-shadow) !important;
+    outline: var(--island-border);
+    overflow: hidden;
+}
+
+.island-main {
+    flex: 1;
+    display: flex;
+    /* flex-direction is controlled by Tailwind classes (flex-col / flex-row) */
+
+    gap: var(--island-gap);
+
+    padding: var(--island-gap);
+    padding-left: 25px;
+
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Hide the right-panel portal slot when nothing is portaled into it */
+#dashboard-right-panel:empty {
+    display: none;
+}
+
+.island-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--island-bg);
+    border-bottom: var(--island-border);
+    border-top-left-radius: var(--island-radius);
+    border-top-right-radius: var(--island-radius);
+    display: flex;
+    align-items: center;
+    height: 48px;
+    padding-inline: 1rem;
+    flex-shrink: 0;
+    backdrop-filter: blur(6px);
+}
+
+.island-content {
+    background: var(--island-bg);
+    border: var(--island-border);
+    border-radius: var(--island-radius);
+    box-shadow: var(--island-shadow);
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

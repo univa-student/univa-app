@@ -64,7 +64,7 @@ export function SettingsPage() {
             <div className="flex gap-6">
                 {/* Sidebar nav */}
                 <nav className="w-56 shrink-0">
-                    <div className="flex flex-col gap-1 sticky top-20">
+                    <div className="flex flex-col gap-1 sticky top-4">
                         {tabs.map((tab, idx) => {
                             const isActive = tab.id === activeTab
                             const isDanger = tab.id === "danger"

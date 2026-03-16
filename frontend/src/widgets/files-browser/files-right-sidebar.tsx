@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom";
+import { useState, useEffect } from "react";
 import {
     UploadCloudIcon, FolderPlusIcon, HomeIcon,
     StarIcon, ClockIcon, TreePineIcon, HardDriveIcon,
@@ -36,8 +38,20 @@ export function FilesRightSidebar({
     const limitFormatted = storage ? formatBytes(storage.limit) : "0 GB";
     const fillPercent = storage && storage.limit > 0 ? Math.min(100, (storage.used / storage.limit) * 100) : 0;
 
-    return (
-        <aside className="fixed top-0 right-0 w-[310px] h-screen flex flex-col border-l bg-card/30">
+    // Portal target: the `#dashboard-right-panel` slot rendered by DashboardLayout
+    // when fullHeight=true. This makes the sidebar a true sibling island instead
+    // of being nested inside island-content.
+    // Find the portal target AFTER React commits the DOM (getElementById during
+    // render returns null on first mount because the parent hasn't been committed yet)
+    const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+    useEffect(() => {
+        setPortalTarget(document.getElementById("dashboard-right-panel"));
+    }, []);
+
+    if (!portalTarget) return null;
+
+    const content = (
+        <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", flex: 1 }}>
             {/* Quick actions */}
             <div className="p-4 space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Дії</p>
@@ -72,7 +86,7 @@ export function FilesRightSidebar({
                         className={`w-full justify-start gap-3 h-9 px-3 ${currentFolderId === null
                             ? "bg-primary/10 text-primary hover:bg-primary/20 font-medium"
                             : "text-muted-foreground hover:text-foreground font-normal"
-                            }`}
+                        }`}
                     >
                         <HomeIcon className="size-4" />
                         <span className="truncate">Мої файли</span>
@@ -125,9 +139,7 @@ export function FilesRightSidebar({
                             key={`root-file-${file.id}`}
                             className="group flex items-center gap-1 rounded-lg pr-1 transition-all duration-150 text-muted-foreground hover:bg-muted/60 hover:text-foreground cursor-pointer"
                         >
-                            {/* Invisible spacer to match the chevron in FolderTreeItem */}
                             <div className="flex shrink-0 size-5 items-center justify-center pointer-events-none" />
-
                             <button
                                 onClick={() => onSelectFile(file)}
                                 className="flex flex-1 min-w-0 items-center gap-2 py-1.5 text-sm"
@@ -164,6 +176,8 @@ export function FilesRightSidebar({
                     </div>
                 </div>
             </div>
-        </aside>
+        </div>
     );
+
+    return createPortal(content, portalTarget);
 }

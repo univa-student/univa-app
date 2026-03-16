@@ -21,7 +21,16 @@ export function useFileSummary(fileId: number) {
 export function useGenerateSummary() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: (fileId: number) => summaryQueries.generate(fileId).queryFn(),
+        mutationFn: async (fileId: number) => {
+            const result = await summaryQueries.generate(fileId).queryFn();
+            // Guard: if the backend didn't return an id, log and throw so we
+            // don't navigate to /summaries/NaN
+            if (!result || typeof result.id !== "number") {
+                console.warn("[useGenerateSummary] unexpected response shape:", result);
+                throw new Error("Summary generated but ID was missing in response");
+            }
+            return result;
+        },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["summaries"] });
         },
