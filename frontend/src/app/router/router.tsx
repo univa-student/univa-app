@@ -28,6 +28,12 @@ import { routesLoaders } from "./loaders.ts";
 import { AiHome } from "@/pages/ai/ai-home.tsx";
 import { SummariesListPage } from "@/pages/ai/summaries-list.tsx";
 import { SummaryViewPage } from "@/pages/ai/summary-view.tsx";
+import {IntegrationsPage} from "@/pages/main/integrations.page.tsx";
+import {StatusPage} from "@/pages/main/status.page.tsx";
+import {ApiPage} from "@/pages/main/api.page.tsx";
+import {SupportPage} from "@/pages/main/support.page.tsx";
+import {CookiesPage, LicensesPage, PrivacyPage, TermsPage} from "@/pages/main/licenses.page.tsx";
+import {BlogPage, CareerPage, ContactPage} from "@/pages/main/blog.page.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -57,6 +63,94 @@ export const router = createBrowserRouter([
                 element: (
                     <LazyBoundary>
                         <AboutPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "integrations",
+                element: (
+                    <LazyBoundary>
+                        <IntegrationsPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "status",
+                element: (
+                    <LazyBoundary>
+                        <StatusPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "api",
+                element: (
+                    <LazyBoundary>
+                        <ApiPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "support",
+                element: (
+                    <LazyBoundary>
+                        <SupportPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "privacy",
+                element: (
+                    <LazyBoundary>
+                        <PrivacyPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "terms",
+                element: (
+                    <LazyBoundary>
+                        <TermsPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "cookies",
+                element: (
+                    <LazyBoundary>
+                        <CookiesPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "licenses",
+                element: (
+                    <LazyBoundary>
+                        <LicensesPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "contacts",
+                element: (
+                    <LazyBoundary>
+                        <ContactPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "career",
+                element: (
+                    <LazyBoundary>
+                        <CareerPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "blog",
+                element: (
+                    <LazyBoundary>
+                        <BlogPage />
                     </LazyBoundary>
                 ),
             },

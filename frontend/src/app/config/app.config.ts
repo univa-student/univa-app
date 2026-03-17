@@ -10,7 +10,7 @@ export const APP_ENV = import.meta.env.MODE as "development" | "production" | "s
 export const IS_DEV = import.meta.env.DEV as boolean;
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 // ─── WebSocket ────────────────────────────────────────────────────────────────
 export const WS_HOST = import.meta.env.VITE_WS_HOST ?? "localhost";

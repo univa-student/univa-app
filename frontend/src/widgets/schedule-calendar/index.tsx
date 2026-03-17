@@ -36,7 +36,8 @@ import { SemesterView } from "./semester-view";
 import { MonthView } from "./month-view";
 import { WeekView } from "./week-view";
 import { DayView } from "./day-view";
-import {ScheduleRightSidebar} from "@/pages/schedule/subjects/components/ScheduleRightSidebar.tsx";
+import { SchedulePanel } from "./schedule-panel";
+import { ScheduleRightSidebar } from "@/pages/schedule/subjects/components/ScheduleRightSidebar.tsx";
 
 export function ScheduleCalendar() {
     const [viewMode, setViewMode] = useState<ViewMode>("week");
@@ -366,7 +367,7 @@ export function ScheduleCalendar() {
                 )}
             </div>
 
-            {viewMode === "day" && (
+            {viewMode === "day" ? (
                 <ScheduleRightSidebar
                     now={now}
                     todayStr={todayStr}
@@ -377,6 +378,8 @@ export function ScheduleCalendar() {
                     minutesUntilNext={minutesUntilNext}
                     onLessonClick={setEditingLessonId}
                 />
+            ) : (
+                <SchedulePanel />
             )}
 
             {showAddLesson && <AddLessonModal onClose={() => setShowAddLesson(false)} />}

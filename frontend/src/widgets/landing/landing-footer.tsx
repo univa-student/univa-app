@@ -11,7 +11,7 @@ const columns = [
         links: [
             { label: "Можливості", href: "#можливості" },
             { label: "Як це працює", href: "#як-це-працює" },
-            { label: "Інтеграції", href: "#" },
+            { label: "Інтеграції", href: "/integrations" },
             { label: "Оновлення", href: "#" },
         ],
     },
@@ -19,36 +19,36 @@ const columns = [
         title: "Компанія",
         links: [
             { label: "Про нас", to: "/about" },
-            { label: "Блог", href: "#" },
-            { label: "Кар'єра", href: "#" },
-            { label: "Контакти", href: "#" },
+            { label: "Блог", href: "/blog" },
+            { label: "Кар'єра", href: "/career" },
+            { label: "Контакти", href: "/contacts" },
         ],
     },
     {
         title: "Ресурси",
         links: [
             { label: "Документація", to: "/docs" },
-            { label: "API", href: "#" },
-            { label: "Статус", href: "#" },
-            { label: "Підтримка", href: "#" },
+            { label: "API", href: "/api" },
+            { label: "Статус", href: "/status" },
+            { label: "Підтримка", href: "/support" },
         ],
     },
     {
         title: "Правове",
         links: [
-            { label: "Конфіденційність", href: "#" },
-            { label: "Умови", href: "#" },
-            { label: "Cookies", href: "#" },
-            { label: "Ліцензії", href: "#" },
+            { label: "Конфіденційність", href: "/privacy" },
+            { label: "Умови", href: "/terms" },
+            { label: "Cookies", href: "/cookies" },
+            { label: "Ліцензії", href: "/licenses" },
         ],
     },
 ]
 
 const socials = [
-    { Icon: GithubIcon, href: "#" },
+    { Icon: GithubIcon, href: "https://github.com/univa-student" },
     { Icon: TwitterIcon, href: "#" },
     { Icon: BookOpenIcon, href: "#" },
-    { Icon: MailIcon, href: "#" },
+    { Icon: MailIcon, href: "mailto:illeasmakouz@gmail.com" },
 ]
 
 export function LandingFooter() {

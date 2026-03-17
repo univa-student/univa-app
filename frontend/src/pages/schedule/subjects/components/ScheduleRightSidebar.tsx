@@ -1,5 +1,3 @@
-import { createPortal } from "react-dom";
-import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { uk } from "date-fns/locale";
 import {
@@ -13,6 +11,7 @@ import type { Deadline } from "@/entities/deadline/model/types";
 import { fmtTime, toMin } from "@/widgets/schedule-calendar/schedule.utils";
 import { LessonTypeIcon } from "@/shared/ui/schedule/lesson-type-icon";
 import { ModeBadge } from "@/shared/ui/schedule/mode-badge";
+import { PageSidePanel } from "@/shared/ui/page-side-panel";
 
 interface Props {
     now: Date;
@@ -29,19 +28,13 @@ export function ScheduleRightSidebar({
                                          now, todayStr, activeDayStr, instances, deadlines,
                                          nextLesson, minutesUntilNext, onLessonClick,
                                      }: Props) {
-    const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
-    useEffect(() => {
-        setPortalTarget(document.getElementById("dashboard-right-panel"));
-    }, []);
-
-    if (!portalTarget) return null;
-
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const isToday = activeDayStr === todayStr;
     const date = new Date(activeDayStr + "T12:00:00");
 
-    const content = (
-        <div className="flex flex-col flex-1 overflow-hidden">
+    return (
+        <PageSidePanel>
+            <div className="flex flex-col flex-1 h-full overflow-hidden">
 
             {/* ── Header ── */}
             <div className="px-4 py-3 border-b border-border/40">
@@ -197,7 +190,6 @@ export function ScheduleRightSidebar({
                 </div>
             </ScrollArea>
         </div>
+        </PageSidePanel>
     );
-
-    return createPortal(content, portalTarget);
 }
