@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useSummaries } from "@/entities/summary/api/hooks";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
+import {AiPanel} from "@/pages/ai/ai-panel.tsx";
 
 const workspaces = [
     {
@@ -76,6 +77,7 @@ export function AiHome() {
 
     return (
         <div className="mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            <AiPanel />
             <div className="space-y-6">
                 <section className="rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm backdrop-blur sm:p-6">
                     <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">

@@ -27,7 +27,7 @@ import { useSummaries, useGenerateSummary } from "@/entities/summary/api/hooks";
 
 import { isPreviewable } from "@/shared/ui/files/file-type-icon";
 import { FileCardGrid, FileRowList } from "./file-cards";
-import { FilesRightSidebar } from "./files-right-sidebar";
+import { FilesPanel } from "./files-panel";
 import { UploadDialog } from "@/features/files/upload-file/upload-dialog";
 import { FilePreviewDialog } from "@/features/files/preview-file/file-preview-dialog";
 
@@ -413,7 +413,7 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
             </div>
 
             {/* ── Right sidebar ───────────────────────────────────── */}
-            <FilesRightSidebar
+            <FilesPanel
                 currentFolderId={currentFolderId}
                 onSelectFolder={navigateToFolder}
                 onSelectFile={handleFileClick}
