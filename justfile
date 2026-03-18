@@ -22,7 +22,11 @@ frontend-dev:
 api-dev:
     cd api && php artisan serve
 
+api-broadcast:
+    cd api && php artisan reverb:start
+
 start:
     just frontend-dev &
     just api-dev &
+    just api-broadcast &
     wait

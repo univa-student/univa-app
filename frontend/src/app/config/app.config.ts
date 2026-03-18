@@ -10,12 +10,13 @@ export const APP_ENV = import.meta.env.MODE as "development" | "production" | "s
 export const IS_DEV = import.meta.env.DEV as boolean;
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 // ─── WebSocket ────────────────────────────────────────────────────────────────
-export const WS_HOST = import.meta.env.VITE_WS_HOST ?? "localhost";
-export const WS_PORT = Number(import.meta.env.VITE_WS_PORT ?? 6001);
-export const WS_KEY = import.meta.env.VITE_WS_KEY ?? "";
+export const WS_HOST = import.meta.env.VITE_REVERB_HOST ?? import.meta.env.VITE_WS_HOST ?? "localhost";
+export const WS_PORT = Number(import.meta.env.VITE_REVERB_PORT ?? import.meta.env.VITE_WS_PORT ?? 8080);
+export const WS_KEY = import.meta.env.VITE_REVERB_APP_KEY ?? import.meta.env.VITE_WS_KEY ?? "";
+export const WS_SCHEME = import.meta.env.VITE_REVERB_SCHEME ?? "http";
 
 // ─── Google Fonts ─────────────────────────────────────────────────────────────
 export const GOOGLE_FONTS_URL =

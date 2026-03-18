@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/shared/shadcn/ui/dialog";
@@ -13,18 +13,17 @@ function downloadUrl(fileId: number): string {
     return `${API_BASE_URL}${ENDPOINTS.files.download(fileId)}`;
 }
 
-/** Absolute URL for Google Docs Viewer (supports docx, xlsx, pptx, etc.) */
 function googleViewerUrl(fileUrl: string): string {
     return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
 }
 
 const DOCX_MIMES = [
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-    "application/msword",                                                        // .doc
-    "application/vnd.ms-powerpoint",                                             // .ppt
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
-    "application/vnd.ms-excel",                                                  // .xls
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",        // .xlsx
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
 interface Props {
@@ -35,14 +34,65 @@ interface Props {
 
 export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
     const [iframeLoading, setIframeLoading] = useState(true);
+    // Зберігаємо blob URL для PDF щоб уникнути повторного завантаження
+    const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+    const [pdfError, setPdfError] = useState(false);
+
+    const isImage = file?.mimeType?.startsWith("image/");
+    const isPdf = file?.mimeType === "application/pdf";
+    const isDoc = DOCX_MIMES.includes(file?.mimeType ?? "");
+    const isText = file?.mimeType === "text/plain";
+    const isPreviewable = isImage || isPdf || isDoc || isText;
+
+    // Завантажуємо PDF як blob тільки коли діалог відкритий
+    useEffect(() => {
+        if (!open || !file || !isPdf) {
+            setPdfBlobUrl(null);
+            setPdfError(false);
+            setIframeLoading(true);
+            return;
+        }
+
+        let objectUrl: string | null = null;
+
+        const loadPdf = async () => {
+            setIframeLoading(true);
+            setPdfError(false);
+            try {
+                const res = await fetch(downloadUrl(file.id), {
+                    // якщо є авторизація — додай credentials/headers тут
+                    credentials: "include",
+                });
+                if (!res.ok) throw new Error("fetch failed");
+                const blob = await res.blob();
+                objectUrl = URL.createObjectURL(blob);
+                setPdfBlobUrl(objectUrl);
+            } catch {
+                setPdfError(true);
+            } finally {
+                setIframeLoading(false);
+            }
+        };
+
+        loadPdf();
+
+        return () => {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [open, file?.id, isPdf]);
+
+    // Скидаємо стан при зміні файлу або закритті
+    useEffect(() => {
+        if (!open) {
+            setIframeLoading(true);
+            setPdfBlobUrl(null);
+            setPdfError(false);
+        }
+    }, [open]);
 
     if (!file) return null;
 
     const url = downloadUrl(file.id);
-    const isImage = file.mimeType?.startsWith("image/");
-    const isPdf = file.mimeType === "application/pdf";
-    const isDoc = DOCX_MIMES.includes(file.mimeType ?? "");
-    const isPreviewable = isImage || isPdf || isDoc;
 
     const handleDownload = () => {
         const a = document.createElement("a");
@@ -54,7 +104,7 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-4xl max-h-[92vh] flex flex-col gap-4 p-0 overflow-hidden">
-                {/* ── Header ────────────────────────────────────────────────── */}
+                {/* ── Header ── */}
                 <DialogHeader className="px-6 pt-5 pb-0 shrink-0">
                     <DialogTitle className="flex items-center gap-2.5">
                         <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${mimeColorMap[mimeGroup(file.mimeType)]}`}>
@@ -68,8 +118,9 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
                     </DialogTitle>
                 </DialogHeader>
 
-                {/* ── Preview area ──────────────────────────────────────────── */}
+                {/* ── Preview area ── */}
                 <div className="flex-1 min-h-0 mx-4 rounded-xl overflow-hidden bg-muted/30 border border-border relative">
+
                     {/* Image */}
                     {isImage && (
                         <img
@@ -79,7 +130,7 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
                         />
                     )}
 
-                    {/* PDF — native browser renderer */}
+                    {/* PDF — завантажуємо як blob щоб обійти Content-Disposition: attachment */}
                     {isPdf && (
                         <>
                             {iframeLoading && (
@@ -87,8 +138,44 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
                                     <Loader2Icon className="size-8 animate-spin text-primary" />
                                 </div>
                             )}
+                            {pdfError && (
+                                <div className="flex flex-col items-center justify-center gap-3 py-16">
+                                    <p className="text-sm text-muted-foreground">Не вдалось завантажити PDF</p>
+                                    <Button variant="outline" size="sm" onClick={handleDownload}>
+                                        <DownloadIcon className="size-4 mr-2" /> Завантажити
+                                    </Button>
+                                </div>
+                            )}
+                            {pdfBlobUrl && !pdfError && (
+                                <object
+                                    key={pdfBlobUrl}
+                                    data={`${pdfBlobUrl}#toolbar=1&navpanes=0`}
+                                    type="application/pdf"
+                                    className="w-full border-0"
+                                    style={{ height: "65vh" }}
+                                >
+                                    <p className="p-4 text-sm text-muted-foreground">
+                                        Ваш браузер не підтримує перегляд PDF.{" "}
+                                        <button className="underline" onClick={handleDownload}>Завантажити</button>
+                                    </p>
+                                </object>
+                            )}
+                        </>
+                    )}
+
+                    {/* DOCX / PPTX / XLSX — Google Docs Viewer */}
+                    {/* Примітка: Google Viewer вимагає публічно доступний URL */}
+                    {isDoc && open && (
+                        <>
+                            {iframeLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-muted/30 z-10">
+                                    <Loader2Icon className="size-8 animate-spin text-primary" />
+                                    <span className="ml-2 text-sm text-muted-foreground">Завантаження Google Docs Viewer…</span>
+                                </div>
+                            )}
                             <iframe
-                                src={`${url}#toolbar=1&navpanes=0`}
+                                key={file.id}
+                                src={googleViewerUrl(url)}
                                 title={file.originalName}
                                 className="w-full border-0"
                                 style={{ height: "65vh" }}
@@ -97,23 +184,9 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
                         </>
                     )}
 
-                    {/* DOCX / PPTX / XLSX — Google Docs Viewer */}
-                    {isDoc && (
-                        <>
-                            {iframeLoading && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-                                    <Loader2Icon className="size-8 animate-spin text-primary" />
-                                    <span className="ml-2 text-sm text-muted-foreground">Завантаження Google Docs Viewer…</span>
-                                </div>
-                            )}
-                            <iframe
-                                src={googleViewerUrl(url)}
-                                title={file.originalName}
-                                className="w-full border-0"
-                                style={{ height: "65vh" }}
-                                onLoad={() => setIframeLoading(false)}
-                            />
-                        </>
+                    {/* TXT — простий текст через fetch */}
+                    {isText && open && (
+                        <TextPreview fileId={file.id} url={url} />
                     )}
 
                     {/* Not previewable */}
@@ -130,7 +203,7 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
                     )}
                 </div>
 
-                {/* ── Footer ────────────────────────────────────────────────── */}
+                {/* ── Footer ── */}
                 <DialogFooter className="px-6 pb-5 shrink-0 flex-row justify-between">
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Закрити
@@ -150,5 +223,47 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    );
+}
+
+// ── TXT preview sub-component ──────────────────────────────────────────────
+
+function TextPreview({ fileId, url }: { fileId: number; url: string }) {
+    const [text, setText] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        setLoading(true);
+        setError(false);
+        fetch(url, { credentials: "include" })
+            .then(r => {
+                if (!r.ok) throw new Error();
+                return r.text();
+            })
+            .then(t => setText(t))
+            .catch(() => setError(true))
+            .finally(() => setLoading(false));
+    }, [fileId]);
+
+    if (loading) return (
+        <div className="flex items-center justify-center" style={{ height: "65vh" }}>
+            <Loader2Icon className="size-8 animate-spin text-primary" />
+        </div>
+    );
+
+    if (error) return (
+        <div className="flex items-center justify-center" style={{ height: "65vh" }}>
+            <p className="text-sm text-muted-foreground">Не вдалось завантажити файл</p>
+        </div>
+    );
+
+    return (
+        <pre
+            className="w-full overflow-auto p-5 text-sm font-mono text-foreground whitespace-pre-wrap break-words"
+            style={{ height: "65vh" }}
+        >
+            {text}
+        </pre>
     );
 }

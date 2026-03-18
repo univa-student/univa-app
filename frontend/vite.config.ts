@@ -55,4 +55,28 @@ export default defineConfig({
             "@": path.resolve(__dirname, "src"),
         },
     },
+    server: {
+        allowedHosts: [
+            "localhost",
+            "127.0.0.1",
+            "korbin-perigynous-metaphrastically.ngrok-free.dev",
+        ],
+        proxy: {
+            "/api": {
+                target: "http://127.0.0.1:8000",
+                changeOrigin: true,
+                secure: false,
+            },
+            "/broadcasting": {
+                target: "http://127.0.0.1:8000",
+                changeOrigin: true,
+                secure: false,
+            },
+            "/sanctum": {
+                target: "http://127.0.0.1:8000",
+                changeOrigin: true,
+                secure: false,
+            },
+        },
+    },
 })

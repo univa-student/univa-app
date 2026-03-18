@@ -9,6 +9,7 @@ import {
     FileText,
     AlertCircle,
 } from "lucide-react";
+import { AiPanel } from "./ai-panel";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import { Button } from "@/shared/shadcn/ui/button";
 
@@ -29,7 +30,7 @@ export function SummaryViewPage() {
 
     if (isLoading) {
         return (
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 space-y-5">
+            <div className="w-full px-4 py-6 sm:px-6 space-y-5">
                 <Skeleton className="h-8 w-40 rounded-xl" />
                 <Skeleton className="h-10 w-3/4 rounded-xl" />
                 <Skeleton className="h-4 w-48 rounded-lg" />
@@ -44,7 +45,7 @@ export function SummaryViewPage() {
 
     if (isError || !data) {
         return (
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+            <div className="w-full px-4 py-6 sm:px-6">
                 <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 gap-2">
                     <ArrowLeft className="size-4" />
                     Назад
@@ -64,7 +65,8 @@ export function SummaryViewPage() {
     const meta = cj?.meta;
 
     return (
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <div className="w-full px-4 py-6 sm:px-6">
+            <AiPanel />
             {/* Back button */}
             <Button
                 variant="ghost"

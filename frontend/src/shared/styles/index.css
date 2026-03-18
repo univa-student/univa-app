@@ -191,12 +191,12 @@
 
     /* ── Island Workspace tokens (dark) ── */
     --island-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.35),
-        0 6px 20px rgba(0, 0, 0, 0.45),
-        0 0 0 1px rgba(255, 255, 255, 0.04);
+        0 1px 3px rgba(0, 0, 0, 0.5),
+        0 6px 20px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
     --island-border: 1px solid var(--border);
     --island-bg: var(--card);
-    --island-canvas: oklch(0.93 0.006 250);
+    --island-canvas: #0b0d10;
 }
 
 @layer base {
@@ -304,12 +304,6 @@ html, body, #root {
     padding: 0.45rem 0.75rem !important;
 }
 
-/* Dashboard main content area */
-[data-compact="1"] .flex.flex-1.flex-col.gap-4.p-4 {
-    gap: 0.6rem !important;
-    padding: 0.6rem !important;
-}
-
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ANIMATIONS  —  html[data-animations="0"]
@@ -349,69 +343,72 @@ html, body, #root {
 
 .island-canvas {
     position: relative;
-
     background:
-        /* сильний верхній glow */
             radial-gradient(
                     1400px 800px at -10% -20%,
                     rgba(90, 110, 180, 0.35),
                     transparent 60%
             ),
-
-                /* правий glow */
             radial-gradient(
                     1200px 700px at 120% 110%,
                     rgba(90, 110, 180, 0.30),
                     transparent 65%
             ),
-
-                /* центральний glow */
             radial-gradient(
                     900px 600px at 50% 120%,
                     rgba(90, 110, 180, 0.22),
                     transparent 70%
             ),
-
             var(--island-canvas);
-
     height: 100dvh;
     display: flex;
     overflow: hidden;
+}
+
+.dark .island-canvas {
+    background:
+            radial-gradient(
+                    1200px 700px at -10% -20%,
+                    rgba(120, 150, 255, 0.18),
+                    transparent 60%
+            ),
+
+            radial-gradient(
+                    1000px 600px at 110% 110%,
+                    rgba(120, 150, 255, 0.15),
+                    transparent 65%
+            ),
+
+            radial-gradient(
+                    900px 500px at 50% 120%,
+                    rgba(120, 150, 255, 0.12),
+                    transparent 70%
+            ),
+
+            var(--island-canvas);
 }
 
 .island-canvas::before {
     content: "";
     position: absolute;
     inset: 0;
+    z-index: 0;
 
     background-image:
-            linear-gradient(
-                    rgba(0,0,0,0.04) 1px,
-                    transparent 1px
-            ),
-            linear-gradient(
-                    90deg,
-                    rgba(0,0,0,0.04) 1px,
-                    transparent 1px
-            );
+            linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
 
-    background-size: 40px 40px;
+    background-size: 32px 32px;
 
     pointer-events: none;
 }
 
 .dark .island-canvas::before {
     background-image:
-            linear-gradient(
-                    rgba(255,255,255,0.05) 1px,
-                    transparent 1px
-            ),
-            linear-gradient(
-                    90deg,
-                    rgba(255,255,255,0.05) 1px,
-                    transparent 1px
-            );
+            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
 }
+
 .island {
     background: var(--island-bg);
     border: var(--island-border);
@@ -423,36 +420,165 @@ html, body, #root {
             0 0 0 1px rgba(0,0,0,0.04);
 }
 
-[data-island-layout] [data-slot="sidebar-container"] {
-    inset-block: var(--island-gap) !important;
-    inset-inline-start: var(--island-gap) !important;
-    height: calc(100dvh - 2 * var(--island-gap)) !important;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   PERIMETER FRAME LAYOUT
+   Grid-based frame with top bar, left rail, right rail, bottom bar, center
+═══════════════════════════════════════════════════════════════════════════ */
 
-[data-island-layout] [data-sidebar="sidebar"] {
-    border-radius: var(--island-radius) !important;
-    box-shadow: var(--island-shadow) !important;
-    outline: var(--island-border);
+.app-frame {
+    display: grid;
+    grid-template-areas:
+        "top    top    top"
+        "left   center right"
+        "bottom bottom bottom";
+    grid-template-rows: 32px 1fr 32px;
+    grid-template-columns: 34px 1fr 34px;
+    height: 100dvh;
     overflow: hidden;
+    gap: 0;
+    padding: var(--island-gap);
 }
 
-.island-main {
+.app-frame > * {
+    position: relative;
+    z-index: 1;
+}
+
+.app-top-bar {
+    grid-area: top;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5px;
+    gap: 16px;
+    min-width: 0;
+}
+
+.app-top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 36px;
+    justify-content: center;
+}
+
+.app-top-bar-center {
     flex: 1;
     display: flex;
-    /* flex-direction is controlled by Tailwind classes (flex-col / flex-row) */
-
-    gap: var(--island-gap);
-
-    padding: var(--island-gap);
-    padding-left: 25px;
-
-    min-height: 0;
-    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
 }
 
-/* Hide the right-panel portal slot when nothing is portaled into it */
-#dashboard-right-panel:empty {
+.app-top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.app-top-bar-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+}
+
+.app-top-bar-icon:hover {
+    background: color-mix(in oklch, var(--primary) 8%, transparent);
+    color: var(--foreground);
+}
+
+.app-rail {
+    grid-area: left;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 0;
+    gap: 2px;
+    min-height: 0;
+}
+
+.app-right-rail {
+    grid-area: right;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 0;
+    gap: 2px;
+}
+
+.app-bottom-bar {
+    grid-area: bottom;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-bottom-bar-text {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    opacity: 0.5;
+    letter-spacing: 0.02em;
+}
+
+.app-bottom-bar-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 4px rgba(34, 197, 94, 0.5);
+}
+
+.app-center {
+    grid-area: center;
+    display: flex;
+    gap: var(--island-gap);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 var(--island-gap);
+}
+
+.app-side-panel {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--island-bg);
+    border: var(--island-border);
+    border-radius: var(--island-radius);
+    box-shadow: var(--island-shadow);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    transition: width 0.2s ease, opacity 0.2s ease;
+}
+.app-side-panel::-webkit-scrollbar { display: none; }
+
+#app-side-panel:empty {
     display: none;
+}
+
+.island-content {
+    background: var(--island-bg);
+    border: var(--island-border);
+    border-radius: var(--island-radius);
+    box-shadow: var(--island-shadow);
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .island-header {
@@ -465,26 +591,76 @@ html, body, #root {
     border-top-right-radius: var(--island-radius);
     display: flex;
     align-items: center;
-    height: 48px;
+    height: 42px;
     padding-inline: 1rem;
     flex-shrink: 0;
     backdrop-filter: blur(6px);
 }
 
-.island-content {
-    background: var(--island-bg);
-    border: var(--island-border);
-    border-radius: var(--island-radius);
-    box-shadow: var(--island-shadow);
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-}
+/* (duplicate removed) */
 
 .scrollbar-hidden::-webkit-scrollbar {
     display: none;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   ISLAND PERIMETER LAYOUT — COMPACT MODE
+   Overrides base frame element values
+═══════════════════════════════════════════════════════════════════════════ */
+
+[data-compact="1"] .app-frame {
+    grid-template-rows: 24px 1fr 24px !important;
+    grid-template-columns: 28px 1fr 28px !important;
+}
+
+[data-compact="1"] .app-top-bar {
+    padding: 0 8px !important;
+    height: 24px !important;
+}
+
+[data-compact="1"] .app-rail {
+    padding: 8px 0 !important;
+    width: 28px !important;
+    gap: 2px !important;
+}
+
+[data-compact="1"] .app-right-rail {
+    padding: 8px 0 !important;
+    width: 28px !important;
+}
+
+[data-compact="1"] .app-bottom-bar {
+    padding: 0 8px !important;
+    height: 24px !important;
+}
+
+[data-compact="1"] .app-rail-icon {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+[data-compact="1"] .app-rail-icon svg {
+    width: 12px !important;
+    height: 12px !important;
+}
+
+[data-compact="1"] .app-center {
+    gap: 0.5rem !important;
+    padding: 0 0.5rem !important;
+}
+
+[data-compact="1"] .island-content {
+    border-radius: 0.5rem !important;
+}
+
+[data-compact="1"] .app-side-panel {
+    border-radius: 0.5rem !important;
+    width: 220px !important;
+}
+
+[data-compact="1"] .app-bottom-bar-text {
+    font-size: 10px !important;
+}
 .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;

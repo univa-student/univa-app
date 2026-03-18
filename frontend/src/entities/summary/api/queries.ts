@@ -2,6 +2,10 @@ import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import type { SummaryArtifact, SummaryListItem } from "../model/types";
 
+interface GenerateSummaryResponse {
+    run: { id: number; [key: string]: unknown };
+    artifact: SummaryArtifact;
+}
 export const summaryQueries = {
     list() {
         return {
@@ -21,7 +25,7 @@ export const summaryQueries = {
         return {
             queryKey: ["summaries", "generate", fileId],
             queryFn: () =>
-                apiFetch<SummaryArtifact>(ENDPOINTS.summaries.generate(fileId), {
+                apiFetch<GenerateSummaryResponse>(ENDPOINTS.summaries.generate(fileId), {
                     method: "POST",
                 }),
         };

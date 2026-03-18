@@ -11,6 +11,7 @@ import {
     AlertCircle,
     BookOpen,
 } from "lucide-react";
+import { AiPanel } from "./ai-panel";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import { Button } from "@/shared/shadcn/ui/button";
 
@@ -94,7 +95,8 @@ export function SummariesListPage() {
     const deleteMut = useDeleteSummary();
 
     return (
-        <div className="mx-auto px-4 py-6 sm:px-6">
+        <div className="w-full px-4 py-6 sm:px-6">
+            <AiPanel />
             {/* Header */}
             <div className="mb-6 flex items-center gap-3">
                 <Button

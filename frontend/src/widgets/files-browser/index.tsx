@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
     SearchIcon, LayoutGridIcon, LayoutListIcon,
     FolderIcon, ChevronRightIcon, HomeIcon, UploadCloudIcon
@@ -27,7 +27,7 @@ import { useSummaries, useGenerateSummary } from "@/entities/summary/api/hooks";
 
 import { isPreviewable } from "@/shared/ui/files/file-type-icon";
 import { FileCardGrid, FileRowList } from "./file-cards";
-import { FilesRightSidebar } from "./files-right-sidebar";
+import { FilesPanel } from "./files-panel";
 import { UploadDialog } from "@/features/files/upload-file/upload-dialog";
 import { FilePreviewDialog } from "@/features/files/preview-file/file-preview-dialog";
 
@@ -184,7 +184,7 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
                 return [...s, { id, name }];
             });
         }
-    }, []);
+    }, [baseFolder]);
 
     const openFolder = useCallback((folder: FolderItem) => {
         setFolderStack(s => [...s, { id: folder.id, name: folder.name }]);
@@ -256,7 +256,6 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
                     </div>
                 )}
 
-                {/* Drop zone + content */}
                 <div
                     className={`relative flex-1 min-h-[200px] rounded-2xl transition-all duration-200 ${dragOver ? "bg-muted/30" : ""}`}
                     onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -414,7 +413,7 @@ export function FilesBrowser({ baseFolder }: FilesBrowserProps = {}) {
             </div>
 
             {/* ── Right sidebar ───────────────────────────────────── */}
-            <FilesRightSidebar
+            <FilesPanel
                 currentFolderId={currentFolderId}
                 onSelectFolder={navigateToFolder}
                 onSelectFile={handleFileClick}

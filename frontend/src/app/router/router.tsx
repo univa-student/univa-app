@@ -22,12 +22,19 @@ import { FilesPage } from "@/pages/files/files.page";
 import { ChatPage } from "@/pages/chat/chat.page";
 import { DeadlinesPage } from "@/pages/deadlines/deadlines.page";
 import { SpacesPage } from "@/pages/spaces/spaces.page";
+import { NotificationsPage } from "@/pages/notifications/notifications.page";
 
 import { PrivateRoot } from "./PrivateRoot.tsx";
 import { routesLoaders } from "./loaders.ts";
 import { AiHome } from "@/pages/ai/ai-home.tsx";
 import { SummariesListPage } from "@/pages/ai/summaries-list.tsx";
 import { SummaryViewPage } from "@/pages/ai/summary-view.tsx";
+import {IntegrationsPage} from "@/pages/main/integrations.page.tsx";
+import {StatusPage} from "@/pages/main/status.page.tsx";
+import {ApiPage} from "@/pages/main/api.page.tsx";
+import {SupportPage} from "@/pages/main/support.page.tsx";
+import {CookiesPage, LicensesPage, PrivacyPage, TermsPage} from "@/pages/main/licenses.page.tsx";
+import {BlogPage, CareerPage, ContactPage} from "@/pages/main/blog.page.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -57,6 +64,94 @@ export const router = createBrowserRouter([
                 element: (
                     <LazyBoundary>
                         <AboutPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "integrations",
+                element: (
+                    <LazyBoundary>
+                        <IntegrationsPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "status",
+                element: (
+                    <LazyBoundary>
+                        <StatusPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "api",
+                element: (
+                    <LazyBoundary>
+                        <ApiPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "support",
+                element: (
+                    <LazyBoundary>
+                        <SupportPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "privacy",
+                element: (
+                    <LazyBoundary>
+                        <PrivacyPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "terms",
+                element: (
+                    <LazyBoundary>
+                        <TermsPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "cookies",
+                element: (
+                    <LazyBoundary>
+                        <CookiesPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "licenses",
+                element: (
+                    <LazyBoundary>
+                        <LicensesPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "contacts",
+                element: (
+                    <LazyBoundary>
+                        <ContactPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "career",
+                element: (
+                    <LazyBoundary>
+                        <CareerPage />
+                    </LazyBoundary>
+                ),
+            },
+            {
+                path: "blog",
+                element: (
+                    <LazyBoundary>
+                        <BlogPage />
                     </LazyBoundary>
                 ),
             },
@@ -136,11 +231,14 @@ export const router = createBrowserRouter([
                         element: (
                             <LazyBoundary>
                                 <AuthGuard>
-                                    <DashboardLayout breadcrumbs={[
-                                        { label: "Головна", href: "/dashboard" },
-                                        { label: "Розклад" },
-                                        { label: "Календар" },
-                                    ]}>
+                                    <DashboardLayout
+                                        fullHeight
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Розклад" },
+                                            { label: "Календар" },
+                                        ]}
+                                    >
                                         <SchedulePage />
                                     </DashboardLayout>
                                 </AuthGuard>
@@ -238,6 +336,21 @@ export const router = createBrowserRouter([
                                         { label: "Спейси" },
                                     ]}>
                                         <SpacesPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/notifications",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout breadcrumbs={[
+                                        { label: "Головна", href: "/dashboard" },
+                                        { label: "Сповіщення" },
+                                    ]}>
+                                        <NotificationsPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>
