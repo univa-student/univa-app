@@ -168,7 +168,7 @@ export function OrbitHero({ size: maxSize = 520, className }: OrbitHeroProps) {
                     const pt = project(a, rx, ry, ORBIT_TILT, ORBIT_Z_ANGLES[oi]);
                     const sx = half + pt.x;
                     const sy = half + pt.y;
-                    i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+                    if (i === 0) { ctx.moveTo(sx, sy); } else { ctx.lineTo(sx, sy); }
                 }
                 ctx.closePath();
                 ctx.strokeStyle = ORBIT_COLORS[oi];

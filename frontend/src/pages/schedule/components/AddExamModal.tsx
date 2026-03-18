@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { GraduationCapIcon, MapPinIcon, StickyNoteIcon, ClockIcon, BookOpenIcon } from "lucide-react";
 import { useSubjects, useCreateExam, useExamTypes } from "@/entities/schedule/api/hooks";
 import { ModalShell } from "@/shared/ui/modal-shell";
@@ -72,7 +72,7 @@ export function AddExamModal({ onClose }: Props) {
             isOpen={true}
             onClose={onClose}
             title=""
-            className="sm:max-w-[440px] p-0 overflow-hidden"
+            className="sm:max-w-110 p-0 overflow-hidden"
         >
             {/* Modal header */}
             <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-border">

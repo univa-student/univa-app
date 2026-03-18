@@ -188,13 +188,13 @@ const SECTIONS: FieldDef["section"][] = [
 /** ===== Component ===== */
 
 export function RegisterForm({
-                                 className,
-                                 form,
-                                 onFieldChange,
-                                 onSubmit,
-                                 isPending,
-                                 errors = {},
-                             }: RegisterFormProps) {
+    className,
+    form,
+    onFieldChange,
+    onSubmit,
+    isPending,
+    errors = {},
+}: RegisterFormProps) {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -227,7 +227,7 @@ export function RegisterForm({
                             type="checkbox"
                             className="mt-1 h-4 w-4 rounded border-muted-foreground/30"
                             checked={checked}
-                            onChange={(e) => onFieldChange(f.name, e.target.checked as any)}
+                            onChange={(e) => onFieldChange(f.name, e.target.checked as RegisterFormData[RegisterFieldName])}
                             required={!!f.required}
                             aria-invalid={invalid}
                         />
@@ -266,7 +266,7 @@ export function RegisterForm({
                         placeholder={f.placeholder}
                         autoComplete={f.autoComplete}
                         value={String(form[f.name] ?? "")}
-                        onChange={(e) => onFieldChange(f.name, e.target.value as any)}
+                        onChange={(e) => onFieldChange(f.name, e.target.value as RegisterFormData[RegisterFieldName])}
                         aria-invalid={invalid}
                         className={cn(
                             "h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/20",
@@ -343,12 +343,12 @@ export function RegisterForm({
                                 >
                                     {isPending ? (
                                         <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Реєструємо…
-                    </span>
+                                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            Реєструємо…
+                                        </span>
                                     ) : "Зареєструватись"}
                                 </Button>
                             </div>

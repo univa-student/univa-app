@@ -24,7 +24,7 @@ export async function apiFetch<T>(
 ): Promise<T> {
     const xsrf = getXsrfToken();
 
-    const body = init?.body as any;
+    const body = init?.body;
     const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
 
     const res = await fetch(`${API_BASE_URL}${path}`, {

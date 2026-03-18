@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import {
     BookOpenIcon, CalendarIcon, ClockIcon,
@@ -106,7 +106,7 @@ export function AddLessonModal({ onClose }: Props) {
             isOpen={true}
             onClose={onClose}
             title=""
-            className="sm:max-w-[520px] p-0 overflow-hidden"
+            className="sm:max-w-130 p-0 overflow-hidden"
         >
             {/* Header */}
             <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-border">

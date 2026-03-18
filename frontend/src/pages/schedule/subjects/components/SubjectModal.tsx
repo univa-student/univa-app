@@ -35,25 +35,26 @@ export function SubjectModal({ subject, onClose }: Props) {
     const isEdit = !!subject;
 
     const [form, setForm] = useState({
-        name:        "",
+        name: "",
         teacherName: "",
-        color:       COLORS[0],
+        color: COLORS[0],
     });
 
     useEffect(() => {
         if (subject) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setForm({
-                name:        subject.name,
+                name: subject.name,
                 teacherName: subject.teacherName || "",
-                color:       subject.color || COLORS[0],
+                color: subject.color || COLORS[0],
             });
         }
     }, [subject]);
 
     const createSubject = useCreateSubject();
     const updateSubject = useUpdateSubject();
-    const isPending     = createSubject.isPending || updateSubject.isPending;
-    const isError       = createSubject.isError   || updateSubject.isError;
+    const isPending = createSubject.isPending || updateSubject.isPending;
+    const isError = createSubject.isError || updateSubject.isError;
 
     function set(key: string, value: string) {
         setForm(f => ({ ...f, [key]: value }));
@@ -63,9 +64,9 @@ export function SubjectModal({ subject, onClose }: Props) {
         e.preventDefault();
         if (!form.name.trim()) return;
         const payload = {
-            name:        form.name.trim(),
+            name: form.name.trim(),
             teacherName: form.teacherName.trim() || null,
-            color:       form.color,
+            color: form.color,
         };
         if (isEdit && subject) {
             await updateSubject.mutateAsync({ id: subject.id, payload });
@@ -158,8 +159,8 @@ export function SubjectModal({ subject, onClose }: Props) {
                                     className="w-8 h-8 rounded-full transition-all duration-150 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                                     style={{
                                         backgroundColor: c,
-                                        transform:    form.color === c ? "scale(1.2)" : undefined,
-                                        boxShadow:    form.color === c ? `0 0 0 3px white, 0 0 0 5px ${c}` : undefined,
+                                        transform: form.color === c ? "scale(1.2)" : undefined,
+                                        boxShadow: form.color === c ? `0 0 0 3px white, 0 0 0 5px ${c}` : undefined,
                                     }}
                                     aria-label={`Колір ${c}`}
                                 />

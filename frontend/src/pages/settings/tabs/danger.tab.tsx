@@ -33,6 +33,7 @@ const dangerActions = [
     },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function DangerTab({ tab: _tab }: { tab: TabDef }) {
     return (
         <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">

@@ -121,7 +121,7 @@ export function SecurityTab(_: { tab: TabDef }) {
     const isSuccess = changePassword.isSuccess
     const isError = changePassword.isError
     const serverError = isError
-        ? (changePassword.error as any)?.body?.message ?? "Не вдалося змінити пароль."
+        ? (changePassword.error as Error & { body?: { message?: string } })?.body?.message ?? "Не вдалося змінити пароль."
         : null
     const displayError = clientError ?? serverError
 

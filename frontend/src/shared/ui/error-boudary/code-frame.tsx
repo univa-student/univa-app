@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ChevronDown, ChevronUp, FileCode2, Loader2 } from "lucide-react";
 
 type Props = {
-    file?:    string;
-    line?:    number;   // 1-based
-    column?:  number;   // 1-based
+    file?: string;
+    line?: number;   // 1-based
+    column?: number;   // 1-based
     context?: number;
 };
 
@@ -20,9 +20,9 @@ function getLangLabel(file: string) {
 }
 
 export function CodeFrame({ file, line, column, context = 8 }: Props) {
-    const [source,   setSource]   = useState<string | null>(null);
-    const [err,      setErr]      = useState<string | null>(null);
-    const [loading,  setLoading]  = useState(false);
+    const [source, setSource] = useState<string | null>(null);
+    const [err, setErr] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(false);
     const errorRowRef = useRef<HTMLTableRowElement>(null);
 
@@ -31,13 +31,14 @@ export function CodeFrame({ file, line, column, context = 8 }: Props) {
     useEffect(() => {
         let cancelled = false;
         if (!srcFile) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
         setErr(null);
         setSource(null);
 
         fetch(`/__source?file=${encodeURIComponent(srcFile)}`, { cache: "no-store" })
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
-            .then(t  => { if (!cancelled) { setSource(t); setLoading(false); } })
+            .then(t => { if (!cancelled) { setSource(t); setLoading(false); } })
             .catch(e => { if (!cancelled) { setErr(e instanceof Error ? e.message : String(e)); setLoading(false); } });
 
         return () => { cancelled = true; };
@@ -51,9 +52,9 @@ export function CodeFrame({ file, line, column, context = 8 }: Props) {
     const frame = useMemo(() => {
         if (!source || !line) return null;
         const lines = source.split("\n");
-        const ctx   = expanded ? 30 : context;
+        const ctx = expanded ? 30 : context;
         const start = Math.max(1, line - ctx);
-        const end   = Math.min(lines.length, line + ctx);
+        const end = Math.min(lines.length, line + ctx);
         const chunk = [];
         for (let i = start; i <= end; i++) chunk.push({ n: i, text: lines[i - 1] ?? "" });
         return { chunk, total: lines.length };
@@ -62,8 +63,8 @@ export function CodeFrame({ file, line, column, context = 8 }: Props) {
     if (!srcFile) return null;
 
     const fileName = srcFile.split("/").pop() ?? srcFile;
-    const dirPath  = srcFile.split("/").slice(0, -1).join("/");
-    const lang     = getLangLabel(srcFile);
+    const dirPath = srcFile.split("/").slice(0, -1).join("/");
+    const lang = getLangLabel(srcFile);
 
     return (
         <div style={{
@@ -84,7 +85,7 @@ export function CodeFrame({ file, line, column, context = 8 }: Props) {
             }}>
                 {/* traffic lights */}
                 <div style={{ display: "flex", gap: 6 }}>
-                    {["#ff5f57","#febc2e","#28c840"].map(c => (
+                    {["#ff5f57", "#febc2e", "#28c840"].map(c => (
                         <div key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c, opacity: .75 }} />
                     ))}
                 </div>
@@ -131,43 +132,43 @@ export function CodeFrame({ file, line, column, context = 8 }: Props) {
                     <div style={{ maxHeight: 420, overflowY: "auto" }}>
                         <table style={{ width: "100%", borderCollapse: "collapse" }}>
                             <tbody>
-                            {frame.chunk.map(row => {
-                                const isErr = row.n === line;
-                                return (
-                                    <tr
-                                        key={row.n}
-                                        ref={isErr ? errorRowRef : null}
-                                        style={{ background: isErr ? "rgba(239,68,68,.12)" : undefined }}
-                                    >
-                                        {/* gutter */}
-                                        <td style={{
-                                            width: 48, textAlign: "right", padding: "2px 10px 2px 0",
-                                            verticalAlign: "top", userSelect: "none",
-                                            borderRight: isErr ? "1px solid rgba(239,68,68,.3)" : "1px solid rgba(255,255,255,.05)",
-                                            color: isErr ? "#f87171" : "var(--code-muted)",
-                                            fontWeight: isErr ? 700 : 400, lineHeight: 1.7,
-                                        }}>
-                                            {isErr ? `▶ ${row.n}` : row.n}
-                                        </td>
+                                {frame.chunk.map(row => {
+                                    const isErr = row.n === line;
+                                    return (
+                                        <tr
+                                            key={row.n}
+                                            ref={isErr ? errorRowRef : null}
+                                            style={{ background: isErr ? "rgba(239,68,68,.12)" : undefined }}
+                                        >
+                                            {/* gutter */}
+                                            <td style={{
+                                                width: 48, textAlign: "right", padding: "2px 10px 2px 0",
+                                                verticalAlign: "top", userSelect: "none",
+                                                borderRight: isErr ? "1px solid rgba(239,68,68,.3)" : "1px solid rgba(255,255,255,.05)",
+                                                color: isErr ? "#f87171" : "var(--code-muted)",
+                                                fontWeight: isErr ? 700 : 400, lineHeight: 1.7,
+                                            }}>
+                                                {isErr ? `▶ ${row.n}` : row.n}
+                                            </td>
 
-                                        {/* code */}
-                                        <td style={{ padding: "2px 14px", verticalAlign: "top", lineHeight: 1.7 }}>
+                                            {/* code */}
+                                            <td style={{ padding: "2px 14px", verticalAlign: "top", lineHeight: 1.7 }}>
                                                 <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", color: isErr ? "#f1f5f9" : "var(--code-text)" }}>
                                                     {row.text}
                                                 </pre>
-                                            {/* column caret */}
-                                            {isErr && typeof column === "number" && column > 1 && (
-                                                <pre style={{ margin: 0, color: "rgba(248,113,113,.55)" }}>
+                                                {/* column caret */}
+                                                {isErr && typeof column === "number" && column > 1 && (
+                                                    <pre style={{ margin: 0, color: "rgba(248,113,113,.55)" }}>
                                                         {" ".repeat(column - 1)}^
                                                     </pre>
-                                            )}
-                                        </td>
+                                                )}
+                                            </td>
 
-                                        {/* error strip */}
-                                        <td style={{ width: 3, background: isErr ? "#ef4444" : undefined }} />
-                                    </tr>
-                                );
-                            })}
+                                            {/* error strip */}
+                                            <td style={{ width: 3, background: isErr ? "#ef4444" : undefined }} />
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
