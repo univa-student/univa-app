@@ -18,6 +18,7 @@ import { FilesTab } from "./tabs/files.tab"
 import { OrganizerTab } from "./tabs/organizer.tab"
 import { IntegrationsTab } from "./tabs/integrations.tab"
 import { DangerTab } from "./tabs/danger.tab"
+import { ProfileTab } from "./tabs/profile.tab"
 import usePageTitle from "@/shared/hooks/usePageTitle.ts"
 import type { TabDef } from "./settings.types"
 
@@ -26,6 +27,7 @@ type TabFC = React.FC<{ tab: TabDef }>
 
 const tabComponents: Record<string, TabFC> = {
     account: AccountTab,
+    profile: ProfileTab,
     security: SecurityTab,
     notifications: NotificationsTab,
     appearance: AppearanceTab,

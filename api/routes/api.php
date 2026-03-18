@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Ai\Http\Controllers\SummarizeFileController;
+use App\Modules\Profiles\Http\Controllers\UniversityController;
 use App\Modules\User\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -16,7 +18,6 @@ use App\Http\Controllers\Schedule\SubjectController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\System\HealthController;
 use App\Http\Controllers\System\User\MeController;
-use App\Modules\Ai\Http\Controllers\SummarizeFileController;
 use App\Modules\Notification\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,9 @@ switch ($authMode) {
     case 'token':
         // Для Bearer token без сесій і cookie
         $authMiddleware[] = 'auth:sanctum';
+        $authMiddleware[] = 'api';
+
+        $publicMiddleware[] = [];
         break;
 
     case 'hybrid':
@@ -160,6 +164,28 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
         Route::patch('/{notification}/read', 'markAsRead');
         Route::delete('/{notification}', 'destroy');
     });
+
+    // ── Profiles ──────────────────────────────────────────────────────────────
+
+    Route::get('/information', [
+        UniversityController::class,
+        'information'
+    ]);
+
+    Route::post('/select-region', [
+        UniversityController::class,
+        'selectRegion'
+    ]);
+
+    Route::post('/select-university', [
+        UniversityController::class,
+        'selectUniversity'
+    ]);
+
+    Route::post('/save-university', [
+        UniversityController::class,
+        'store'
+    ]);
 });
 
 Route::group(['prefix' => '/v1', 'middleware' => $publicMiddleware], function () {

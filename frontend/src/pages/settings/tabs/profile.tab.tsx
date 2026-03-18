@@ -41,7 +41,7 @@ const educationFields: FieldDef[] = [
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function AccountTab(_: { tab: TabDef }) {
+export function ProfileTab(_: { tab: TabDef }) {
     const user = useAuthUser()
     const updateProfile = useUpdateProfile()
     const uploadAvatar = useUploadAvatar()
