@@ -9,6 +9,8 @@ use App\Http\Requests\Schedule\StoreExceptionRequest;
 use App\Models\Schedule\ScheduleLesson;
 use App\Models\Schedule\ScheduleLessonException;
 use App\Services\Schedule\ScheduleService;
+use App\Modules\Notification\Support\Notifier;
+use App\Modules\Notification\Enums\NotificationType;
 use Illuminate\Http\JsonResponse;
 
 class ScheduleExceptionController extends Controller
@@ -26,6 +28,11 @@ class ScheduleExceptionController extends Controller
         } catch (UnivaHttpException $e) {
             return $e->render();
         }
+
+        Notifier::send($lesson->user_id, NotificationType::SCHEDULE_EXCEPTION_CREATED, [
+            'message' => "У розкладі відбулися зміни. Це стосується пари з предмету '{$lesson->subject?->name}'.",
+            'lesson_id' => $lesson->id
+        ]);
 
         return ApiResponse::created('Exception created.', $exception);
     }

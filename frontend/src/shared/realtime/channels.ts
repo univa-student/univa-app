@@ -6,10 +6,10 @@
  */
 
 /** Personal notifications & events for a specific user. */
-export const userChannel = (userId: number) => `private-user.${userId}`;
+export const userChannel = (userId: number) => `user.${userId}`;
 
 /** Group chat & events for a specific space. */
-export const spaceChannel = (spaceId: number) => `private-space.${spaceId}`;
+export const spaceChannel = (spaceId: number) => `space.${spaceId}`;
 
 /** File processing / indexing progress for a specific file (optional). */
-export const fileChannel = (fileId: number) => `private-file.${fileId}`;
+export const fileChannel = (fileId: number) => `file.${fileId}`;

@@ -70,9 +70,9 @@ export function AppTopBar() {
 
                 <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
-                        <button className="app-top-bar-icon" aria-label="Сповіщення">
+                        <Link to="/dashboard/notifications" className="app-top-bar-icon" aria-label="Сповіщення">
                             <BellIcon className="size-5" />
-                        </button>
+                        </Link>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">Сповіщення</TooltipContent>
                 </Tooltip>

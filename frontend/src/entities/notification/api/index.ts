@@ -1,21 +1,20 @@
-/**
- * entities/notification/api/index.ts
- *
- * Notification API — list and mark as read.
- */
 import { apiFetch } from "@/shared/api/http";
-import type { Notification } from "../model/types";
+import type { PaginatedNotifications } from "../model/types";
 
-const API = "/api/v1";
+export const notificationApi = {
+    getNotifications: (page = 1) => {
+        return apiFetch<PaginatedNotifications>(`/api/v1/notifications?page=${page}`);
+    },
 
-export function listNotifications(): Promise<Notification[]> {
-    return apiFetch<Notification[]>(`${API}/notifications`);
-}
+    markAsRead: (id: number) => {
+        return apiFetch<{ message: string }>(`/api/v1/notifications/${id}/read`, { method: "PATCH" });
+    },
 
-export function markRead(id: number): Promise<void> {
-    return apiFetch<void>(`${API}/notifications/${id}/read`, { method: "PATCH" });
-}
+    markAllAsRead: () => {
+        return apiFetch<{ message: string }>(`/api/v1/notifications/read-all`, { method: "PATCH" });
+    },
 
-export function markAllRead(): Promise<void> {
-    return apiFetch<void>(`${API}/notifications/read-all`, { method: "PATCH" });
-}
+    deleteNotification: (id: number) => {
+        return apiFetch<{ message: string }>(`/api/v1/notifications/${id}`, { method: "DELETE" });
+    },
+};

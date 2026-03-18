@@ -88,6 +88,10 @@ export async function apiFetch<T>(
         triggerAlert(res.status, json.message);
     }
 
+    if (json.data !== undefined && json.meta !== undefined) {
+        return json as T;
+    }
+
     return (json.data !== undefined ? json.data : json) as T;
 }
 

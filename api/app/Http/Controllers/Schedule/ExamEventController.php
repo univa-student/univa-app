@@ -11,6 +11,8 @@ use App\Http\Requests\Schedule\IndexExamEventRequest;
 use App\Models\Schedule\ExamEvent;
 use App\Services\Schedule\ExamEventService;
 use App\Http\Resources\Schedule\ExamEventResource;
+use App\Modules\Notification\Support\Notifier;
+use App\Modules\Notification\Enums\NotificationType;
 use Illuminate\Http\JsonResponse;
 
 class ExamEventController extends Controller
@@ -36,6 +38,11 @@ class ExamEventController extends Controller
         $exam = $this->service->create((int) auth()->id(), $request->validated());
         $exam->load(['subject', 'examType']);
 
+        Notifier::send($exam->user_id, NotificationType::EXAM_CREATED, [
+            'message' => "Заплановано новий екзамен: {$exam->subject?->name}.",
+            'exam_id' => $exam->id
+        ]);
+
         return ApiResponse::created('Exam created.', $exam);
     }
 
@@ -48,6 +55,11 @@ class ExamEventController extends Controller
         } catch (UnivaHttpException $e) {
             return $e->render();
         }
+
+        Notifier::send($updated->user_id, NotificationType::EXAM_UPDATED, [
+            'message' => "Деталі екзамену з предмету '{$updated->subject?->name}' було оновлено.",
+            'exam_id' => $updated->id
+        ]);
 
         return ApiResponse::ok('Exam updated.', $updated);
     }

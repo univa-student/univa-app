@@ -16,6 +16,8 @@ use App\Modules\User\UseCases\ChangePassword;
 use App\Modules\User\UseCases\DeleteAvatar;
 use App\Modules\User\UseCases\UpdateUser;
 use App\Modules\User\UseCases\UploadAvatar;
+use App\Modules\Notification\Support\Notifier;
+use App\Modules\Notification\Enums\NotificationType;
 use Illuminate\Http\JsonResponse;
 use Throwable;
 
@@ -29,6 +31,10 @@ class UserController extends Controller
         UpdateUser $useCase,
     ): JsonResponse {
         $user = $useCase->handle($request->toDto());
+
+        Notifier::send($user->id, NotificationType::PROFILE_UPDATED, [
+            'message' => 'Ваш профіль було оновлено.'
+        ]);
 
         return ApiResponse::make(
             state: ResponseState::OK,
@@ -46,6 +52,10 @@ class UserController extends Controller
     ): JsonResponse {
         $useCase->handle($request->toDto());
 
+        Notifier::send($request->user()->id, NotificationType::PASSWORD_CHANGED, [
+            'message' => 'Пароль до вашого акаунту було змінено.'
+        ]);
+
         return ApiResponse::make(
             state: ResponseState::OK,
             message: 'Пароль успішно змінено.',
@@ -60,6 +70,10 @@ class UserController extends Controller
         UploadAvatar $useCase,
     ): JsonResponse {
         $user = $useCase->handle($request->toDto());
+
+        Notifier::send($user->id, NotificationType::AVATAR_UPDATED, [
+            'message' => 'Ваш аватар успішно оновлено.'
+        ]);
 
         return ApiResponse::make(
             state: ResponseState::OK,
@@ -76,6 +90,10 @@ class UserController extends Controller
         DeleteAvatar $useCase,
     ): JsonResponse {
         $user = $useCase->handle($request->toDto());
+
+        Notifier::send($user->id, NotificationType::AVATAR_UPDATED, [
+            'message' => 'Ваш аватар видалено.'
+        ]);
 
         return ApiResponse::make(
             state: ResponseState::OK,

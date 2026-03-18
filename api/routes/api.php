@@ -17,6 +17,7 @@ use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\System\HealthController;
 use App\Http\Controllers\System\User\MeController;
 use App\Modules\Ai\Http\Controllers\SummarizeFileController;
+use App\Modules\Notification\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 $authMode = env('API_AUTH_MODE', 'hybrid');
@@ -150,6 +151,14 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
         Route::get('/summaries/{artifact}', 'show');
         Route::delete('/summaries/{artifact}', 'destroy');
         Route::post('/{file}/summary', 'store');
+    });
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    Route::controller(NotificationController::class)->prefix('/notifications')->group(function () {
+        Route::get('/', 'index');
+        Route::patch('/read-all', 'markAllAsRead');
+        Route::patch('/{notification}/read', 'markAsRead');
+        Route::delete('/{notification}', 'destroy');
     });
 });
 
