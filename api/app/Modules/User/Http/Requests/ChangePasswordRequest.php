@@ -1,14 +1,17 @@
 <?php
 
-namespace App\Http\Requests\Account;
+declare(strict_types=1);
 
-use Illuminate\Foundation\Http\FormRequest;
+namespace App\Modules\User\Http\Requests;
 
-class ChangePasswordRequest extends FormRequest
+use App\Core\Request\UnivaRequest;
+use App\Modules\User\DTO\ChangePasswordData;
+
+class ChangePasswordRequest extends UnivaRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     public function rules(): array
@@ -28,5 +31,16 @@ class ChangePasswordRequest extends FormRequest
             'password.min'                     => 'Пароль має бути не менше 8 символів.',
             'password.confirmed'               => 'Паролі не збігаються.',
         ];
+    }
+
+    public function toDto(): ChangePasswordData
+    {
+        $validated = $this->validated();
+
+        return new ChangePasswordData(
+            userId: (int) $this->user()->getAuthIdentifier(),
+            currentPassword: (string) $validated['current_password'],
+            password: (string) $validated['password'],
+        );
     }
 }

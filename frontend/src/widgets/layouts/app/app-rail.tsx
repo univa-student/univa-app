@@ -24,16 +24,16 @@ export function AppRail() {
                                 <Link
                                     to={item.url}
                                     className={[
-                                        "relative flex items-center justify-center size-[30px] rounded-md transition-all duration-150",
+                                        "relative flex items-center justify-center size-[40px] rounded-md transition-all duration-150",
                                         active
                                             ? ""
                                             : "hover:bg-accent/20 hover:text-foreground",
                                     ].join(" ")}
                                     aria-label={item.title}
                                 >
-                                    <Icon className="size-[17px]" />
+                                    <Icon className="size-6" />
                                     {active && (
-                                        <span className="absolute -left-[5px] top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-full bg-primary" />
+                                        <span className="absolute left-1 top-1/2 -translate-y-1/2 w-[2.5px] h-6 rounded-full bg-primary" />
                                     )}
                                 </Link>
                             </TooltipTrigger>

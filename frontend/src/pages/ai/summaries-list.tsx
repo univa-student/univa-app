@@ -95,7 +95,7 @@ export function SummariesListPage() {
     const deleteMut = useDeleteSummary();
 
     return (
-        <div className="mx-auto px-4 py-6 sm:px-6">
+        <div className="w-full px-4 py-6 sm:px-6">
             <AiPanel />
             {/* Header */}
             <div className="mb-6 flex items-center gap-3">

@@ -49,12 +49,12 @@ export function AppRightRail() {
                     <TooltipTrigger asChild>
                         <button
                             onClick={toggleTheme}
-                            className="flex items-center justify-center size-[28px] rounded-md hover:bg-accent/70 hover:text-foreground transition-colors border-none bg-transparent cursor-pointer"
+                            className="flex items-center justify-center size-[40px] rounded-md hover:bg-accent/70 hover:text-foreground transition-colors border-none bg-transparent cursor-pointer"
                             aria-label={isDark ? "Світла тема" : "Темна тема"}
                         >
                             {isDark
-                                ? <SunIcon className="size-[16px]" />
-                                : <MoonIcon className="size-[16px]" />
+                                ? <SunIcon className="size-5" />
+                                : <MoonIcon className="size-5" />
                             }
                         </button>
                     </TooltipTrigger>
@@ -67,10 +67,10 @@ export function AppRightRail() {
                     <TooltipTrigger asChild>
                         <button
                             onClick={toggleFs}
-                            className="flex items-center justify-center size-[28px] rounded-md hover:bg-accent/70 hover:text-foreground transition-colors border-none bg-transparent cursor-pointer"
+                            className="flex items-center justify-center size-[40px] rounded-md hover:bg-accent/70 hover:text-foreground transition-colors border-none bg-transparent cursor-pointer"
                             aria-label="Повний екран"
                         >
-                            <MaximizeIcon className="size-[16px]" />
+                            <MaximizeIcon className="size-5" />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="left" sideOffset={8}>Повний екран</TooltipContent>
