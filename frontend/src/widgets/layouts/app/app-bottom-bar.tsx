@@ -173,14 +173,14 @@ export function AppBottomBar() {
                             )}
                             aria-label="Профіль"
                         >
-                            <Avatar className="size-5 rounded-full">
+                            <Avatar className="size-6 rounded-full">
                                 <AvatarImage src={avatarUrl} alt={userName} />
                                 <AvatarFallback className="rounded-full bg-primary/15 text-[9px] font-semibold text-primary">
                                     {getInitials(userName)}
                                 </AvatarFallback>
                             </Avatar>
 
-                            <span className="hidden max-w-[140px] truncate text-[12px] font-medium text-foreground/85 md:block">
+                            <span className="hidden max-w-[140px] truncate text-[14px] font-medium text-foreground/85 md:block">
                                 {userName}
                             </span>
                         </button>
@@ -241,8 +241,8 @@ export function AppBottomBar() {
 
                 <div className="hidden h-4 w-px bg-border/80 sm:block" />
 
-                <div className="hidden min-w-0 items-center gap-2 text-[12px] text-muted-foreground sm:flex">
-                    <Icon className="size-3.5 shrink-0" />
+                <div className="hidden min-w-0 items-center gap-2 text-[13px] text-muted-foreground sm:flex">
+                    <Icon className="size-4.5 shrink-0" />
                     <span className="truncate font-medium text-foreground/80">{meta.title}</span>
                     <span className="text-muted-foreground/50">—</span>
                     <span className="truncate">{meta.hint}</span>
@@ -251,7 +251,9 @@ export function AppBottomBar() {
 
             <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
                 <div className="flex min-w-0 items-center gap-2 rounded-md border border-border/60 bg-background/60 px-2.5 py-1">
-                    <span className="font-medium text-foreground/80">Univa</span>
+                    <span className="font-medium text-foreground/80">
+                        Univa
+                    </span>
                     <span className="text-muted-foreground/45">
                         {APP_VERSION}
                     </span>

@@ -17,6 +17,8 @@ use App\Modules\Ai\Http\Resources\AiArtifactResource;
 use App\Modules\Ai\Http\Resources\AiRunResource;
 use App\Modules\Ai\Models\AiArtifact;
 use App\Modules\Ai\UseCases\SummarizeFile;
+use App\Modules\Notification\Support\Notifier;
+use App\Modules\Notification\Enums\NotificationType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Throwable;
@@ -60,6 +62,10 @@ class SummarizeFileController extends Controller
         SummarizeFile $useCase,
     ): JsonResponse {
         $result = $useCase->handle($request->toDto());
+
+        Notifier::send($request->user()->id, NotificationType::AI_SUMMARY_CREATED, [
+            'message' => 'Новий конспект до вашого файлу успішно згенеровано.'
+        ]);
 
         return ApiResponse::make(
             state: ResponseState::OK,

@@ -22,6 +22,7 @@ import { FilesPage } from "@/pages/files/files.page";
 import { ChatPage } from "@/pages/chat/chat.page";
 import { DeadlinesPage } from "@/pages/deadlines/deadlines.page";
 import { SpacesPage } from "@/pages/spaces/spaces.page";
+import { NotificationsPage } from "@/pages/notifications/notifications.page";
 
 import { PrivateRoot } from "./PrivateRoot.tsx";
 import { routesLoaders } from "./loaders.ts";
@@ -335,6 +336,21 @@ export const router = createBrowserRouter([
                                         { label: "Спейси" },
                                     ]}>
                                         <SpacesPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/notifications",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout breadcrumbs={[
+                                        { label: "Головна", href: "/dashboard" },
+                                        { label: "Сповіщення" },
+                                    ]}>
+                                        <NotificationsPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>

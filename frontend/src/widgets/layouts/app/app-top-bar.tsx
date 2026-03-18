@@ -20,9 +20,9 @@ export function AppTopBar() {
                     <TooltipTrigger asChild>
                         <Link
                             to="/dashboard"
-                            className="flex items-center justify-center size-[28px] rounded-md hover:bg-accent/60 transition-colors"
+                            className="flex items-center justify-center size-[28px] rounded-md"
                         >
-                            <img src={logoSrc} alt="Univa" className="size-5 object-contain" />
+                            <img src={logoSrc} alt="Univa" className="size-7 object-contain" />
                         </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">Дашборд</TooltipContent>
@@ -46,7 +46,7 @@ export function AppTopBar() {
                             aria-label="Бокова панель"
                             type="button"
                         >
-                            <SidebarIcon className="size-[16px]" />
+                            <SidebarIcon className="size-[18px]" />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">Бокова панель (Ctrl+B)</TooltipContent>
@@ -62,7 +62,7 @@ export function AppTopBar() {
                 <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
                         <button className="app-top-bar-icon" aria-label="Пошук">
-                            <SearchIcon className="size-[16px]" />
+                            <SearchIcon className="size-5" />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">Пошук</TooltipContent>
@@ -70,9 +70,9 @@ export function AppTopBar() {
 
                 <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
-                        <button className="app-top-bar-icon" aria-label="Сповіщення">
-                            <BellIcon className="size-[16px]" />
-                        </button>
+                        <Link to="/dashboard/notifications" className="app-top-bar-icon" aria-label="Сповіщення">
+                            <BellIcon className="size-5" />
+                        </Link>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">Сповіщення</TooltipContent>
                 </Tooltip>

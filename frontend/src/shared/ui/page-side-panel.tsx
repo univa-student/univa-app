@@ -19,12 +19,8 @@ export function PageSidePanel({ children }: PageSidePanelProps) {
     const [target, setTarget] = useState<HTMLElement | null>(null)
 
     useEffect(() => {
-        // Find the portal slot after DOM commit
         const el = document.getElementById("app-side-panel")
         setTarget(el)
-
-        // Cleanup: when unmounted, nothing else is needed — React portal
-        // removal handles it automatically
     }, [])
 
     if (!target) return null

@@ -65,34 +65,34 @@ export function FilesPanel({
                     </Button>
                 </div>
 
-                <Separator />
+                {/*<Separator />*/}
 
-                {/* Navigation shortcuts */}
-                <div className="p-3 space-y-1 flex-shrink-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">
-                        Навігація
-                    </p>
-                    {([
-                        { icon: HomeIcon, label: "Мої файли", folderId: null },
-                        { icon: StarIcon, label: "Закріплені", folderId: -1 },
-                        { icon: ClockIcon, label: "Нещодавні", folderId: -2 },
-                    ] as const).map(({ icon: Icon, label, folderId }) => (
-                        <Button
-                            key={label}
-                            variant={currentFolderId === folderId ? "secondary" : "ghost"}
-                            size="sm"
-                            onClick={() => folderId !== -1 && folderId !== -2 && onSelectFolder(folderId as null, label)}
-                            className={`w-full justify-start gap-2 h-8 text-xs ${
-                                currentFolderId === folderId
-                                    ? "bg-primary/10 text-primary hover:bg-primary/15 font-medium"
-                                    : "text-muted-foreground hover:text-foreground"
-                            }`}
-                        >
-                            <Icon className="size-3.5" />
-                            {label}
-                        </Button>
-                    ))}
-                </div>
+                {/*/!* Navigation shortcuts *!/*/}
+                {/*<div className="p-3 space-y-1 flex-shrink-0">*/}
+                {/*    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">*/}
+                {/*        Навігація*/}
+                {/*    </p>*/}
+                {/*    {([*/}
+                {/*        { icon: HomeIcon, label: "Мої файли", folderId: null },*/}
+                {/*        { icon: StarIcon, label: "Закріплені", folderId: -1 },*/}
+                {/*        { icon: ClockIcon, label: "Нещодавні", folderId: -2 },*/}
+                {/*    ] as const).map(({ icon: Icon, label, folderId }) => (*/}
+                {/*        <Button*/}
+                {/*            key={label}*/}
+                {/*            variant={currentFolderId === folderId ? "secondary" : "ghost"}*/}
+                {/*            size="sm"*/}
+                {/*            onClick={() => folderId !== -1 && folderId !== -2 && onSelectFolder(folderId as null, label)}*/}
+                {/*            className={`w-full justify-start gap-2 h-8 text-xs ${*/}
+                {/*                currentFolderId === folderId*/}
+                {/*                    ? "bg-primary/10 text-primary hover:bg-primary/15 font-medium"*/}
+                {/*                    : "text-muted-foreground hover:text-foreground"*/}
+                {/*            }`}*/}
+                {/*        >*/}
+                {/*            <Icon className="size-3.5" />*/}
+                {/*            {label}*/}
+                {/*        </Button>*/}
+                {/*    ))}*/}
+                {/*</div>*/}
 
                 <Separator />
 

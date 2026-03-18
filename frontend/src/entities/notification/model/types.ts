@@ -1,22 +1,18 @@
-/**
- * entities/notification/model/types.ts
- *
- * Notification domain types.
- */
-
-export type NotificationType =
-    | "task.due"
-    | "message.created"
-    | "schedule.updated"
-    | "file.indexed"
-    | "system";
-
-export interface Notification {
+export interface AppNotification {
     id: number;
-    type: NotificationType;
-    title: string;
-    body: string;
-    payload: Record<string, unknown>;
-    readAt: string | null;  // null = unread
-    createdAt: string;
+    user_id: number;
+    type: string;
+    payload: Record<string, any> | null;
+    read_at: string | null;
+    created_at: string;
+}
+
+export interface PaginatedNotifications {
+    data: AppNotification[];
+    meta: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
 }

@@ -15,6 +15,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Laravel\Ai\Enums\Lab;
 use function Laravel\Ai\agent;
+use App\Modules\Notification\Support\Notifier;
+use App\Modules\Notification\Enums\NotificationType;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
@@ -104,6 +106,11 @@ class FileController extends Controller
         } catch (UnivaHttpException $e) {
             return $e->render();
         }
+
+        Notifier::send($file->user_id, NotificationType::FILE_UPLOADED, [
+            'message' => "Файл '{$file->original_name}' успішно завантажено.",
+            'file_id' => $file->id
+        ]);
 
         return ApiResponse::created('File uploaded.', $file);
     }
