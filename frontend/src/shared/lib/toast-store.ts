@@ -17,6 +17,8 @@ class ToastStore {
     private toasts: Toast[] = [];
     private listeners: Set<Listener> = new Set();
     private timers: Map<string, number> = new Map();
+    private id = 0;
+
     private readonly MAX_TOASTS = 6;
     private readonly DEFAULT_AUTOCLOSE = 3500;
 
@@ -26,15 +28,15 @@ class ToastStore {
     };
 
     getSnapshot = () => {
-        return this.toasts;
+        return [...this.toasts]; // 🔥 immutable
     };
 
     private notify() {
-        this.listeners.forEach((listener) => listener(this.toasts));
+        this.listeners.forEach((listener) => listener(this.getSnapshot()));
     }
 
     toast = (data: ToastInput) => {
-        const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const id = `${++this.id}`;
         const newToast: Toast = { id, ...data };
 
         this.toasts = [...this.toasts, newToast].slice(-this.MAX_TOASTS);

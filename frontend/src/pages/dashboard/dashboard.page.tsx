@@ -1,5 +1,5 @@
 import usePageTitle from "@/shared/hooks/usePageTitle.ts";
-import { DashboardOverview } from "@/widgets/dashboard-overview";
+import { DashboardOverview } from "@/modules/dashboard/ui";
 
 export function DashboardPage() {
     usePageTitle("Головна", { suffix: true });

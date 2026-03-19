@@ -23,7 +23,7 @@ import {
     AlertCircleIcon,
 } from "lucide-react"
 
-import { useAuthUser } from "@/entities/user/model/useAuthUser"
+import { useAuthUser } from "@/modules/auth/model/useAuthUser"
 
 const navMain = [
     {

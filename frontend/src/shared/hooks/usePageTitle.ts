@@ -1,20 +1,22 @@
 import { useEffect } from "react";
-import { APP_NAME } from "../../app/config/app.config.ts";
+import { APP_NAME } from "@/app/config/app.config";
 
 type Options = {
-    suffix?: boolean; // додавати "| Univa"
+    suffix?: boolean;
 };
 
-function usePageTitle(title: string, options?: Options) {
+export function usePageTitle(title: string, options?: Options) {
+    const suffix = options?.suffix !== false;
+
     useEffect(() => {
-        document.title = options?.suffix === false
-            ? title
-            : `${title} | ${APP_NAME}`;
+        const prevTitle = document.title;
+
+        document.title = suffix
+            ? `${title} | ${APP_NAME}`
+            : title;
 
         return () => {
-            document.title = APP_NAME;
+            document.title = prevTitle;
         };
-    }, [title, options?.suffix]);
+    }, [title, suffix]);
 }
-
-export default usePageTitle

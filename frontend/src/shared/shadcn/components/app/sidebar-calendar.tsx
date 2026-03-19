@@ -16,10 +16,10 @@ import { Button } from "@/shared/shadcn/ui/button"
 import { Separator } from "@/shared/shadcn/ui/separator"
 import { Skeleton } from "@/shared/shadcn/ui/skeleton"
 
-import { useSchedule } from "@/entities/schedule/api/hooks"
-import { useDeadlines } from "@/entities/deadline/api/hooks"
-import type { LessonInstance } from "@/entities/schedule/model/types"
-import type { Deadline } from "@/entities/deadline/model/types"
+import { useSchedule } from "@/modules/schedule/api/hooks"
+import { useDeadlines } from "@/modules/deadlines/api/hooks"
+import type { LessonInstance } from "@/modules/schedule/model/types"
+import type { Deadline } from "@/modules/deadlines/model/types"
 
 /* ─────────────────────────── Types ─────────────────────────── */
 

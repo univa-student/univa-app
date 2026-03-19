@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
-import { fetchUserSettings } from "@/entities/user/api/settings/fetch-user-settings";
-import { userSettingsStore } from "@/entities/user/model/settings/settings-store";
-import { mapUiSettings } from "@/entities/user/lib/settings/map-ui-settings";
-import { applyDomSettings } from "@/entities/user/lib/settings/apply-dom-settings";
-import { loadCachedUiSettings, saveCachedUiSettings } from "@/entities/user/lib/settings/settings-cache";
+import { fetchUserSettings } from "@/modules/auth/api/settings/fetch-user-settings";
+import { mapUiSettings } from "@/modules/auth/lib/settings/map-ui-settings";
+import { applyDomSettings } from "@/modules/auth/lib/settings/apply-dom-settings";
+import { loadCachedUiSettings, saveCachedUiSettings } from "@/modules/auth/lib/settings/settings-cache";
+import { userSettingsStore } from "@/modules/auth/model/settings-store";
 
 type Props = {
     children: ReactNode;
@@ -15,27 +15,32 @@ type Props = {
 export function SettingsProvider({ children }: Props) {
     useEffect(() => {
         const cached = loadCachedUiSettings();
-        if (cached) applyDomSettings(cached);
+        if (cached) {
+            applyDomSettings(cached);
+            userSettingsStore.setAll({ ui: cached, items: null });
+        }
     }, []);
 
-    const mutation = useMutation({
-        mutationFn: fetchUserSettings,
-        onSuccess: (items) => {
-            const ui = mapUiSettings(items);
-
-            userSettingsStore.setAll({ ui, items });
-            saveCachedUiSettings(ui);
-            applyDomSettings(ui);
-        },
-        onError: () => {
-            userSettingsStore.setReady(true);
-        },
+    const { data, isError } = useQuery({
+        queryKey: ["user-settings"],
+        queryFn: fetchUserSettings,
+        staleTime: Infinity,
     });
 
     useEffect(() => {
-        mutation.mutate();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        if (data) {
+            const ui = mapUiSettings(data);
+
+            userSettingsStore.setAll({ ui, items: data });
+            saveCachedUiSettings(ui);
+            applyDomSettings(ui);
+            userSettingsStore.setReady(true);
+        }
+
+        if (isError) {
+            userSettingsStore.setReady(true);
+        }
+    }, [data, isError]);
 
     return <>{children}</>;
 }

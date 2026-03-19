@@ -17,7 +17,7 @@ import {
     useLessonTypes,
     useDeliveryModes,
     useRecurrenceRules,
-} from "@/entities/schedule/api/hooks";
+} from "@/modules/schedule/api/hooks";
 import { ModalShell } from "@/shared/ui/modal-shell";
 
 interface Props {

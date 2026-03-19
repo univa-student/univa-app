@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { useSignIn } from "@/features/auth/sign-in/use-sign-in";
+import { useSignIn } from "@/modules/auth/ui/sign-in/use-sign-in";
 import { extractApiFieldErrors } from "@/shared/lib/forms/extract-api-field-errors";
 import { useToast } from "@/shared/hooks/useToast";
 import usePageTitle from "@/shared/hooks/usePageTitle";
 import { LoginForm } from "@/shared/shadcn/components/auth/login-form";
-import { AuthPageShell } from "@/shared/ui/auth/auth-page-shell";
+import { AuthPageShell } from "@/modules/auth/ui/auth-page-shell";
 
 type LoginLocationState = {
     from?: string;

@@ -1,7 +1,7 @@
 import { PageSidePanel } from "@/shared/ui/page-side-panel";
 import { Link, useLocation } from "react-router-dom";
 import { Brain, FileText, Sparkles, Layers3 } from "lucide-react";
-import { useSummaries } from "@/entities/summary/api/hooks";
+import { useSummaries } from "@/modules/ai/api/hooks";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import { Separator } from "@/shared/shadcn/ui/separator";
 

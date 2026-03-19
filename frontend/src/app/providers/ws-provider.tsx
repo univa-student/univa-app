@@ -1,12 +1,6 @@
-/**
- * app/providers/ws-provider.tsx
- *
- * Provides the WebSocket client to the app.
- * Connects after the user is authenticated, disconnects on logout.
- */
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { wsClient } from "@/shared/realtime/ws-client";
-import { authStore } from "@/entities/user/model/auth-store";
+import { authStore } from "@/modules/auth/model/auth-store";
 import { ENABLE_WS } from "@/app/config/feature-flags";
 
 interface WsContextValue {
@@ -20,29 +14,33 @@ export function useWs(): WsContextValue {
 }
 
 export function WsProvider({ children }: { children: React.ReactNode }) {
-    const connectedRef = useRef(false);
-
     useEffect(() => {
         if (!ENABLE_WS) return;
 
-        const handleStoreChange = () => {
+        const sync = () => {
             const { user, isReady } = authStore.getState();
 
-            if (isReady && user && !connectedRef.current) {
+            if (!isReady) return;
+
+            if (user && !wsClient.isConnected) {
                 wsClient.connect();
-                connectedRef.current = true;
             }
 
-            if (isReady && !user && connectedRef.current) {
+            if (!user && wsClient.isConnected) {
                 wsClient.disconnect();
-                connectedRef.current = false;
             }
         };
 
-        // Check immediately (authStore may already be ready)
-        handleStoreChange();
+        sync(); // initial sync
 
-        return authStore.subscribe(handleStoreChange);
+        const unsubscribe = authStore.subscribe(sync);
+
+        return () => {
+            unsubscribe();
+            if (wsClient.isConnected) {
+                wsClient.disconnect();
+            }
+        };
     }, []);
 
     return (

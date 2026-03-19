@@ -6,8 +6,9 @@ import { AuthProvider } from "@/app/providers/auth-provider";
 import { SettingsProvider } from "@/app/providers/settings-provider";
 import { WsProvider } from "@/app/providers/ws-provider";
 import { ThemeProvider } from "@/app/providers/theme-provider";
-import { useUserSettings } from "@/entities/user/hooks/use-user-settings";
+import { useUserSettings } from "@/modules/auth/hooks/use-user-settings";
 
+// ─── Animation ───────────────────────────────────────────
 function AnimationProvider({ children }: { children: React.ReactNode }) {
     const { animations } = useUserSettings();
 
@@ -18,40 +19,28 @@ function AnimationProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
+// ─── Base (завжди) ───────────────────────────────────────
 export function BaseProviders({ children }: { children: React.ReactNode }) {
     return (
         <TooltipProvider delayDuration={0}>
-            <ToastProvider>
-                {children}
-            </ToastProvider>
+            <ToastProvider>{children}</ToastProvider>
         </TooltipProvider>
     );
 }
 
-/**
- * Глобально: тільки auth/session.
- * Без settings, ws, user-only side effects.
- */
+// ─── App (глобальні) ─────────────────────────────────────
 export function AppProviders({ children }: { children: React.ReactNode }) {
-    return (
-        <AuthProvider>
-            {children}
-        </AuthProvider>
-    );
+    return <AuthProvider>{children}</AuthProvider>;
 }
 
-/**
- * Тільки для приватної частини.
- */
+// ─── Private (після auth) ────────────────────────────────
 export function PrivateProviders({ children }: { children: React.ReactNode }) {
     return (
         <SettingsProvider>
             <ThemeProvider>
-                <WsProvider>
-                    <AnimationProvider>
-                        {children}
-                    </AnimationProvider>
-                </WsProvider>
+                <AnimationProvider>
+                    <WsProvider>{children}</WsProvider>
+                </AnimationProvider>
             </ThemeProvider>
         </SettingsProvider>
     );
