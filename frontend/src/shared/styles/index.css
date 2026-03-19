@@ -47,126 +47,156 @@
     --radius: 0.75rem;
 
     /* Base */
-    --background: oklch(0.985 0.005 293);
-    --foreground: oklch(0.22 0.015 270);
+    --background: oklch(0.982 0 0);
+    --foreground: oklch(0.18 0 0);
 
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.22 0.015 270);
+    --card-foreground: oklch(0.18 0 0);
 
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.22 0.015 270);
+    --popover-foreground: oklch(0.18 0 0);
 
-    --primary: oklch(0.54 0.24 293);
+    /* Steel accent — neutral blue-grey */
+    --primary: oklch(0.38 0.022 250);
     --primary-foreground: white;
 
-    --secondary: oklch(0.96 0.008 293);
-    --secondary-foreground: oklch(0.35 0.06 293);
+    --secondary: oklch(0.955 0 0);
+    --secondary-foreground: oklch(0.32 0.008 250);
 
-    --muted: oklch(0.95 0.006 293);
-    --muted-foreground: oklch(0.55 0.03 270);
+    --muted: oklch(0.945 0 0);
+    --muted-foreground: oklch(0.52 0.008 250);
 
-    --accent: oklch(0.94 0.04 293);
-    --accent-foreground: oklch(0.35 0.15 293);
+    --accent: oklch(0.928 0.006 250);
+    --accent-foreground: oklch(0.28 0.018 250);
 
-    --destructive: oklch(0.58 0.22 29);
+    --destructive: oklch(0.57 0.21 27);
     --destructive-foreground: white;
 
-    --border: oklch(0.90 0.006 293);
-    --input: oklch(0.91 0.006 293);
+    --border: oklch(0.875 0 0);
+    --input: oklch(0.892 0 0);
     --ring: var(--primary);
 
-    --chart-1: oklch(0.54 0.24 293);
-    --chart-2: oklch(0.60 0.20 280);
-    --chart-3: oklch(0.66 0.17 265);
-    --chart-4: oklch(0.72 0.14 255);
-    --chart-5: oklch(0.78 0.10 250);
+    --chart-1: oklch(0.38 0.022 250);
+    --chart-2: oklch(0.48 0.016 245);
+    --chart-3: oklch(0.58 0.010 240);
+    --chart-4: oklch(0.68 0.006 235);
+    --chart-5: oklch(0.76 0.004 230);
 
-    --sidebar: oklch(0.97 0.006 293);
+    --sidebar: oklch(0.970 0 0);
     --sidebar-foreground: var(--foreground);
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: oklch(0.95 0.01 293);
+    --sidebar-accent: oklch(0.948 0.004 250);
     --sidebar-accent-foreground: var(--foreground);
     --sidebar-border: var(--border);
     --sidebar-ring: var(--ring);
 
-    --u-bg: #fafbfc;
-    --u-card: #ffffff;
-    --u-text: #111827;
-    --u-muted: #6b7280;
-    --u-faint: #d1d5db;
-    --u-border: #e5e7eb;
+    --u-bg: var(--background);
+    --u-card: var(--card);
+    --u-text: var(--foreground);
+    --u-muted: var(--muted-foreground);
+    --u-faint: var(--border);
+    --u-border: var(--border);
 
-    --u-accent: #7c3aed;
-    --u-accent-light: #ede9fe;
-    --u-accent-mid: #c4b5fd;
+    --u-accent: var(--primary);
+    --u-accent-light: color-mix(in oklch, var(--primary) 12%, white);
+    --u-accent-mid: color-mix(in oklch, var(--primary) 35%, white);
 
-    --u-gradient: linear-gradient(135deg, #7c3aed, #6366f1, #3b82f6);
+    --u-gradient: linear-gradient(
+            135deg,
+            oklch(0.36 0.024 252),
+            oklch(0.42 0.016 248),
+            oklch(0.50 0.010 244)
+    );
 
-    /* для glow в OrbitHero */
-    --u-orbit-glow: rgba(124, 58, 237, 0.12);
+    --u-orbit-glow: color-mix(in srgb, var(--primary) 10%, transparent);
+
+    /* ── Island Workspace tokens ── */
+    --island-radius: 0.875rem;
+    --island-gap: 0.625rem;
+    --island-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 3px 10px rgba(0, 0, 0, 0.07),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    --island-border: 1px solid var(--border);
+    --island-bg: var(--card);
+    --island-canvas: oklch(0.952 0.003 250);
 }
 
 .dark {
-    --background: #0c0a14;
-    --foreground: #e8e4f0;
+    --background: #101214;
+    --foreground: #e4e6ea;
 
-    --card: #13101e;
-    --card-foreground: #e8e4f0;
+    --card: #16191e;
+    --card-foreground: #e4e6ea;
 
-    --popover: #13101e;
-    --popover-foreground: #e8e4f0;
+    --popover: #16191e;
+    --popover-foreground: #e4e6ea;
 
-    --secondary: #1a1528;
-    --secondary-foreground: #a89ec0;
+    --secondary: #1c2028;
+    --secondary-foreground: #a0a8b4;
 
-    --muted: #150f22;
-    --muted-foreground: #8e85a0;
+    --muted: #181c22;
+    --muted-foreground: #8a919e;
 
-    --border: #251e38;
-    --input: #251e38;
+    --border: #272d38;
+    --input: #272d38;
 
-    --primary: #8b5cf6;
+    /* Steel dark — cold grey with slight blue undertone */
+    --primary: #7b8799;
     --primary-foreground: #ffffff;
 
-    --accent: #6d28d9;
-    --accent-foreground: #ede9fe;
+    --accent: #5a6474;
+    --accent-foreground: #dde2ea;
 
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
 
-    --ring: #8b5cf6;
+    --ring: #7b8799;
 
-    --chart-1: #8b5cf6;
-    --chart-2: #7c3aed;
-    --chart-3: #6366f1;
-    --chart-4: #818cf8;
-    --chart-5: #a5b4fc;
+    --chart-1: #7b8799;
+    --chart-2: #6b7888;
+    --chart-3: #5c6878;
+    --chart-4: #4e5a68;
+    --chart-5: #8e9daf;
 
-    /* Sidebar */
-    --sidebar: #0c0a14;
-    --sidebar-foreground: #e8e4f0;
-    --sidebar-primary: #8b5cf6;
+    --sidebar: #0d1013;
+    --sidebar-foreground: #e4e6ea;
+    --sidebar-primary: #7b8799;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-ring: #8b5cf6;
-    --sidebar-accent: #1a1528;
-    --sidebar-accent-foreground: #e8e4f0;
-    --sidebar-border: #251e38;
+    --sidebar-ring: #7b8799;
+    --sidebar-accent: #1c2028;
+    --sidebar-accent-foreground: #e4e6ea;
+    --sidebar-border: #272d38;
 
-    --u-bg: #0c0a14;
-    --u-card: #13101e;
-    --u-text: #f3f0fa;
-    --u-muted: #a89ec0;
-    --u-faint: #3b2d5c;
-    --u-border: #251e38;
+    --u-bg: var(--background);
+    --u-card: var(--card);
+    --u-text: var(--foreground);
+    --u-muted: var(--muted-foreground);
+    --u-faint: var(--border);
+    --u-border: var(--border);
 
-    --u-accent: #8b5cf6;
-    --u-accent-light: #312e81;
-    --u-accent-mid: #6366f1;
+    --u-accent: var(--primary);
+    --u-accent-light: color-mix(in oklch, var(--primary) 18%, black);
+    --u-accent-mid: color-mix(in oklch, var(--primary) 52%, #c8d0dc);
 
-    --u-gradient: linear-gradient(135deg, #7c3aed, #4f46e5, #2563eb);
+    --u-gradient: linear-gradient(
+            135deg,
+            #6b7888,
+            #5c6878,
+            #4e5a68
+    );
 
-    --u-orbit-glow: rgba(139, 92, 246, 0.16);
+    --u-orbit-glow: color-mix(in srgb, var(--primary) 14%, transparent);
+
+    /* ── Island Workspace tokens (dark) ── */
+    --island-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.5),
+        0 6px 20px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    --island-border: 1px solid var(--border);
+    --island-bg: var(--card);
+    --island-canvas: #0b0d10;
 }
 
 @layer base {
@@ -209,11 +239,15 @@
     }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   COMPACT MODE  —  html[data-compact="1"]
-   Tightens spacing, reduces paddings/gaps/element sizes globally.
-   Pure CSS — no component changes required.
-═══════════════════════════════════════════════════════════════════════════ */
+html, body, #root {
+    height: 100%;
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
+}
+
 :root[data-compact="1"] {
     --radius: 0.6rem;
 }
@@ -270,12 +304,6 @@
     padding: 0.45rem 0.75rem !important;
 }
 
-/* Dashboard main content area */
-[data-compact="1"] .flex.flex-1.flex-col.gap-4.p-4 {
-    gap: 0.6rem !important;
-    padding: 0.6rem !important;
-}
-
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ANIMATIONS  —  html[data-animations="0"]
@@ -305,4 +333,335 @@
 [data-animations="0"] [style*="translateX"],
 [data-animations="0"] [style*="scale("] {
     transform: none !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ISLAND WORKSPACE UI
+   Floating panel layout similar to JetBrains / Linear / Notion
+═══════════════════════════════════════════════════════════════════════════ */
+
+.island-canvas {
+    position: relative;
+    background:
+            radial-gradient(
+                    1400px 800px at -10% -20%,
+                    rgba(90, 110, 180, 0.35),
+                    transparent 60%
+            ),
+            radial-gradient(
+                    1200px 700px at 120% 110%,
+                    rgba(90, 110, 180, 0.30),
+                    transparent 65%
+            ),
+            radial-gradient(
+                    900px 600px at 50% 120%,
+                    rgba(90, 110, 180, 0.22),
+                    transparent 70%
+            ),
+            var(--island-canvas);
+    height: 100dvh;
+    display: flex;
+    overflow: hidden;
+}
+
+.dark .island-canvas {
+    background:
+            radial-gradient(
+                    1200px 700px at -10% -20%,
+                    rgba(120, 150, 255, 0.18),
+                    transparent 60%
+            ),
+
+            radial-gradient(
+                    1000px 600px at 110% 110%,
+                    rgba(120, 150, 255, 0.15),
+                    transparent 65%
+            ),
+
+            radial-gradient(
+                    900px 500px at 50% 120%,
+                    rgba(120, 150, 255, 0.12),
+                    transparent 70%
+            ),
+
+            var(--island-canvas);
+}
+
+.island-canvas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    background-image:
+            linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
+
+    background-size: 32px 32px;
+
+    pointer-events: none;
+}
+
+.dark .island-canvas::before {
+    background-image:
+            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+}
+
+.island {
+    background: var(--island-bg);
+    border: var(--island-border);
+    border-radius: var(--island-radius);
+
+    box-shadow:
+            0 2px 6px rgba(0,0,0,0.05),
+            0 8px 24px rgba(0,0,0,0.06),
+            0 0 0 1px rgba(0,0,0,0.04);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PERIMETER FRAME LAYOUT
+   Grid-based frame with top bar, left rail, right rail, bottom bar, center
+═══════════════════════════════════════════════════════════════════════════ */
+
+.app-frame {
+    display: grid;
+    grid-template-areas:
+        "top    top    top"
+        "left   center right"
+        "bottom bottom bottom";
+    grid-template-rows: 32px 1fr 32px;
+    grid-template-columns: 34px 1fr 34px;
+    height: 100dvh;
+    overflow: hidden;
+    gap: 0;
+    padding: var(--island-gap);
+}
+
+.app-frame > * {
+    position: relative;
+    z-index: 1;
+}
+
+.app-top-bar {
+    grid-area: top;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5px;
+    gap: 16px;
+    min-width: 0;
+}
+
+.app-top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 36px;
+    justify-content: center;
+}
+
+.app-top-bar-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+}
+
+.app-top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.app-top-bar-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+}
+
+.app-top-bar-icon:hover {
+    background: color-mix(in oklch, var(--primary) 8%, transparent);
+    color: var(--foreground);
+}
+
+.app-rail {
+    grid-area: left;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 0;
+    gap: 2px;
+    min-height: 0;
+}
+
+.app-right-rail {
+    grid-area: right;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 0;
+    gap: 2px;
+}
+
+.app-bottom-bar {
+    grid-area: bottom;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-bottom-bar-text {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    opacity: 0.5;
+    letter-spacing: 0.02em;
+}
+
+.app-bottom-bar-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 4px rgba(34, 197, 94, 0.5);
+}
+
+.app-center {
+    grid-area: center;
+    display: flex;
+    gap: var(--island-gap);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 var(--island-gap);
+}
+
+.app-side-panel {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--island-bg);
+    border: var(--island-border);
+    border-radius: var(--island-radius);
+    box-shadow: var(--island-shadow);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    transition: width 0.2s ease, opacity 0.2s ease;
+}
+.app-side-panel::-webkit-scrollbar { display: none; }
+
+#app-side-panel:empty {
+    display: none;
+}
+
+.island-content {
+    background: var(--island-bg);
+    border: var(--island-border);
+    border-radius: var(--island-radius);
+    box-shadow: var(--island-shadow);
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.island-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--island-bg);
+    border-bottom: var(--island-border);
+    border-top-left-radius: var(--island-radius);
+    border-top-right-radius: var(--island-radius);
+    display: flex;
+    align-items: center;
+    height: 42px;
+    padding-inline: 1rem;
+    flex-shrink: 0;
+    backdrop-filter: blur(6px);
+}
+
+/* (duplicate removed) */
+
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ISLAND PERIMETER LAYOUT — COMPACT MODE
+   Overrides base frame element values
+═══════════════════════════════════════════════════════════════════════════ */
+
+[data-compact="1"] .app-frame {
+    grid-template-rows: 24px 1fr 24px !important;
+    grid-template-columns: 28px 1fr 28px !important;
+}
+
+[data-compact="1"] .app-top-bar {
+    padding: 0 8px !important;
+    height: 24px !important;
+}
+
+[data-compact="1"] .app-rail {
+    padding: 8px 0 !important;
+    width: 28px !important;
+    gap: 2px !important;
+}
+
+[data-compact="1"] .app-right-rail {
+    padding: 8px 0 !important;
+    width: 28px !important;
+}
+
+[data-compact="1"] .app-bottom-bar {
+    padding: 0 8px !important;
+    height: 24px !important;
+}
+
+[data-compact="1"] .app-rail-icon {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+[data-compact="1"] .app-rail-icon svg {
+    width: 12px !important;
+    height: 12px !important;
+}
+
+[data-compact="1"] .app-center {
+    gap: 0.5rem !important;
+    padding: 0 0.5rem !important;
+}
+
+[data-compact="1"] .island-content {
+    border-radius: 0.5rem !important;
+}
+
+[data-compact="1"] .app-side-panel {
+    border-radius: 0.5rem !important;
+    width: 220px !important;
+}
+
+[data-compact="1"] .app-bottom-bar-text {
+    font-size: 10px !important;
+}
+.scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

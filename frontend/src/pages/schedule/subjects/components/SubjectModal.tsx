@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { BookOpenIcon, UserIcon, PaletteIcon } from "lucide-react";
 import { useCreateSubject, useUpdateSubject } from "@/entities/schedule/api/hooks";
 import type { Subject } from "@/entities/schedule/model/types";
@@ -20,7 +20,7 @@ const inputCls =
     "placeholder:text-muted-foreground/50 transition-colors hover:bg-muted/50 " +
     "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50";
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
     return (
         <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
@@ -60,7 +60,7 @@ export function SubjectModal({ subject, onClose }: Props) {
         setForm(f => ({ ...f, [key]: value }));
     }
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!form.name.trim()) return;
         const payload = {
@@ -81,7 +81,7 @@ export function SubjectModal({ subject, onClose }: Props) {
             isOpen={true}
             onClose={onClose}
             title=""
-            className="sm:max-w-[420px] p-0 overflow-hidden"
+            className="sm:max-w-105 p-0 overflow-hidden"
         >
             {/* Header */}
             <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-border">

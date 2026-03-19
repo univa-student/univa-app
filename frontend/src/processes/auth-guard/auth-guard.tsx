@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/app/providers/auth-provider";
+import { useAuth } from "@/app/context/auth-context";
 
 // ─── Loader (shown while checking auth) ──────────────────────────────────────
 

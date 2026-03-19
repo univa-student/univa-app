@@ -9,6 +9,8 @@ use App\Http\Requests\Schedule\StoreExceptionRequest;
 use App\Models\Schedule\ScheduleLesson;
 use App\Models\Schedule\ScheduleLessonException;
 use App\Services\Schedule\ScheduleService;
+use App\Modules\Notification\Support\Notifier;
+use App\Modules\Notification\Enums\NotificationType;
 use Illuminate\Http\JsonResponse;
 
 class ScheduleExceptionController extends Controller
@@ -19,7 +21,6 @@ class ScheduleExceptionController extends Controller
 
     public function store(StoreExceptionRequest $request, ScheduleLesson $lesson): JsonResponse
     {
-        // Only owner can add exceptions
         $this->authorize('update', $lesson);
 
         try {
@@ -28,12 +29,16 @@ class ScheduleExceptionController extends Controller
             return $e->render();
         }
 
+        Notifier::send($lesson->user_id, NotificationType::SCHEDULE_EXCEPTION_CREATED, [
+            'message' => "У розкладі відбулися зміни. Це стосується пари з предмету '{$lesson->subject?->name}'.",
+            'lesson_id' => $lesson->id
+        ]);
+
         return ApiResponse::created('Exception created.', $exception);
     }
 
     public function destroy(ScheduleLessonException $exception): JsonResponse
     {
-        // Ensure the owner owns the parent lesson
         $this->authorize('update', $exception->lesson);
 
         $this->service->deleteException($exception);

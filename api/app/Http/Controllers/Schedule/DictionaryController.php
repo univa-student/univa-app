@@ -14,21 +14,41 @@ class DictionaryController extends Controller
 {
     public function lessonTypes(): JsonResponse
     {
-        return ApiResponse::ok('Lesson types retrieved.', LessonType::all());
+        $lessonTypes = LessonType::all();
+
+        return ApiResponse::ok(
+            message: 'Lesson types retrieved.',
+            data: $lessonTypes
+        );
     }
 
     public function deliveryModes(): JsonResponse
     {
-        return ApiResponse::ok('Delivery modes retrieved.', DeliveryMode::all());
+        $deliveryModes = DeliveryMode::all();
+
+        return ApiResponse::ok(
+            message: 'Delivery modes retrieved.',
+            data: $deliveryModes
+        );
     }
 
     public function examTypes(): JsonResponse
     {
-        return ApiResponse::ok('Exam types retrieved.', ExamType::all());
+        $examTypes = ExamType::all();
+
+        return ApiResponse::ok(
+            message: 'Exam types retrieved.',
+            data: $examTypes,
+        );
     }
 
     public function recurrenceRules(): JsonResponse
     {
-        return ApiResponse::ok('Recurrence rules retrieved.', RecurrenceRule::all());
+        $recurrenceRules = RecurrenceRule::all();
+
+        return ApiResponse::ok(
+            message: 'Recurrence rules retrieved.',
+            data: $recurrenceRules
+        );
     }
 }

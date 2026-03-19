@@ -1,10 +1,30 @@
 import { API_BASE_URL } from "@/app/config/app.config";
 import { ApiError } from "@/shared/types/api";
+import { toast } from "@/shared/lib/toast-store";
+
+type AlertVariant = "success" | "warning" | "destructive" | "info";
+
+export interface ApiFetchOptions extends RequestInit {
+    silent401?: boolean;
+}
+
+function triggerAlert(status: number, message?: string) {
+    if (!message) return;
+
+    let variant: AlertVariant = "info";
+
+    if (status === 200 || status === 201) variant = "success";
+    else if (status === 400 || status === 422) variant = "warning";
+    else if (status >= 400) variant = "destructive";
+
+    toast({ variant, message });
+}
 
 // ─── XSRF token reader ──────────────────────────────────────────────────────
 function getXsrfToken(): string | null {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
     if (!match) return null;
+
     return decodeURIComponent(match[1]);
 }
 
@@ -20,53 +40,66 @@ function getXsrfToken(): string | null {
  */
 export async function apiFetch<T>(
     path: string,
-    init?: RequestInit,
+    init: ApiFetchOptions = {},
 ): Promise<T> {
-    const xsrf = getXsrfToken();
+    const { silent401 = false, ...requestInit } = init;
 
     const body = init?.body;
     const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
 
     const res = await fetch(`${API_BASE_URL}${path}`, {
-        ...init,
+        ...requestInit,
         credentials: "include",
         headers: {
-            "Accept": "application/json",
+            Accept: "application/json",
             "X-Requested-With": "XMLHttpRequest",
-
-            // IMPORTANT: тільки для НЕ-FormData
-            ...(hasBody(init) && !isFormData ? { "Content-Type": "application/json" } : {}),
-
+            ...(hasBody(requestInit) && !isFormData
+                ? { "Content-Type": "application/json" }
+                : {}),
             ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
-
-            // якщо хтось передав headers ззовні
-            ...(init?.headers ?? {}),
+            ...(requestInit.headers ?? {}),
         },
     });
 
     if (!res.ok) {
-        const body = await res.json().catch(() => ({
-            message: `HTTP ${res.status}`,
-        }));
+        const errorBody = await res.json().catch(() => ({}));
+
+        const shouldSilence401 = silent401 && res.status === 401;
+
+        if (!shouldSilence401 && typeof errorBody.message === "string") {
+            triggerAlert(res.status, errorBody.message);
+        }
 
         throw new ApiError(res.status, {
-            message: body.message ?? `HTTP ${res.status}`,
-            errors: body.errors,
+            message: errorBody.message ?? `HTTP ${res.status}`,
+            errors: errorBody.errors,
         });
     }
 
-    if (res.status === 204) return undefined as T;
+    if (res.status === 204) {
+        return undefined as T;
+    }
 
     const json = await res.json();
+
+    if (json.message && typeof json.message === "string") {
+        triggerAlert(res.status, json.message);
+    }
+
+    if (json.data !== undefined && json.meta !== undefined) {
+        return json as T;
+    }
+
     return (json.data !== undefined ? json.data : json) as T;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Check if the request has a body (POST/PUT/PATCH/DELETE with body) */
 function hasBody(init?: RequestInit): boolean {
     if (!init) return false;
     if (init.body) return true;
+
     const method = (init.method ?? "GET").toUpperCase();
+
     return method === "POST" || method === "PUT" || method === "PATCH";
 }

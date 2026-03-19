@@ -12,14 +12,16 @@ export interface SettingValue {
 
 export interface SettingItem {
     id: number;
-    group_id: number;
+    groupId: number;
     key: string;
     type: "bool" | "int" | "string" | "json" | "enum";
     label: string;
     description: string | null;
     constraints: Record<string, unknown> | null;
     /** The currently active value id (user override or default) */
-    selected_value_id: number | null;
+    selectedValueId: number | null;
+    /** For input based settings (not enum) */
+    rawValue?: string | null;
     /** All allowed values for this setting */
     values: SettingValue[];
 }
@@ -31,11 +33,15 @@ export interface SettingItem {
  * Falls back to the first available value if nothing is selected.
  */
 export function getSelectedValue(item: SettingItem): string {
-    if (item.selected_value_id !== null) {
-        const found = item.values.find(v => v.id === item.selected_value_id);
-        if (found) return found.value;
+    if (item.rawValue !== null && item.rawValue !== undefined) {
+        return String(item.rawValue);
     }
-    return item.values[0]?.value ?? "";
+    const selectedId = item.selectedValueId ?? (item as any).selected_value_id;
+    if (selectedId !== null && selectedId !== undefined) {
+        const found = item.values.find(v => v.id === selectedId);
+        if (found) return String(found.value);
+    }
+    return item.values?.[0]?.value ? String(item.values[0].value) : "";
 }
 
 // ─── API functions ────────────────────────────────────────────────────────────

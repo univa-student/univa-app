@@ -33,27 +33,28 @@ export interface Subject {
     name: string;
     teacherName: string | null;
     color: string | null;
+    files_count?: number;
 }
 
 // ─── Schedule lesson (rule) ───────────────────────────────────────────────────
 
 export interface ScheduleLesson {
     id: number;
-    subject_id: number;
+    subjectId: number;
     weekday: number; // 1 Mon … 7 Sun
-    starts_at: string; // "HH:mm"
-    ends_at: string;
-    lesson_type_id: number;
-    delivery_mode_id: number;
-    location_text: string | null;
+    startsAt: string; // "HH:mm"
+    endsAt: string;
+    lessonTypeId: number;
+    deliveryModeId: number;
+    locationText: string | null;
     note: string | null;
-    recurrence_rule_id: number;
-    active_from: string; // "YYYY-MM-DD"
-    active_to: string | null;
+    recurrenceRuleId: number;
+    activeFrom: string; // "YYYY-MM-DD"
+    activeTo: string | null;
     subject?: Subject;
-    lesson_type?: LessonType;
-    delivery_mode?: DeliveryMode;
-    recurrence_rule?: RecurrenceRule;
+    lessonType?: LessonType;
+    deliveryMode?: DeliveryMode;
+    recurrenceRule?: RecurrenceRule;
 }
 
 // ─── Built lesson instance (returned by GET /schedule) ───────────────────────
@@ -71,6 +72,7 @@ export interface LessonInstance {
         name: string;
         teacherName: string | null;
         color: string | null;
+        files_count?: number;
     };
     lessonType: {
         id: number;
@@ -99,14 +101,14 @@ export type ExceptionAction = "cancelled" | "rescheduled" | "modified";
 
 export interface ScheduleException {
     id: number;
-    schedule_lesson_id: number;
+    scheduleLessonId: number;
     date: string;
     action: ExceptionAction;
-    override_starts_at: string | null;
-    override_ends_at: string | null;
-    override_location_text: string | null;
-    override_teacher: string | null;
-    override_subject_id: number | null;
+    overrideStartsAt: string | null;
+    overrideEndsAt: string | null;
+    overrideLocationText: string | null;
+    overrideTeacher: string | null;
+    overrideSubjectId: number | null;
     reason: string | null;
 }
 
@@ -114,54 +116,54 @@ export interface ScheduleException {
 
 export interface ExamEvent {
     id: number;
-    subject_id: number;
-    exam_type_id: number;
-    starts_at: string; // "YYYY-MM-DD HH:mm"
-    ends_at: string | null;
-    location_text: string | null;
+    subjectId: number;
+    examTypeId: number;
+    startsAt: string; // "YYYY-MM-DD HH:mm"
+    endsAt: string | null;
+    locationText: string | null;
     note: string | null;
     subject?: Subject;
-    exam_type?: ExamType;
+    examType?: ExamType;
 }
 
 // ─── Form payloads ────────────────────────────────────────────────────────────
 
 export interface CreateSubjectPayload {
     name: string;
-    teacher_name?: string | null;
+    teacherName?: string | null;
     color?: string | null;
 }
 
 export interface CreateLessonPayload {
-    subject_id: number;
+    subjectId: number;
     weekday: number;
-    starts_at: string;
-    ends_at: string;
-    lesson_type_id: number;
-    delivery_mode_id: number;
-    location_text?: string | null;
+    startsAt: string;
+    endsAt: string;
+    lessonTypeId: number;
+    deliveryModeId: number;
+    locationText?: string | null;
     note?: string | null;
-    recurrence_rule_id: number;
-    active_from: string;
-    active_to?: string | null;
+    recurrenceRuleId: number;
+    activeFrom: string;
+    activeTo?: string | null;
 }
 
 export interface CreateExceptionPayload {
     date: string;
     action: ExceptionAction;
-    override_starts_at?: string | null;
-    override_ends_at?: string | null;
-    override_location_text?: string | null;
-    override_teacher?: string | null;
-    override_subject_id?: number | null;
+    overrideStartsAt?: string | null;
+    overrideEndsAt?: string | null;
+    overrideLocationText?: string | null;
+    overrideTeacher?: string | null;
+    overrideSubjectId?: number | null;
     reason?: string | null;
 }
 
 export interface CreateExamPayload {
-    subject_id: number;
-    exam_type_id: number;
-    starts_at: string;
-    ends_at?: string | null;
-    location_text?: string | null;
+    subjectId: number;
+    examTypeId: number;
+    startsAt: string;
+    endsAt?: string | null;
+    locationText?: string | null;
     note?: string | null;
 }

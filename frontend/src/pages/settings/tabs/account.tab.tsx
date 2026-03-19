@@ -201,11 +201,10 @@ export function AccountTab(_: { tab: TabDef }) {
                     <CardContent className="grid grid-cols-2 gap-4">
                         {educationFields.map(f => (
                             <div key={f.id} className={f.fullWidth ? "col-span-2" : ""}>
-                                <label className="text-sm font-medium mb-1.5 block">{f.label}</label>
+                                <label className="text-sm font-medium mb-1.5">{f.label}</label>
                                 <Input
                                     type="text"
                                     placeholder={f.placeholder}
-                                    disabled
                                     className="opacity-60"
                                 />
                             </div>

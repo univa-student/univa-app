@@ -1,20 +1,25 @@
-import { useState, useMemo, useRef, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
     CalendarIcon,
-    ClockIcon,
     AlertCircleIcon,
-    PlusIcon,
-    XIcon,
     CalendarDaysIcon,
     LayoutGridIcon,
+    GraduationCapIcon,
+    BookOpenIcon,
 } from "lucide-react"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns"
 import { SidebarGroup } from "@/shared/shadcn/ui/sidebar"
 import { Button } from "@/shared/shadcn/ui/button"
 import { Separator } from "@/shared/shadcn/ui/separator"
-import { Input } from "@/shared/shadcn/ui/input"
+import { Skeleton } from "@/shared/shadcn/ui/skeleton"
+
+import { useSchedule } from "@/entities/schedule/api/hooks"
+import { useDeadlines } from "@/entities/deadline/api/hooks"
+import type { LessonInstance } from "@/entities/schedule/model/types"
+import type { Deadline } from "@/entities/deadline/model/types"
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
@@ -24,8 +29,12 @@ interface CalendarEvent {
     id: string
     date: string   // "YYYY-MM-DD"
     title: string
+    subtitle?: string
     time?: string
     type: EventType
+    accent?: string
+    isOverdue?: boolean
+    isCompleted?: boolean
 }
 
 /* ─────────────────────────── Constants ─────────────────────── */
@@ -42,32 +51,36 @@ const MONTH_NAMES_SHORT = [
     "Лип", "Сер", "Вер", "Жов", "Лис", "Гру",
 ] as const
 
-const INITIAL_EVENTS: CalendarEvent[] = [
-    { id: "e1",  date: "2026-02-24", title: "Вища математика",             time: "08:30", type: "class" },
-    { id: "e2",  date: "2026-02-24", title: "Програмування",               time: "10:25", type: "class" },
-    { id: "e3",  date: "2026-02-24", title: "Англійська мова",             time: "13:00", type: "class" },
-    { id: "e4",  date: "2026-02-25", title: "Бази даних",                  time: "08:30", type: "class" },
-    { id: "e5",  date: "2026-02-25", title: "Лабораторна з БД",            time: "23:59", type: "deadline" },
-    { id: "e6",  date: "2026-02-26", title: "Есе: Цифрова трансформація",  time: "18:00", type: "deadline" },
-    { id: "e7",  date: "2026-02-26", title: "Фізика",                      time: "10:25", type: "class" },
-    { id: "e8",  date: "2026-02-27", title: "Філософія",                   time: "12:15", type: "class" },
-    { id: "e9",  date: "2026-02-28", title: "Семінар з програмування",     time: "14:00", type: "event" },
-    { id: "e10", date: "2026-03-01", title: "Курсова — розділ 2",          time: "12:00", type: "deadline" },
-    { id: "e11", date: "2026-03-02", title: "Вища математика",             time: "08:30", type: "class" },
-    { id: "e12", date: "2026-03-03", title: "Тест з граматики",            time: "10:00", type: "deadline" },
-    { id: "e13", date: "2026-03-03", title: "Англійська мова",             time: "13:00", type: "class" },
-    { id: "e14", date: "2026-03-05", title: "Фізика — лаб. робота",        time: "10:25", type: "class" },
-    { id: "e15", date: "2026-03-10", title: "Контрольна з математики",     time: "08:30", type: "event" },
-    { id: "e16", date: "2026-03-14", title: "Хакатон UniCode",                            type: "event" },
-    { id: "e17", date: "2026-03-17", title: "Залік з філософії",           time: "10:00", type: "deadline" },
-]
-
 /* ─────────────────────────── Event config ───────────────────── */
 
 const EV_CFG = {
-    class:    { dot: "bg-blue-500",   icon: ClockIcon,        color: "text-blue-500",   bg: "bg-blue-500/10",   label: "Пари" },
-    deadline: { dot: "bg-rose-500",   icon: AlertCircleIcon,  color: "text-rose-500",   bg: "bg-rose-500/10",   label: "Дедлайни" },
-    event:    { dot: "bg-amber-500",  icon: CalendarIcon,     color: "text-amber-500",  bg: "bg-amber-500/10",  label: "Події" },
+    class: {
+        dot: "bg-blue-500",
+        icon: BookOpenIcon,
+        color: "text-blue-400",
+        bg: "bg-blue-500/8 dark:bg-blue-500/10",
+        activeBg: "bg-blue-500/12",
+        border: "border-blue-500/15",
+        label: "Пари",
+    },
+    deadline: {
+        dot: "bg-rose-500",
+        icon: AlertCircleIcon,
+        color: "text-rose-400",
+        bg: "bg-rose-500/8 dark:bg-rose-500/10",
+        activeBg: "bg-rose-500/12",
+        border: "border-rose-500/15",
+        label: "Дедлайни",
+    },
+    event: {
+        dot: "bg-amber-500",
+        icon: GraduationCapIcon,
+        color: "text-amber-400",
+        bg: "bg-amber-500/8 dark:bg-amber-500/10",
+        activeBg: "bg-amber-500/12",
+        border: "border-amber-500/15",
+        label: "Іспити",
+    },
 } as const
 
 /* ─────────────────────────── Helpers ───────────────────────── */
@@ -81,13 +94,18 @@ function parseKey(key: string): [number, number, number] {
     return [y, m - 1, d]
 }
 
+function fmtTime(t: string | null | undefined): string | undefined {
+    if (!t) return undefined
+    return t.slice(0, 5)
+}
+
 function getMonthCells(year: number, month: number) {
     let startDow = new Date(year, month, 1).getDay() - 1
     if (startDow < 0) startDow = 6
     const dim = new Date(year, month + 1, 0).getDate()
     const prevDim = new Date(year, month, 0).getDate()
-    const [pm, py] = month === 0  ? [11, year - 1] : [month - 1, year]
-    const [nm, ny] = month === 11 ? [0,  year + 1] : [month + 1, year]
+    const [pm, py] = month === 0 ? [11, year - 1] : [month - 1, year]
+    const [nm, ny] = month === 11 ? [0, year + 1] : [month + 1, year]
 
     const cells: { day: number; current: boolean; key: string }[] = []
     for (let i = startDow - 1; i >= 0; i--) {
@@ -100,7 +118,6 @@ function getMonthCells(year: number, month: number) {
     return cells
 }
 
-/** Returns the 7 days of the ISO week that contains the given date. */
 function getWeekDays(year: number, month: number, day: number) {
     const ref = new Date(year, month, day)
     let dow = ref.getDay() - 1
@@ -119,8 +136,37 @@ function getWeekDays(year: number, month: number, day: number) {
     })
 }
 
-let _id = 100
-function nextId() { return String(++_id) }
+/* ── Map API data to CalendarEvent ────────────────────────── */
+
+function mapLessons(instances: LessonInstance[]): CalendarEvent[] {
+    return instances.map(inst => ({
+        id: `lesson-${inst.source}-${inst.id}-${inst.date}`,
+        date: inst.date,
+        title: inst.subject?.name ?? "Предмет",
+        subtitle: inst.lessonType?.name ?? undefined,
+        time: fmtTime(inst.startsAt),
+        type: inst.source === "exam" ? "event" as EventType : "class" as EventType,
+        accent: inst.subject?.color ?? undefined,
+    }))
+}
+
+function mapDeadlines(deadlines: Deadline[]): CalendarEvent[] {
+    const now = new Date()
+    return deadlines
+        .filter(d => d.status !== "cancelled")
+        .map(d => {
+            const dt = new Date(d.dueAt)
+            return {
+                id: `deadline-${d.id}`,
+                date: format(dt, "yyyy-MM-dd"),
+                title: d.title,
+                time: fmtTime(format(dt, "HH:mm")),
+                type: "deadline" as EventType,
+                isOverdue: dt < now && d.status !== "completed",
+                isCompleted: d.status === "completed",
+            }
+        })
+}
 
 /* ─────────────────────────── Component ─────────────────────── */
 
@@ -129,33 +175,52 @@ export function SidebarCalendar() {
     const todayKey = toKey(today.getFullYear(), today.getMonth(), today.getDate())
 
     /* State */
-    const [viewYear, setViewYear]     = useState(today.getFullYear())
-    const [viewMonth, setViewMonth]   = useState(today.getMonth())
-    const [viewDay, setViewDay]       = useState(today.getDate())   // anchor for week view
+    const [viewYear, setViewYear] = useState(today.getFullYear())
+    const [viewMonth, setViewMonth] = useState(today.getMonth())
+    const [viewDay, setViewDay] = useState(today.getDate())
     const [selectedKey, setSelectedKey] = useState<string | null>(todayKey)
-    const [direction, setDirection]   = useState(0)
-    const [mode, setMode]             = useState<"month" | "week">("month")
+    const [direction, setDirection] = useState(0)
+    const [mode, setMode] = useState<"month" | "week">("month")
     const [activeFilters, setActiveFilters] = useState<Set<EventType>>(new Set(["class", "deadline", "event"]))
-    const [events, setEvents]         = useState<CalendarEvent[]>(INITIAL_EVENTS)
-    const [showAddForm, setShowAddForm] = useState(false)
-    const [newTitle, setNewTitle]     = useState("")
-    const [newTime, setNewTime]       = useState("")
-    const [newType, setNewType]       = useState<EventType>("class")
-    const titleRef = useRef<HTMLInputElement>(null)
 
-    useEffect(() => {
-        if (showAddForm) setTimeout(() => titleRef.current?.focus(), 50)
-    }, [showAddForm])
+    /* Compute visible date range for API queries */
+    const dateRange = useMemo(() => {
+        if (mode === "month") {
+            const mStart = startOfMonth(new Date(viewYear, viewMonth, 1))
+            const mEnd = endOfMonth(new Date(viewYear, viewMonth, 1))
+            const from = startOfWeek(mStart, { weekStartsOn: 1 })
+            const to = endOfWeek(mEnd, { weekStartsOn: 1 })
+            return { from: format(from, "yyyy-MM-dd"), to: format(to, "yyyy-MM-dd") }
+        }
+        const wDays = getWeekDays(viewYear, viewMonth, viewDay)
+        return { from: wDays[0].key, to: wDays[6].key }
+    }, [viewYear, viewMonth, viewDay, mode])
+
+    /* API data */
+    const { data: instances = [], isLoading: isLoadingSchedule } = useSchedule(dateRange.from, dateRange.to)
+    const { data: deadlines = [], isLoading: isLoadingDeadlines } = useDeadlines({
+        dateFrom: dateRange.from,
+        dateTo: dateRange.to,
+    })
+    const isLoading = isLoadingSchedule || isLoadingDeadlines
+
+    /* Merge into CalendarEvent[] */
+    const allEvents = useMemo(() => {
+        return [...mapLessons(instances), ...mapDeadlines(deadlines)]
+    }, [instances, deadlines])
 
     /* Derived */
     const eventsByDate = useMemo(() => {
         const map: Record<string, CalendarEvent[]> = {}
-        events.forEach(e => { (map[e.date] ??= []).push(e) })
+        allEvents.forEach(e => { (map[e.date] ??= []).push(e) })
+        Object.values(map).forEach(arr =>
+            arr.sort((a, b) => (a.time ?? "99:99").localeCompare(b.time ?? "99:99"))
+        )
         return map
-    }, [events])
+    }, [allEvents])
 
     const monthCells = useMemo(() => getMonthCells(viewYear, viewMonth), [viewYear, viewMonth])
-    const weekDays   = useMemo(() => getWeekDays(viewYear, viewMonth, viewDay), [viewYear, viewMonth, viewDay])
+    const weekDays = useMemo(() => getWeekDays(viewYear, viewMonth, viewDay), [viewYear, viewMonth, viewDay])
 
     const filteredEventsForKey = (key: string) =>
         (eventsByDate[key] ?? []).filter(e => activeFilters.has(e.type))
@@ -174,7 +239,6 @@ export function SidebarCalendar() {
                 else setViewMonth(m => m + 1)
             }
         } else {
-            // advance by 7 days
             const ref = new Date(viewYear, viewMonth, viewDay + dir * 7)
             setViewYear(ref.getFullYear())
             setViewMonth(ref.getMonth())
@@ -195,7 +259,6 @@ export function SidebarCalendar() {
         if (!isCurrent && mode === "month") return
         if (selectedKey === key) { setSelectedKey(null); return }
         setSelectedKey(key)
-        setShowAddForm(false)
     }
 
     const toggleFilter = (t: EventType) => {
@@ -206,23 +269,6 @@ export function SidebarCalendar() {
             return next
         })
     }
-
-    const addEvent = () => {
-        if (!newTitle.trim() || !selectedKey) return
-        setEvents(prev => [...prev, {
-            id: nextId(),
-            date: selectedKey,
-            title: newTitle.trim(),
-            time: newTime || undefined,
-            type: newType,
-        }])
-        setNewTitle("")
-        setNewTime("")
-        setNewType("class")
-        setShowAddForm(false)
-    }
-
-    const deleteEvent = (id: string) => setEvents(prev => prev.filter(e => e.id !== id))
 
     const isCurrentMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth()
 
@@ -235,6 +281,15 @@ export function SidebarCalendar() {
         return `${first.day} ${MONTH_NAMES_SHORT[first.month]} – ${last.day} ${MONTH_NAMES_SHORT[last.month]}`
     }, [mode, weekDays])
 
+    /* Selected day label */
+    const selectedDayLabel = useMemo(() => {
+        if (!selectedKey) return ""
+        const [y, m, d] = parseKey(selectedKey)
+        const date = new Date(y, m, d)
+        const dayName = ["Неділя", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"][date.getDay()]
+        return `${dayName}, ${d} ${MONTH_NAMES_SHORT[m]}`
+    }, [selectedKey])
+
     /* ── Render helpers ── */
 
     const renderDotRow = (key: string) => {
@@ -244,25 +299,27 @@ export function SidebarCalendar() {
         const hasE = evs.some(e => e.type === "event")
         if (!hasD && !hasC && !hasE) return null
         return (
-            <span className="flex gap-[2px] absolute bottom-[3px] left-1/2 -translate-x-1/2">
-                {hasD && <span className="size-[4px] rounded-full bg-neutral-500" />}
-                {hasC && <span className="size-[4px] rounded-full bg-blue-500" />}
-                {hasE && <span className="size-[4px] rounded-full bg-amber-500" />}
+            <span className="flex gap-[3px] absolute bottom-[2px] left-1/2 -translate-x-1/2">
+                {hasC && <span className="size-[4px] rounded-full bg-blue-500 shadow-[0_0_3px_rgba(59,130,246,0.5)]" />}
+                {hasD && <span className="size-[4px] rounded-full bg-rose-500 shadow-[0_0_3px_rgba(244,63,94,0.5)]" />}
+                {hasE && <span className="size-[4px] rounded-full bg-amber-500 shadow-[0_0_3px_rgba(245,158,11,0.5)]" />}
             </span>
         )
     }
 
     const cellClass = (key: string, current: boolean) => {
-        const isToday    = key === todayKey
+        const isToday = key === todayKey
         const isSelected = key === selectedKey
+        const hasEvents = (eventsByDate[key] ?? []).length > 0
         return [
             "relative flex flex-col items-center justify-center text-[13px] rounded-lg transition-all duration-150 select-none h-8 w-8",
             current ? "cursor-pointer" : "cursor-default pointer-events-none",
-            !current && "text-muted-foreground/25",
-            current && !isToday && !isSelected && "text-foreground hover:bg-accent/60",
-            isToday  && !isSelected && "bg-primary/75 text-primary-foreground font-semibold shadow-sm",
-            isSelected && !isToday  && "bg-primary/15 text-primary ring-1 ring-primary/40 font-semibold",
-            isSelected && isToday   && "bg-primary text-primary-foreground ring-2 ring-primary/60 ring-offset-1 ring-offset-background font-semibold",
+            !current && "text-muted-foreground/20",
+            current && !isToday && !isSelected && "text-foreground/80 hover:bg-accent/60 hover:text-foreground",
+            current && hasEvents && !isToday && !isSelected && "font-medium text-foreground",
+            isToday && !isSelected && "bg-primary text-primary-foreground font-bold shadow-sm shadow-primary/30",
+            isSelected && !isToday && "bg-primary/15 text-primary ring-1 ring-primary/40 font-bold",
+            isSelected && isToday && "bg-primary text-primary-foreground ring-2 ring-primary/50 ring-offset-1 ring-offset-background font-bold shadow-md shadow-primary/30",
         ].filter(Boolean).join(" ")
     }
 
@@ -271,55 +328,72 @@ export function SidebarCalendar() {
         <SidebarGroup className="group-data-[collapsible=icon]:hidden px-3 pb-2">
 
             {/* ── Header ── */}
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-[13px] font-semibold tracking-tight">
-                    {mode === "month" ? `${MONTH_NAMES[viewMonth]} ${viewYear}` : weekLabel}
-                </span>
+            <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-1.5">
+                    <CalendarIcon className="size-4 text-primary/70" />
+                    <span className="text-[13px] font-bold tracking-tight">
+                        {mode === "month" ? `${MONTH_NAMES[viewMonth]} ${viewYear}` : weekLabel}
+                    </span>
+                </div>
                 <div className="flex items-center gap-0.5">
-                    {/* Today button */}
                     {(mode === "month" ? !isCurrentMonth : !weekDays.some(d => d.key === todayKey)) && (
-                        <Button variant="ghost" size="sm" className="h-6 px-1.5 text-[11px] text-primary font-medium" onClick={goToday}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[11px] text-primary font-semibold rounded-full hover:bg-primary/10"
+                            onClick={goToday}
+                        >
                             Сьогодні
                         </Button>
                     )}
-                    {/* Mode toggle */}
-                    <Button
-                        variant={mode === "month" ? "secondary" : "ghost"}
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        title="Місяць"
-                        onClick={() => setMode("month")}
-                    >
-                        <LayoutGridIcon className="size-4" />
-                    </Button>
-                    <Button
-                        variant={mode === "week" ? "secondary" : "ghost"}
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        title="Тиждень"
-                        onClick={() => {
-                            setMode("week")
-                            // anchor week to selected or today
-                            const anchor = selectedKey ?? todayKey
-                            const [y, m, d] = parseKey(anchor)
-                            setViewYear(y); setViewMonth(m); setViewDay(d)
-                        }}
-                    >
-                        <CalendarDaysIcon className="size-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigate(-1)}>
+                    <div className="flex items-center rounded-lg bg-muted/50 p-0.5">
+                        <button
+                            onClick={() => setMode("month")}
+                            className={[
+                                "h-5 w-5 flex items-center justify-center rounded-md transition-all duration-150",
+                                mode === "month" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground/60 hover:text-foreground",
+                            ].join(" ")}
+                            title="Місяць"
+                        >
+                            <LayoutGridIcon className="size-3.5" />
+                        </button>
+                        <button
+                            onClick={() => {
+                                setMode("week")
+                                const anchor = selectedKey ?? todayKey
+                                const [y, m, d] = parseKey(anchor)
+                                setViewYear(y); setViewMonth(m); setViewDay(d)
+                            }}
+                            className={[
+                                "h-5 w-5 flex items-center justify-center rounded-md transition-all duration-150",
+                                mode === "week" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground/60 hover:text-foreground",
+                            ].join(" ")}
+                            title="Тиждень"
+                        >
+                            <CalendarDaysIcon className="size-3.5" />
+                        </button>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => navigate(-1)}>
                         <ChevronLeftIcon className="size-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigate(1)}>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => navigate(1)}>
                         <ChevronRightIcon className="size-4" />
                     </Button>
                 </div>
             </div>
 
             {/* ── Day-of-week headers ── */}
-            <div className="grid grid-cols-7 text-center mb-0.5">
-                {DAYS_OF_WEEK.map(d => (
-                    <span key={d} className="text-[11px] font-medium text-muted-foreground/70 leading-6">{d}</span>
+            <div className="grid grid-cols-7 text-center mb-1">
+                {DAYS_OF_WEEK.map((d, i) => (
+                    <span
+                        key={d}
+                        className={[
+                            "text-[10px] font-semibold uppercase tracking-wider leading-6",
+                            i >= 5 ? "text-muted-foreground/40" : "text-muted-foreground/60",
+                        ].join(" ")}
+                    >
+                        {d}
+                    </span>
                 ))}
             </div>
 
@@ -331,7 +405,7 @@ export function SidebarCalendar() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: direction * -24 }}
                     transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="grid grid-cols-7 gap-y-0.5"
+                    className="grid grid-cols-7 gap-y-0.5 place-items-center"
                 >
                     {mode === "month" && monthCells.map((cell, i) => (
                         <button
@@ -358,23 +432,31 @@ export function SidebarCalendar() {
             </AnimatePresence>
 
             {/* ── Filter chips ── */}
-            <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+            <div className="flex items-center gap-1 mt-2.5 flex-wrap">
                 {(["class", "deadline", "event"] as EventType[]).map(t => {
                     const cfg = EV_CFG[t]
                     const active = activeFilters.has(t)
+                    const count = selectedKey
+                        ? (eventsByDate[selectedKey] ?? []).filter(e => e.type === t).length
+                        : allEvents.filter(e => e.type === t).length
                     return (
                         <button
                             key={t}
                             onClick={() => toggleFilter(t)}
                             className={[
-                                "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-all duration-150 border",
+                                "flex items-center gap-1 rounded-full px-2 py-[3px] text-[10px] font-semibold transition-all duration-150 border",
                                 active
-                                    ? `${cfg.bg} ${cfg.color} border-current/20`
-                                    : "text-muted-foreground/50 border-muted-foreground/15 bg-transparent",
+                                    ? `${cfg.bg} ${cfg.color} ${cfg.border}`
+                                    : "text-muted-foreground/40 border-transparent bg-transparent hover:bg-muted/50",
                             ].join(" ")}
                         >
-                            <span className={`size-[5px] rounded-full ${active ? cfg.dot : "bg-muted-foreground/30"}`} />
+                            <span className={`size-[5px] rounded-full transition-colors ${active ? cfg.dot : "bg-muted-foreground/25"}`} />
                             {cfg.label}
+                            {count > 0 && (
+                                <span className={`text-[9px] font-bold ${active ? "opacity-60" : "opacity-40"}`}>
+                                    {count}
+                                </span>
+                            )}
                         </button>
                     )
                 })}
@@ -388,98 +470,45 @@ export function SidebarCalendar() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         className="overflow-hidden"
                     >
-                        <Separator className="my-2" />
+                        <Separator className="my-2.5" />
 
                         {/* Panel header */}
-                        <div className="flex items-center justify-between mb-1.5 px-0.5">
-                            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                {(() => {
-                                    const [m, d] = parseKey(selectedKey)
-                                    return `${d} ${MONTH_NAMES_SHORT[m]}`
-                                })()}
+                        <div className="flex items-center justify-between mb-2 px-0.5">
+                            <span className="text-[11px] font-bold text-foreground/80 tracking-tight">
+                                {selectedDayLabel}
                             </span>
-                            <Button
-                                variant="ghost"
-                                size="lg"
-                                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                                onClick={() => { setShowAddForm(v => !v); setNewTitle(""); setNewTime(""); setNewType("class") }}
-                                title="Додати подію"
-                            >
-                                <motion.div animate={{ rotate: showAddForm ? 45 : 0 }} transition={{ duration: 0.15 }}>
-                                    <PlusIcon className="size-4" />
-                                </motion.div>
-                            </Button>
+                            {selectedEvents.length > 0 && (
+                                <span className="text-[10px] font-medium text-muted-foreground/50 tabular-nums">
+                                    {selectedEvents.length}
+                                </span>
+                            )}
                         </div>
 
-                        {/* Add event form */}
-                        <AnimatePresence>
-                            {showAddForm && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.15 }}
-                                    className="overflow-hidden mb-2"
-                                >
-                                    <div className="rounded-lg border border-border/60 bg-muted/40 p-2 flex flex-col gap-1.5">
-                                        <Input
-                                            ref={titleRef}
-                                            value={newTitle}
-                                            onChange={e => setNewTitle(e.target.value)}
-                                            onKeyDown={e => e.key === "Enter" && addEvent()}
-                                            placeholder="Назва події…"
-                                            className="h-6 text-[11px] px-2 bg-background"
-                                        />
-                                        <div className="flex gap-1.5">
-                                            <Input
-                                                value={newTime}
-                                                onChange={e => setNewTime(e.target.value)}
-                                                placeholder="08:30"
-                                                className="h-6 text-[11px] px-2 bg-background w-16 shrink-0"
-                                                maxLength={5}
-                                            />
-                                            {/* Type selector */}
-                                            <div className="flex gap-1 flex-1">
-                                                {(["class", "deadline", "event"] as EventType[]).map(t => (
-                                                    <button
-                                                        key={t}
-                                                        onClick={() => setNewType(t)}
-                                                        className={[
-                                                            "flex-1 rounded-md text-[9px] font-medium py-0.5 transition-all border",
-                                                            newType === t
-                                                                ? `${EV_CFG[t].bg} ${EV_CFG[t].color} border-current/20`
-                                                                : "text-muted-foreground/60 border-transparent bg-background",
-                                                        ].join(" ")}
-                                                    >
-                                                        {EV_CFG[t].label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            className="h-6 text-[11px] font-medium"
-                                            onClick={addEvent}
-                                            disabled={!newTitle.trim()}
-                                        >
-                                            Додати
-                                        </Button>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
                         {/* Events list */}
-                        {selectedEvents.length === 0 ? (
-                            <p className="text-[11px] text-muted-foreground/60 px-1 py-0.5 italic">Немає подій</p>
+                        {isLoading ? (
+                            <div className="flex flex-col gap-1.5">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+                                        <Skeleton className="size-4 rounded" />
+                                        <Skeleton className="h-3.5 flex-1 rounded" />
+                                        <Skeleton className="h-3 w-10 rounded" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : selectedEvents.length === 0 ? (
+                            <div className="flex flex-col items-center py-3 gap-1">
+                                <CalendarIcon className="size-5 text-muted-foreground/20" />
+                                <p className="text-[11px] text-muted-foreground/40 font-medium">Немає подій</p>
+                            </div>
                         ) : (
                             <div className="flex flex-col gap-1">
                                 <AnimatePresence initial={false}>
                                     {selectedEvents.map(ev => {
                                         const cfg = EV_CFG[ev.type]
+                                        const accentColor = ev.accent ?? (ev.type === "class" ? "#3b82f6" : ev.type === "deadline" ? "#f43f5e" : "#f59e0b")
                                         return (
                                             <motion.div
                                                 key={ev.id}
@@ -487,23 +516,51 @@ export function SidebarCalendar() {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, x: 10, height: 0, marginBottom: 0 }}
                                                 transition={{ duration: 0.15 }}
-                                                className={`group flex items-center gap-2 px-2 py-1.5 rounded-lg ${cfg.bg} relative overflow-hidden`}
+                                                className={[
+                                                    "group flex items-center gap-2 px-2 py-[6px] rounded-lg relative overflow-hidden transition-colors",
+                                                    cfg.bg,
+                                                    "hover:brightness-105",
+                                                    ev.isCompleted && "opacity-50",
+                                                ].filter(Boolean).join(" ")}
                                             >
                                                 {/* Accent line */}
-                                                <span className={`absolute left-0 inset-y-0 w-[3px] rounded-l-lg ${cfg.dot}`} />
-                                                <cfg.icon className={`size-4 shrink-0 ${cfg.color} ml-1`} />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-[13px] font-medium truncate leading-tight">{ev.title}</p>
+                                                <span
+                                                    className="absolute left-0 inset-y-0 w-[3px] rounded-l-lg"
+                                                    style={{ backgroundColor: accentColor }}
+                                                />
+
+                                                {/* Icon */}
+                                                <div className="ml-1.5 shrink-0">
+                                                    <cfg.icon
+                                                        className={[
+                                                            "size-3.5",
+                                                            ev.isOverdue ? "text-rose-500" : cfg.color,
+                                                        ].join(" ")}
+                                                    />
                                                 </div>
+
+                                                {/* Content */}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={[
+                                                        "text-[12px] font-semibold truncate leading-tight",
+                                                        ev.isOverdue && "text-rose-500",
+                                                        ev.isCompleted && "line-through",
+                                                    ].filter(Boolean).join(" ")}>
+                                                        {ev.title}
+                                                    </p>
+                                                    {ev.subtitle && (
+                                                        <p className="text-[10px] text-muted-foreground/50 truncate leading-tight mt-px">
+                                                            {ev.subtitle}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* Time */}
                                                 {ev.time && (
-                                                    <span className="text-[12px] text-muted-foreground shrink-0">{ev.time}</span>
+                                                    <span className="text-[11px] font-medium text-muted-foreground/60 tabular-nums shrink-0">
+                                                        {ev.time}
+                                                    </span>
                                                 )}
-                                                <button
-                                                    onClick={() => deleteEvent(ev.id)}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 text-muted-foreground/60 hover:text-destructive"
-                                                >
-                                                    <XIcon className="size-4" />
-                                                </button>
                                             </motion.div>
                                         )
                                     })}

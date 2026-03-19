@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { SettingsIcon } from "lucide-react"
 import { Badge } from "@/shared/shadcn/ui/badge"
+import { PageSidePanel } from "@/shared/ui/page-side-panel"
 import { tabs } from "./config/tabs.config"
 
 /* ── Tab components ── */
@@ -17,6 +18,7 @@ import { FilesTab } from "./tabs/files.tab"
 import { OrganizerTab } from "./tabs/organizer.tab"
 import { IntegrationsTab } from "./tabs/integrations.tab"
 import { DangerTab } from "./tabs/danger.tab"
+import { ProfileTab } from "./tabs/profile.tab"
 import usePageTitle from "@/shared/hooks/usePageTitle.ts"
 import type { TabDef } from "./settings.types"
 
@@ -25,6 +27,7 @@ type TabFC = React.FC<{ tab: TabDef }>
 
 const tabComponents: Record<string, TabFC> = {
     account: AccountTab,
+    profile: ProfileTab,
     security: SecurityTab,
     notifications: NotificationsTab,
     appearance: AppearanceTab,
@@ -62,43 +65,45 @@ export function SettingsPage() {
 
             {/* Layout: sidebar + content */}
             <div className="flex gap-6">
-                {/* Sidebar nav */}
-                <nav className="w-56 shrink-0">
-                    <div className="flex flex-col gap-1 sticky top-20">
-                        {tabs.map((tab, idx) => {
-                            const isActive = tab.id === activeTab
-                            const isDanger = tab.id === "danger"
-                            const showGroup = tab.group && (idx === 0 || tabs[idx - 1].group !== tab.group)
-                            return (
-                                <div key={tab.id}>
-                                    {showGroup && (
-                                        <p className={["text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-3", idx > 0 ? "mt-4 mb-1.5" : "mb-1.5"].join(" ")}>
-                                            {tab.group}
-                                        </p>
-                                    )}
-                                    <button
-                                        onClick={() => setActiveTab(tab.id)}
-                                        className={[
-                                            "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer text-left w-full",
-                                            isActive
-                                                ? isDanger ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
-                                                : isDanger ? "text-destructive/60 hover:text-destructive hover:bg-destructive/5" : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-                                        ].join(" ")}
-                                    >
-                                        <tab.icon className="size-4" />
-                                        {tab.label}
-                                        {tab.badge && (
-                                            <Badge variant="secondary" className="ml-auto text-[9px] px-1.5 py-0">{tab.badge}</Badge>
+                <PageSidePanel>
+                    {/* Sidebar nav */}
+                    <nav className="flex flex-col h-full overflow-hidden p-3">
+                        <div className="flex flex-col gap-1 flex-1 overflow-y-auto pr-1">
+                            {tabs.map((tab, idx) => {
+                                const isActive = tab.id === activeTab
+                                const isDanger = tab.id === "danger"
+                                const showGroup = tab.group && (idx === 0 || tabs[idx - 1].group !== tab.group)
+                                return (
+                                    <div key={tab.id}>
+                                        {showGroup && (
+                                            <p className={["text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-3", idx > 0 ? "mt-4 mb-1.5" : "mb-1.5"].join(" ")}>
+                                                {tab.group}
+                                            </p>
                                         )}
-                                    </button>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </nav>
+                                        <button
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={[
+                                                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer text-left w-full",
+                                                isActive
+                                                    ? isDanger ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                                                    : isDanger ? "text-destructive/60 hover:text-destructive hover:bg-destructive/5" : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                                            ].join(" ")}
+                                        >
+                                            <tab.icon className="size-4" />
+                                            {tab.label}
+                                            {tab.badge && (
+                                                <Badge variant="secondary" className="ml-auto text-[9px] px-1.5 py-0">{tab.badge}</Badge>
+                                            )}
+                                        </button>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </nav>
+                </PageSidePanel>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0 max-w-3xl">
+                <div className="flex-1 min-w-0 max-w-3xl pt-2">
                     {/* Tab context header */}
                     <div className="mb-5 pb-4 border-b">
                         <h2 className="text-lg font-semibold flex items-center gap-2">

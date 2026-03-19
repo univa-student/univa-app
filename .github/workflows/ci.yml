@@ -161,7 +161,7 @@ jobs:
 
       - name: Build all images
         shell: bash
-        run: docker compose build --no-cache
+        run: docker compose build
         env:
           DOCKER_BUILDKIT: 1
           UID: 1000

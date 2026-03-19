@@ -10,14 +10,15 @@ import {
     HardDriveIcon,
     LayoutListIcon,
     LinkIcon,
-    Trash2Icon,
+    Trash2Icon, GraduationCap,
 } from "lucide-react"
 import type { TabDef } from "../settings.types"
 
 // Group IDs mirror ApplicationSettingGroup PHP constants
 export const SETTING_GROUP = {
     USER: 1001,
-    SECURITY: 1002,
+    PROFILE: 1002,
+    SECURITY: 1003,
     NOTIFICATION: 1,
     APPEARANCE: 2,
     PRIVACY: 3,
@@ -32,7 +33,8 @@ export const SETTING_GROUP = {
 
 export const tabs: TabDef[] = [
     // ── Загальне ──────────────────────────────────────────────────────────
-    { id: "account", groupId: SETTING_GROUP.USER, label: "Аккаунт", icon: UserIcon, description: "Профіль, освіта та особисті дані", group: "Загальне" },
+    { id: "account", groupId: SETTING_GROUP.USER, label: "Аккаунт", icon: UserIcon, description: "Особисті дані", group: "Загальне" },
+    { id: "profile", groupId: SETTING_GROUP.USER, label: "Профіль", icon: GraduationCap, description: "Профіль та освіта", group: "Загальне" },
     { id: "security", groupId: SETTING_GROUP.SECURITY, label: "Безпека", icon: ShieldCheckIcon, description: "Пароль, 2FA, активні сесії" },
     { id: "notifications", groupId: SETTING_GROUP.NOTIFICATION, label: "Сповіщення", icon: BellIcon, description: "Email та push-повідомлення" },
     { id: "appearance", groupId: SETTING_GROUP.APPEARANCE, label: "Зовнішній вигляд", icon: PaletteIcon, description: "Тема, мова та інтерфейс" },

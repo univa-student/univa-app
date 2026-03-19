@@ -1,7 +1,11 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/shared/shadcn/ui/sidebar.tsx";
-import { AppSidebar } from "@/shared/shadcn/components/app/app.page.sidebar.tsx";
+import React, { useEffect } from "react"
+import { Link } from "react-router-dom"
+
+import { useAppFrame } from "./app-frame"
+import { AppRail } from "./app-rail"
+import { AppTopBar } from "./app-top-bar"
+import { AppBottomBar } from "./app-bottom-bar"
+import { AppRightRail } from "./app-right-rail"
 
 import {
     Breadcrumb,
@@ -10,67 +14,89 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from "@/shared/shadcn/ui/breadcrumb.tsx";
-import { Separator } from "@/shared/shadcn/ui/separator.tsx";
+} from "@/shared/shadcn/ui/breadcrumb.tsx"
 
 export interface BreadcrumbEntry {
-    label: string;
-    href?: string;
+    label: string
+    href?: string
 }
 
 interface DashboardLayoutProps {
-    children: React.ReactNode;
-    breadcrumbs?: BreadcrumbEntry[];
+    children: React.ReactNode
+    breadcrumbs?: BreadcrumbEntry[]
+    /**
+     * When true the content wrapper fills height (no padding), useful for
+     * calendar / files pages. Also renders #dashboard-right-panel portal slot
+     * as a sibling island.
+     */
+    fullHeight?: boolean
 }
 
-export function DashboardLayout({ children, breadcrumbs = [] }: DashboardLayoutProps) {
+export function DashboardLayout({
+    children,
+    breadcrumbs = [],
+    fullHeight = false,
+}: DashboardLayoutProps) {
+    const { setPageTitle, sidePanelOpen } = useAppFrame()
+
+    /* Derive page title from last breadcrumb */
+    useEffect(() => {
+        const last = breadcrumbs[breadcrumbs.length - 1]
+        setPageTitle(last?.label ?? "")
+    }, [breadcrumbs, setPageTitle])
+
     return (
-        <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-                    <div className="flex items-center gap-2 px-4">
-                        <SidebarTrigger className="-ml-1" />
-
-                        {breadcrumbs.length > 0 && (
-                            <>
-                                <Separator
-                                    orientation="vertical"
-                                    className="mr-2 h-4"
-                                />
-                                <Breadcrumb>
-                                    <BreadcrumbList>
-                                        {breadcrumbs.map((crumb, index) => {
-                                            const isLast = index === breadcrumbs.length - 1;
-
-                                            return (
-                                                <React.Fragment key={crumb.label}>
-                                                    {index > 0 && (
-                                                        <BreadcrumbSeparator className="hidden md:block" />
+        <>
+            <AppTopBar />
+            <AppRail />
+            <div className="app-center">
+                <div id="app-side-panel" className={["app-side-panel", !sidePanelOpen && "!hidden"].filter(Boolean).join(" ")} />
+                <div className="island-content">
+                    {/* Breadcrumb header */}
+                    {breadcrumbs.length > 0 && (
+                        <header className="island-header">
+                            <Breadcrumb>
+                                <BreadcrumbList>
+                                    {breadcrumbs.map((crumb, index) => {
+                                        const isLast = index === breadcrumbs.length - 1
+                                        return (
+                                            <React.Fragment key={crumb.label}>
+                                                {index > 0 && (
+                                                    <BreadcrumbSeparator className="hidden md:block" />
+                                                )}
+                                                <BreadcrumbItem
+                                                    className={
+                                                        index < breadcrumbs.length - 1
+                                                            ? "hidden md:block"
+                                                            : ""
+                                                    }
+                                                >
+                                                    {isLast || !crumb.href ? (
+                                                        <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                                                    ) : (
+                                                        <BreadcrumbLink asChild>
+                                                            <Link to={crumb.href}>{crumb.label}</Link>
+                                                        </BreadcrumbLink>
                                                     )}
-                                                    <BreadcrumbItem className={index < breadcrumbs.length - 1 ? "hidden md:block" : ""}>
-                                                        {isLast || !crumb.href ? (
-                                                            <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                                                        ) : (
-                                                            <BreadcrumbLink asChild>
-                                                                <Link to={crumb.href}>{crumb.label}</Link>
-                                                            </BreadcrumbLink>
-                                                        )}
-                                                    </BreadcrumbItem>
-                                                </React.Fragment>
-                                            );
-                                        })}
-                                    </BreadcrumbList>
-                                </Breadcrumb>
-                            </>
-                        )}
-                    </div>
-                </header>
+                                                </BreadcrumbItem>
+                                            </React.Fragment>
+                                        )
+                                    })}
+                                </BreadcrumbList>
+                            </Breadcrumb>
+                        </header>
+                    )}
 
-                <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-                    {children}
+                    {/* Scroll container */}
+                    <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden">
+                        <div className={fullHeight ? "h-full flex flex-col" : "flex flex-col gap-4 p-4"}>
+                            {children}
+                        </div>
+                    </div>
                 </div>
-            </SidebarInset>
-        </SidebarProvider>
-    );
+            </div>
+            <AppRightRail />
+            <AppBottomBar />
+        </>
+    )
 }
