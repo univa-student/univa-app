@@ -9,6 +9,7 @@ export function PrivacyTab({ tab }: { tab: TabDef }) {
     const { data, isLoading } = useSettingsGroup(tab.groupId!)
     const { draft, set, isDirty, isSaving, error, onSave, seed } = useSettingsDraft(tab.groupId!)
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { if (data) seed(data) }, [data])
 
     if (isLoading) return <SettingsLoadingShell />
