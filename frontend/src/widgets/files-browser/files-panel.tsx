@@ -5,8 +5,7 @@
  */
 import { PageSidePanel } from "@/shared/ui/page-side-panel"
 import {
-    UploadCloudIcon, FolderPlusIcon, HomeIcon,
-    StarIcon, ClockIcon, TreePineIcon, HardDriveIcon,
+    UploadCloudIcon, FolderPlusIcon, TreePineIcon, HardDriveIcon,
 } from "lucide-react"
 import { ScrollArea } from "@/shared/shadcn/ui/scroll-area"
 import { Button } from "@/shared/shadcn/ui/button"

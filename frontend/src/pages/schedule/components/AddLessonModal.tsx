@@ -1,6 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { format } from "date-fns";
-import type { FormEvent, ReactNode } from "react";
 import {
     BookOpenIcon,
     CalendarIcon,

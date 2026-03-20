@@ -6,7 +6,7 @@ import { GOOGLE_FONTS_URL } from "@/app/config/app.config.ts"
 import logoConfig from "@/app/config/logo.config"
 import { Button } from "@/shared/shadcn/ui/button"
 import {
-    ArrowRightIcon, CalendarIcon, ClockIcon, TagIcon,
+    ArrowRightIcon, TagIcon,
     BriefcaseIcon, MapPinIcon, ZapIcon, HeartIcon, UsersIcon,
     TrendingUpIcon, MailIcon, MessageCircleIcon, SendIcon,
     SparklesIcon, RocketIcon, CheckCircleIcon, ArrowUpRightIcon,

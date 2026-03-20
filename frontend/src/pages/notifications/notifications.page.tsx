@@ -33,7 +33,7 @@ type NotificationFilter = "all" | "unread" | "ai" | "files" | "profile" | "avata
 type NotificationItem = {
     id: number;
     type: string;
-    payload?: { message?: string };
+    payload?: Record<string, any> | null;
     created_at?: string;
     createdAt?: string;
     read_at?: string | null;
