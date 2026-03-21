@@ -9,6 +9,7 @@ ARG GID=1000
 RUN apk add --no-cache \
     su-exec \
     curl \
+    fcgi \
     linux-headers \
     libpq-dev \
     libzip-dev \
