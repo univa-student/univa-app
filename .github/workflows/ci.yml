@@ -11,12 +11,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   DB_DATABASE: app_test
   DB_USERNAME: app
-  # CI-only БД живёт только во время пайплайна — production-пароль в secrets.DB_PASSWORD_PROD
+  # CI-only БД — живёт только во время пайплайна, наружу не торчит
   DB_PASSWORD: ci_test_password_123
-
-# ─── Общий шаблон переменных БД для шагов ─────────────────────────────────────
-# Используется через: env: ${{ env.DB_VARS }} — не поддерживается в YAML,
-# поэтому DB-переменные прописываются явно там, где нужны.
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
@@ -41,10 +37,17 @@ jobs:
 
       - name: Bootstrap .env files
         shell: bash
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
-          cp api/.env.example api/.env
-
           [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
+
+          cp api/.env.example api/.env
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" api/.env
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" api/.env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" api/.env
 
           if [ ! -f frontend/.env ]; then
             [ -f frontend/.env.example ] && cp frontend/.env.example frontend/.env || touch frontend/.env
@@ -103,10 +106,17 @@ jobs:
 
       - name: Bootstrap .env files
         shell: bash
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
-          cp api/.env.example api/.env
-
           [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
+
+          cp api/.env.example api/.env
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" api/.env
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" api/.env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" api/.env
 
           if [ ! -f frontend/.env ]; then
             [ -f frontend/.env.example ] && cp frontend/.env.example frontend/.env || touch frontend/.env
@@ -130,9 +140,6 @@ jobs:
           DOCKER_BUILDKIT: 1
           UID: 1000
           GID: 1000
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
       - name: Start postgres & redis
         shell: bash
@@ -156,7 +163,6 @@ jobs:
             done
           done
 
-      # ✅ php-cli убран — он в profile=tools и не нужен для smoke-теста
       - name: Start php-fpm, nginx, node
         shell: bash
         run: docker compose up -d php-fpm nginx node
@@ -167,7 +173,6 @@ jobs:
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      # ✅ Ждём healthcheck php-fpm — nginx зависит от него через service_healthy
       - name: Wait for php-fpm to be healthy
         shell: bash
         run: |
@@ -176,7 +181,11 @@ jobs:
             STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_php_fpm 2>/dev/null || echo "missing")
             echo "  attempt $i: $STATUS"
             [ "$STATUS" = "healthy" ] && echo "✅ php-fpm is healthy" && break
-            [ $i -eq 30 ] && echo "❌ php-fpm did not become healthy" && docker compose logs php-fpm && exit 1
+            [ $i -eq 30 ] \
+              && echo "❌ php-fpm did not become healthy" \
+              && docker inspect gateway_php_fpm --format '{{json .State.Health.Log}}' \
+              && docker compose logs php-fpm \
+              && exit 1
             sleep 3
           done
 
@@ -224,10 +233,17 @@ jobs:
 
       - name: Bootstrap .env files
         shell: bash
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
-          cp api/.env.example api/.env
-
           [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
+
+          cp api/.env.example api/.env
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" api/.env
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" api/.env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" api/.env
 
           if [ ! -f frontend/.env ]; then
             [ -f frontend/.env.example ] && cp frontend/.env.example frontend/.env || touch frontend/.env
@@ -281,7 +297,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      # ✅ Все вызовы php-cli через --profile tools
       - name: Install Composer dependencies
         shell: bash
         run: |
@@ -294,6 +309,7 @@ jobs:
             echo "❌ vendor/autoload.php not found"
             exit 1
           fi
+          echo "✅ Composer install complete"
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
@@ -306,6 +322,19 @@ jobs:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
+
+      # key:generate пишет APP_KEY в api/.env через примонтированный том.
+      # Проверяем что ключ реально записался на хост перед следующим шагом.
+      - name: Verify APP_KEY was written to host
+        shell: bash
+        run: |
+          KEY=$(grep "^APP_KEY=" api/.env | cut -d'=' -f2)
+          if [ -z "$KEY" ] || [ "$KEY" = "base64:" ]; then
+            echo "❌ APP_KEY is empty in api/.env — key:generate не записал ключ в том"
+            grep "APP_KEY" api/.env
+            exit 1
+          fi
+          echo "✅ APP_KEY is set: ${KEY:0:20}..."
 
       - name: Run database migrations
         shell: bash
@@ -353,7 +382,6 @@ jobs:
         shell: bash
         run: |
           [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
-
           if [ ! -f frontend/.env ]; then
             [ -f frontend/.env.example ] && cp frontend/.env.example frontend/.env || touch frontend/.env
           fi
@@ -382,7 +410,7 @@ jobs:
   push:
     name: 📦 Push images to GHCR
     runs-on: self-hosted
-    needs: [backend-tests, frontend-build]
+    needs: [ backend-tests, frontend-build ]
     if: github.ref == 'refs/heads/feature/docker' && github.event_name == 'push'
 
     permissions:
@@ -437,7 +465,6 @@ jobs:
           build-args: |
             UID=1000
             GID=1000
-          # ✅ cache-to/from теперь реально используются
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
@@ -481,7 +508,6 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
-      # ✅ Ротация кеша — теперь /tmp/.buildx-cache-new реально создаётся выше
       - name: Rotate Docker layer cache
         shell: bash
         run: |

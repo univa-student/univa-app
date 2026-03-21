@@ -6,17 +6,22 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'http://localhost',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
         'https://korbin-perigynous-metaphrastically.ngrok-free.dev',
     ],
-    'supports_credentials' => true,
-//    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost'), 'http://localhost:5173'],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+
+        '#^https://[\w-]+\.ngrok-free\.dev$#',
+    ],
 
     'allowed_headers' => ['*'],
 
     'exposed_headers' => [],
 
     'max_age' => 0,
-];
 
+    'supports_credentials' => true,
+];

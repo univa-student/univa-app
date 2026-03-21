@@ -68,10 +68,9 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      # Проверяем что мастер-процесс php-fpm жив.
-      # Не зависит от типа сокета (TCP vs unix) — работает везде.
-      # После стабилизации замените на php-fpm-healthcheck с правильным FCGI_CONNECT.
-      test: ["CMD-SHELL", "pgrep -x php-fpm > /dev/null || exit 1"]
+      # kill -0 1 — проверяем что PID 1 (мастер php-fpm) жив.
+      # Не зависит от имени процесса (php-fpm8.4 на Alpine).
+      test: ["CMD-SHELL", "kill -0 1 && pgrep -f php-fpm > /dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
