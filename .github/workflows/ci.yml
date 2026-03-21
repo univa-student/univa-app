@@ -11,8 +11,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   DB_DATABASE: app_test
   DB_USERNAME: app
-  # ✅ Пароль из секретов репозитория, не захардкожен
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  # CI-only БД живёт только во время пайплайна — production-пароль в secrets.DB_PASSWORD_PROD
+  DB_PASSWORD: ci_test_password_123
 
 # ─── Общий шаблон переменных БД для шагов ─────────────────────────────────────
 # Используется через: env: ${{ env.DB_VARS }} — не поддерживается в YAML,
