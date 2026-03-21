@@ -61,8 +61,7 @@ services:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-fpm/conf.d/php.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
       - ./gateway/docker/development/php-fpm/conf.d/timeouts.ini:/usr/local/etc/php/conf.d/98-timeouts.ini:ro
-    <<: *php-env-file
-    <<: *php-common
+    <<: [ *php-env-file, *php-common ]
     depends_on:
       postgres:
         condition: service_healthy
@@ -95,8 +94,7 @@ services:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-cli/config:/var/www/.config:cached
       - composer_cache:/var/www/.composer
-    <<: *php-env-file
-    <<: *php-common
+    <<: [ *php-env-file, *php-common ]
     working_dir: /var/www/app
     depends_on:
       postgres:
