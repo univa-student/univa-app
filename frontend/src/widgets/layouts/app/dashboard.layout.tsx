@@ -55,7 +55,7 @@ export function DashboardLayout({
                     {/* Breadcrumb header */}
                     {breadcrumbs.length > 0 && (
                         <header className="island-header">
-                            <Breadcrumb>
+                            <Breadcrumb className="px-4 py-2">
                                 <BreadcrumbList>
                                     {breadcrumbs.map((crumb, index) => {
                                         const isLast = index === breadcrumbs.length - 1
@@ -89,7 +89,7 @@ export function DashboardLayout({
 
                     {/* Scroll container */}
                     <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden">
-                        <div className={fullHeight ? "h-full flex flex-col" : "flex flex-col gap-4 p-4"}>
+                        <div className={fullHeight ? "h-full flex flex-col max-w-7xl mx-auto w-full" : "flex flex-col gap-6 md:gap-8 p-6 md:p-12 max-w-7xl mx-auto w-full"}>
                             {children}
                         </div>
                     </div>

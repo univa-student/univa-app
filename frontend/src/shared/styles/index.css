@@ -47,48 +47,48 @@
     --radius: 0.75rem;
 
     /* Base */
-    --background: oklch(0.982 0 0);
-    --foreground: oklch(0.18 0 0);
+    --background: #ffffff;
+    --foreground: #1d1d1f;
 
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.18 0 0);
+    --card: #ffffff;
+    --card-foreground: #1d1d1f;
 
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.18 0 0);
+    --popover: #ffffff;
+    --popover-foreground: #1d1d1f;
 
-    /* Steel accent — neutral blue-grey */
-    --primary: oklch(0.38 0.022 250);
-    --primary-foreground: white;
+    /* Monochrome / Dark Elegance */
+    --primary: #171717;
+    --primary-foreground: #ffffff;
 
-    --secondary: oklch(0.955 0 0);
-    --secondary-foreground: oklch(0.32 0.008 250);
+    --secondary: #f5f5f7;
+    --secondary-foreground: #1d1d1f;
 
-    --muted: oklch(0.945 0 0);
-    --muted-foreground: oklch(0.52 0.008 250);
+    --muted: #f5f5f7;
+    --muted-foreground: #86868b;
 
-    --accent: oklch(0.928 0.006 250);
-    --accent-foreground: oklch(0.28 0.018 250);
+    --accent: #f5f5f7;
+    --accent-foreground: #1d1d1f;
 
-    --destructive: oklch(0.57 0.21 27);
-    --destructive-foreground: white;
+    --destructive: #ff3b30;
+    --destructive-foreground: #ffffff;
 
-    --border: oklch(0.875 0 0);
-    --input: oklch(0.892 0 0);
+    --border: #d2d2d7;
+    --input: #d2d2d7;
     --ring: var(--primary);
 
-    --chart-1: oklch(0.38 0.022 250);
-    --chart-2: oklch(0.48 0.016 245);
-    --chart-3: oklch(0.58 0.010 240);
-    --chart-4: oklch(0.68 0.006 235);
-    --chart-5: oklch(0.76 0.004 230);
+    --chart-1: #0071e3;
+    --chart-2: #34c759;
+    --chart-3: #ff9500;
+    --chart-4: #5856d6;
+    --chart-5: #ff2d55;
 
-    --sidebar: oklch(0.970 0 0);
+    --sidebar: #f5f5f7;
     --sidebar-foreground: var(--foreground);
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: oklch(0.948 0.004 250);
+    --sidebar-accent: #e8e8ed;
     --sidebar-accent-foreground: var(--foreground);
-    --sidebar-border: var(--border);
+    --sidebar-border: #d2d2d7;
     --sidebar-ring: var(--ring);
 
     --u-bg: var(--background);
@@ -99,75 +99,69 @@
     --u-border: var(--border);
 
     --u-accent: var(--primary);
-    --u-accent-light: color-mix(in oklch, var(--primary) 12%, white);
-    --u-accent-mid: color-mix(in oklch, var(--primary) 35%, white);
+    --u-accent-light: color-mix(in srgb, var(--primary) 12%, white);
+    --u-accent-mid: color-mix(in srgb, var(--primary) 35%, white);
 
-    --u-gradient: linear-gradient(
-            135deg,
-            oklch(0.36 0.024 252),
-            oklch(0.42 0.016 248),
-            oklch(0.50 0.010 244)
-    );
+    --u-gradient: linear-gradient(135deg, #171717, #525252);
 
-    --u-orbit-glow: color-mix(in srgb, var(--primary) 10%, transparent);
+    --u-orbit-glow: rgba(23, 23, 23, 0.1);
 
     /* ── Island Workspace tokens ── */
-    --island-radius: 0.875rem;
-    --island-gap: 0.625rem;
+    --island-radius: 1rem;
+    --island-gap: 0.75rem;
     --island-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.04),
-        0 3px 10px rgba(0, 0, 0, 0.07),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
-    --island-border: 1px solid var(--border);
-    --island-bg: var(--card);
-    --island-canvas: oklch(0.952 0.003 250);
+        0 4px 24px rgba(0, 0, 0, 0.04),
+        0 1px 2px rgba(0, 0, 0, 0.02);
+    --island-border: 1px solid rgba(0, 0, 0, 0.05);
+    --island-bg: #ffffff;
+    --island-canvas: #f5f5f7;
 }
 
 .dark {
-    --background: #101214;
-    --foreground: #e4e6ea;
+    --background: #000000;
+    --foreground: #f5f5f7;
 
-    --card: #16191e;
-    --card-foreground: #e4e6ea;
+    --card: #1c1c1e;
+    --card-foreground: #f5f5f7;
 
-    --popover: #16191e;
-    --popover-foreground: #e4e6ea;
+    --popover: #1c1c1e;
+    --popover-foreground: #f5f5f7;
 
-    --secondary: #1c2028;
-    --secondary-foreground: #a0a8b4;
+    --secondary: #2c2c2e;
+    --secondary-foreground: #e5e5ea;
 
-    --muted: #181c22;
-    --muted-foreground: #8a919e;
+    --muted: #1c1c1e;
+    --muted-foreground: #8e8e93;
 
-    --border: #272d38;
-    --input: #272d38;
+    --border: #38383a;
+    --input: #38383a;
 
-    /* Steel dark — cold grey with slight blue undertone */
-    --primary: #7b8799;
-    --primary-foreground: #ffffff;
+    /* Monochrome Light (For Dark Backgrounds) */
+    --primary: #ffffff;
+    --primary-foreground: #171717;
 
-    --accent: #5a6474;
-    --accent-foreground: #dde2ea;
+    --accent: #2c2c2e;
+    --accent-foreground: #ffffff;
 
-    --destructive: #ef4444;
+    --destructive: #ff453a;
     --destructive-foreground: #ffffff;
 
-    --ring: #7b8799;
+    --ring: var(--primary);
 
-    --chart-1: #7b8799;
-    --chart-2: #6b7888;
-    --chart-3: #5c6878;
-    --chart-4: #4e5a68;
-    --chart-5: #8e9daf;
+    --chart-1: #0a84ff;
+    --chart-2: #30d158;
+    --chart-3: #ff9f0a;
+    --chart-4: #5e5ce6;
+    --chart-5: #ff375f;
 
-    --sidebar: #0d1013;
-    --sidebar-foreground: #e4e6ea;
-    --sidebar-primary: #7b8799;
+    --sidebar: #000000;
+    --sidebar-foreground: #f5f5f7;
+    --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-ring: #7b8799;
-    --sidebar-accent: #1c2028;
-    --sidebar-accent-foreground: #e4e6ea;
-    --sidebar-border: #272d38;
+    --sidebar-ring: var(--primary);
+    --sidebar-accent: #1c1c1e;
+    --sidebar-accent-foreground: #f5f5f7;
+    --sidebar-border: #38383a;
 
     --u-bg: var(--background);
     --u-card: var(--card);
@@ -177,26 +171,20 @@
     --u-border: var(--border);
 
     --u-accent: var(--primary);
-    --u-accent-light: color-mix(in oklch, var(--primary) 18%, black);
-    --u-accent-mid: color-mix(in oklch, var(--primary) 52%, #c8d0dc);
+    --u-accent-light: color-mix(in srgb, var(--primary) 18%, black);
+    --u-accent-mid: color-mix(in srgb, var(--primary) 52%, #171717);
 
-    --u-gradient: linear-gradient(
-            135deg,
-            #6b7888,
-            #5c6878,
-            #4e5a68
-    );
+    --u-gradient: linear-gradient(135deg, #ffffff, #a3a3a3);
 
-    --u-orbit-glow: color-mix(in srgb, var(--primary) 14%, transparent);
+    --u-orbit-glow: rgba(255, 255, 255, 0.15);
 
     /* ── Island Workspace tokens (dark) ── */
     --island-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.5),
-        0 6px 20px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
-    --island-border: 1px solid var(--border);
-    --island-bg: var(--card);
-    --island-canvas: #0b0d10;
+        0 4px 24px rgba(0, 0, 0, 0.4),
+        0 1px 2px rgba(0, 0, 0, 0.2);
+    --island-border: 1px solid rgba(255, 255, 255, 0.1);
+    --island-bg: #1c1c1e;
+    --island-canvas: #000000;
 }
 
 @layer base {
@@ -206,7 +194,9 @@
 
     body {
         @apply bg-background text-foreground;
+        font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", sans-serif;
         -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     :root {
@@ -343,70 +333,22 @@ html, body, #root {
 
 .island-canvas {
     position: relative;
-    background:
-            radial-gradient(
-                    1400px 800px at -10% -20%,
-                    rgba(90, 110, 180, 0.35),
-                    transparent 60%
-            ),
-            radial-gradient(
-                    1200px 700px at 120% 110%,
-                    rgba(90, 110, 180, 0.30),
-                    transparent 65%
-            ),
-            radial-gradient(
-                    900px 600px at 50% 120%,
-                    rgba(90, 110, 180, 0.22),
-                    transparent 70%
-            ),
-            var(--island-canvas);
+    background: var(--island-canvas);
     height: 100dvh;
     display: flex;
     overflow: hidden;
 }
 
 .dark .island-canvas {
-    background:
-            radial-gradient(
-                    1200px 700px at -10% -20%,
-                    rgba(120, 150, 255, 0.18),
-                    transparent 60%
-            ),
-
-            radial-gradient(
-                    1000px 600px at 110% 110%,
-                    rgba(120, 150, 255, 0.15),
-                    transparent 65%
-            ),
-
-            radial-gradient(
-                    900px 500px at 50% 120%,
-                    rgba(120, 150, 255, 0.12),
-                    transparent 70%
-            ),
-
-            var(--island-canvas);
+    background: var(--island-canvas);
 }
 
 .island-canvas::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-
-    background-image:
-            linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
-
-    background-size: 32px 32px;
-
-    pointer-events: none;
+    display: none;
 }
 
 .dark .island-canvas::before {
-    background-image:
-            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    display: none;
 }
 
 .island {
