@@ -7,13 +7,16 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 
-# Спільний блок env_file — підключає api/.env до PHP-контейнерів
-# УВAGA: Docker Compose не підтримує змінні у шляхах env_file,
-# тому використовуємо статичні шляхи.
 x-php-env-file: &php-env-file
   env_file:
-    - .env        # кореневі змінні Docker Compose
-    - ./api/.env  # Laravel .env (DB, Redis, APP_KEY тощо)
+    - .env
+    - ./api/.env
+
+x-php-common: &php-common
+  environment:
+    <<: *common-env
+    PHP_OPCACHE_ENABLE: 0
+    COMPOSER_HOME: /var/www/.composer
 
 services:
 
@@ -24,6 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: gateway_nginx
     restart: unless-stopped
+    stop_grace_period: 30s
     ports:
       - "${NGINX_HTTP_PORT:-80}:80"
       - "${NGINX_HTTPS_PORT:-443}:443"
@@ -32,12 +36,12 @@ services:
       - ${APP_PATH:-./api}:/var/www/app:ro
     depends_on:
       php-fpm:
-        condition: service_started
+        condition: service_healthy
       node:
         condition: service_started
     networks:
       - frontend_net
-      - backend_net
+      - dmz_net
     environment:
       <<: *common-env
     logging: *default-logging
@@ -52,25 +56,31 @@ services:
         GID: ${GID:-1000}
     container_name: gateway_php_fpm
     restart: unless-stopped
+    stop_grace_period: 30s
     volumes:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-fpm/conf.d/php.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
       - ./gateway/docker/development/php-fpm/conf.d/timeouts.ini:/usr/local/etc/php/conf.d/98-timeouts.ini:ro
-    <<: *php-env-file
-    environment:
-      <<: *common-env
-      PHP_OPCACHE_ENABLE: 0
-      COMPOSER_HOME: /var/www/.composer
+    <<: [ *php-env-file, *php-common ]
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      # kill -0 1 — проверяем что PID 1 (мастер php-fpm) жив.
+      # Не зависит от имени процесса (php-fpm8.4 на Alpine).
+      test: ["CMD-SHELL", "kill -0 1 && pgrep -f php-fpm > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     networks:
+      - dmz_net
       - backend_net
     logging: *default-logging
 
-  # ── PHP-CLI ─────────────────────────────────────────────────────────────────
+  # ── PHP-CLI — запускается только явно, не стартует вместе со стеком ─────────
   php-cli:
     build:
       context: ./gateway/docker/development/php-cli
@@ -79,16 +89,14 @@ services:
         UID: ${UID:-1000}
         GID: ${GID:-1000}
     container_name: gateway_php_cli
-    restart: unless-stopped
+    restart: "no"
+    profiles:
+      - tools
     volumes:
       - ${APP_PATH:-./api}:/var/www/app:cached
       - ./gateway/docker/development/php-cli/config:/var/www/.config:cached
       - composer_cache:/var/www/.composer
-    <<: *php-env-file
-    environment:
-      <<: *common-env
-      PHP_OPCACHE_ENABLE: 0
-      COMPOSER_HOME: /var/www/.composer
+    <<: [ *php-env-file, *php-common ]
     working_dir: /var/www/app
     depends_on:
       postgres:
@@ -101,7 +109,7 @@ services:
     tty: true
     logging: *default-logging
 
-  # ── NODE ────────────────────────────────────────────────────────────────────
+  # ── NODE ─────────────────────────────────────────────────────────────────────
   node:
     build:
       context: ./gateway/docker/development/node
@@ -112,30 +120,32 @@ services:
       - ${FRONTEND_PATH:-./frontend}:/app:cached
       - node_modules:/app/node_modules
     ports:
-      - "${NODE_PORT:-5173}:5173"
+      - "127.0.0.1:${NODE_PORT:-5173}:5173"
     env_file:
-      - .env              # кореневі змінні
-      - ./frontend/.env   # Vite змінні (VITE_*)
+      - .env
+      - ./frontend/.env
     environment:
       <<: *common-env
-      CHOKIDAR_USEPOLLING: "true"
+      # На Linux polling не нужен — переопределите в .env если нужен (macOS/WSL)
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-false}
     networks:
       - frontend_net
     logging: *default-logging
 
-  # ── REDIS ───────────────────────────────────────────────────────────────────
+  # ── REDIS ────────────────────────────────────────────────────────────────────
   redis:
     build:
       context: ./gateway/docker/development/redis
       dockerfile: Dockerfile
     container_name: gateway_redis
     restart: unless-stopped
+    # Порт открыт только на localhost — снаружи недоступен
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -144,13 +154,14 @@ services:
       - backend_net
     logging: *default-logging
 
-  # ── POSTGRESQL ──────────────────────────────────────────────────────────────
+  # ── POSTGRESQL ───────────────────────────────────────────────────────────────
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.3-alpine3.20
     container_name: gateway_postgres
     restart: unless-stopped
+    # Порт открыт только на localhost — снаружи недоступен
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./gateway/docker/development/postgres/init:/docker-entrypoint-initdb.d:ro
@@ -158,9 +169,9 @@ services:
       <<: *common-env
       POSTGRES_DB: ${DB_DATABASE:-app}
       POSTGRES_USER: ${DB_USERNAME:-app}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-app} -d ${DB_DATABASE:-app}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-app} -d ${DB_DATABASE:-app}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -169,16 +180,23 @@ services:
       - backend_net
     logging: *default-logging
 
-# ─── ТОМА ──────────────────────────────────────────────────────────────────────
+# ─── ТОМА ────────────────────────────────────────────────────────────────────
 volumes:
   redis_data:
   postgres_data:
   composer_cache:
   node_modules:
 
-# ─── СЕТИ ──────────────────────────────────────────────────────────────────────
+# ─── СЕТИ ────────────────────────────────────────────────────────────────────
 networks:
+  # Публичная зона: Nginx + Node/Vite
   frontend_net:
     driver: bridge
+
+  # DMZ: только Nginx ↔ PHP-FPM
+  dmz_net:
+    driver: bridge
+
+  # Приватная зона: PHP-FPM, Redis, Postgres — Nginx сюда не имеет доступа
   backend_net:
     driver: bridge
