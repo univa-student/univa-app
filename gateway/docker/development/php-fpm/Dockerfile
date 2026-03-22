@@ -8,6 +8,8 @@ ARG GID=1000
 # ── Системные зависимости ──────────────────────────────────────────────────────
 RUN apk add --no-cache \
     su-exec \
+    curl \
+    fcgi \
     linux-headers \
     libpq-dev \
     libzip-dev \
@@ -37,6 +39,11 @@ RUN apk add --no-cache \
     && apk del .build-deps \
     && rm -rf /tmp/pear
 
+# ── php-fpm-healthcheck ────────────────────────────────────────────────────────
+RUN curl -fsSL https://raw.githubusercontent.com/renatomefi/php-fpm-healthcheck/master/php-fpm-healthcheck \
+    -o /usr/local/bin/php-fpm-healthcheck \
+    && chmod +x /usr/local/bin/php-fpm-healthcheck
+
 # ── Composer ──────────────────────────────────────────────────────────────────
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -49,18 +56,18 @@ RUN delgroup www-data 2>/dev/null || true \
     && chown -R www-data:www-data /var/www
 
 # ── PHP-FPM pool config ────────────────────────────────────────────────────────
+# Включаем статус-эндпоинт — нужен для php-fpm-healthcheck
 RUN sed -i \
     -e "s/^user = .*/user = www-data/" \
     -e "s/^group = .*/group = www-data/" \
     -e "s/^listen.owner = .*/listen.owner = www-data/" \
     -e "s/^listen.group = .*/listen.group = www-data/" \
-    /usr/local/etc/php-fpm.d/www.conf
+    /usr/local/etc/php-fpm.d/www.conf \
+    && echo "pm.status_path = /status" >> /usr/local/etc/php-fpm.d/www.conf
 
 # ── Entrypoint ────────────────────────────────────────────────────────────────
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
-
-
 
 WORKDIR /var/www/app
 EXPOSE 9000

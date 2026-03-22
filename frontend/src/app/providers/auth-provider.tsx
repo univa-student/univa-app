@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";

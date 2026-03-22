@@ -11,7 +11,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   DB_DATABASE: app_test
   DB_USERNAME: app
-  DB_PASSWORD: secret
+  # CI-only БД — живёт только во время пайплайна, наружу не торчит
+  DB_PASSWORD: ci_test_password_123
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
@@ -22,13 +23,6 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      # Windows: разрешаем выполнение любых PowerShell-скриптов
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
-      # Linux: исправляем права на рабочую директорию (только для Linux)
       - name: Fix workspace permissions (Linux only)
         if: runner.os == 'Linux'
         shell: bash
@@ -41,28 +35,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Create dummy api env
+      - name: Bootstrap .env files
         shell: bash
-        run: cp api/.env.example api/.env
-
-      - name: Create root .env (if not exists)
-        shell: bash
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
-          fi
+          [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
 
-      - name: Create frontend .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
-          cp frontend/.env.example frontend/.env
-          elif [ ! -f frontend/.env ]; then
-          mkdir -p frontend
-          touch frontend/.env
+          cp api/.env.example api/.env
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" api/.env
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" api/.env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" api/.env
+
+          if [ ! -f frontend/.env ]; then
+            [ -f frontend/.env.example ] && cp frontend/.env.example frontend/.env || touch frontend/.env
           fi
 
       - name: Validate docker-compose syntax
@@ -96,7 +84,7 @@ jobs:
           exit $FAILED
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 2: Build & smoke-test всех сервисов
+  # JOB 2: Build & Smoke Test
   # ─────────────────────────────────────────────────────────────────────────────
   build:
     name: 🐳 Docker Build & Smoke Test
@@ -104,11 +92,6 @@ jobs:
     needs: lint
 
     steps:
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions (Linux only)
         if: runner.os == 'Linux'
         shell: bash
@@ -121,38 +104,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Create root .env (if not exists)
+      - name: Bootstrap .env files
         shell: bash
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
+          [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
+
+          cp api/.env.example api/.env
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" api/.env
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" api/.env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" api/.env
+
+          if [ ! -f frontend/.env ]; then
+            [ -f frontend/.env.example ] && cp frontend/.env.example frontend/.env || touch frontend/.env
           fi
-
-      - name: Create frontend .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
-            cp frontend/.env.example frontend/.env
-          elif [ ! -f frontend/.env ]; then
-            touch frontend/.env
-          fi
-
-      - name: Create dummy api env
-        shell: bash
-        run: cp api/.env.example api/.env
-
-      - name: Verify Docker Compose
-        shell: bash
-        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Cache Docker layers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -166,9 +140,6 @@ jobs:
           DOCKER_BUILDKIT: 1
           UID: 1000
           GID: 1000
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
       - name: Start postgres & redis
         shell: bash
@@ -178,33 +149,23 @@ jobs:
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      - name: Wait for postgres to be healthy
+      - name: Wait for postgres & redis
         shell: bash
         run: |
-          echo "Waiting for gateway_postgres..."
-          for i in $(seq 1 30); do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_postgres 2>/dev/null || echo "missing")
-            echo "  attempt $i: $STATUS"
-            [ "$STATUS" = "healthy" ] && echo "✅ postgres is healthy" && break
-            [ $i -eq 30 ] && echo "❌ postgres did not become healthy" && docker compose logs postgres && exit 1
-            sleep 3
+          for svc in gateway_postgres gateway_redis; do
+            echo "Waiting for $svc..."
+            for i in $(seq 1 30); do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' $svc 2>/dev/null || echo "missing")
+              echo "  attempt $i: $STATUS"
+              [ "$STATUS" = "healthy" ] && echo "✅ $svc healthy" && break
+              [ $i -eq 30 ] && echo "❌ $svc not healthy" && docker compose logs $svc && exit 1
+              sleep 3
+            done
           done
 
-      - name: Wait for redis to be healthy
+      - name: Start php-fpm, nginx, node
         shell: bash
-        run: |
-          echo "Waiting for gateway_redis..."
-          for i in $(seq 1 20); do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_redis 2>/dev/null || echo "missing")
-            echo "  attempt $i: $STATUS"
-            [ "$STATUS" = "healthy" ] && echo "✅ redis is healthy" && break
-            [ $i -eq 20 ] && echo "❌ redis did not become healthy" && docker compose logs redis && exit 1
-            sleep 3
-          done
-
-      - name: Start php-fpm, php-cli, nginx, node
-        shell: bash
-        run: docker compose up -d php-fpm php-cli nginx node
+        run: docker compose up -d php-fpm nginx node
         env:
           UID: 1000
           GID: 1000
@@ -212,9 +173,21 @@ jobs:
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      - name: Give services time to start
+      - name: Wait for php-fpm to be healthy
         shell: bash
-        run: sleep 8
+        run: |
+          echo "Waiting for gateway_php_fpm..."
+          for i in $(seq 1 30); do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' gateway_php_fpm 2>/dev/null || echo "missing")
+            echo "  attempt $i: $STATUS"
+            [ "$STATUS" = "healthy" ] && echo "✅ php-fpm is healthy" && break
+            [ $i -eq 30 ] \
+              && echo "❌ php-fpm did not become healthy" \
+              && docker inspect gateway_php_fpm --format '{{json .State.Health.Log}}' \
+              && docker compose logs php-fpm \
+              && exit 1
+            sleep 3
+          done
 
       - name: Show running containers
         shell: bash
@@ -246,11 +219,6 @@ jobs:
     needs: build
 
     steps:
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions (Linux only)
         if: runner.os == 'Linux'
         shell: bash
@@ -263,38 +231,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Create root .env (if not exists)
+      - name: Bootstrap .env files
         shell: bash
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
+          [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
+
+          cp api/.env.example api/.env
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" api/.env
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" api/.env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" api/.env
+
+          if [ ! -f frontend/.env ]; then
+            [ -f frontend/.env.example ] && cp frontend/.env.example frontend/.env || touch frontend/.env
           fi
-
-      - name: Create dummy api env
-        shell: bash
-        run: cp api/.env.example api/.env
-
-      - name: Create frontend .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
-            cp frontend/.env.example frontend/.env
-          elif [ ! -f frontend/.env ]; then
-            touch frontend/.env
-          fi
-
-      - name: Verify Docker Compose
-        shell: bash
-        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Restore Docker layer cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -325,40 +284,32 @@ jobs:
             for i in $(seq 1 30); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' $svc 2>/dev/null || echo "missing")
               [ "$STATUS" = "healthy" ] && echo "✅ $svc healthy" && break
-              [ $i -eq 30 ] && echo "❌ $svc not healthy" && docker compose logs && exit 1
+              [ $i -eq 30 ] && echo "❌ $svc not healthy" && docker compose logs $svc && exit 1
               sleep 3
             done
           done
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./api/vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      - name: Ensure vendor directory exists (inside container)
-        shell: bash
-        run: docker compose run --rm php-cli mkdir -p /var/www/app/vendor
-        env:
-          DB_DATABASE: ${{ env.DB_DATABASE }}
-          DB_USERNAME: ${{ env.DB_USERNAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-
       - name: Install Composer dependencies
         shell: bash
         run: |
-          docker compose run --rm php-cli composer install \
+          docker compose --profile tools run --rm php-cli composer install \
             --no-interaction \
             --no-progress \
             --prefer-dist \
             --optimize-autoloader
-          # Проверяем, что автозагрузчик появился
           if [ ! -f api/vendor/autoload.php ]; then
-            echo "❌ Composer install failed: vendor/autoload.php not found"
+            echo "❌ vendor/autoload.php not found"
             exit 1
           fi
+          echo "✅ Composer install complete"
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
@@ -366,15 +317,28 @@ jobs:
 
       - name: Generate app key
         shell: bash
-        run: docker compose run --rm php-cli php artisan key:generate --force
+        run: docker compose --profile tools run --rm php-cli php artisan key:generate --force
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
+      # key:generate пишет APP_KEY в api/.env через примонтированный том.
+      # Проверяем что ключ реально записался на хост перед следующим шагом.
+      - name: Verify APP_KEY was written to host
+        shell: bash
+        run: |
+          KEY=$(grep "^APP_KEY=" api/.env | cut -d'=' -f2)
+          if [ -z "$KEY" ] || [ "$KEY" = "base64:" ]; then
+            echo "❌ APP_KEY is empty in api/.env — key:generate не записал ключ в том"
+            grep "APP_KEY" api/.env
+            exit 1
+          fi
+          echo "✅ APP_KEY is set: ${KEY:0:20}..."
+
       - name: Run database migrations
         shell: bash
-        run: docker compose run --rm php-cli php artisan migrate --force
+        run: docker compose --profile tools run --rm php-cli php artisan migrate --force
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
@@ -382,8 +346,7 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: |
-          docker compose run --rm php-cli php artisan test
+        run: docker compose --profile tools run --rm php-cli php artisan test
         env:
           DB_DATABASE: ${{ env.DB_DATABASE }}
           DB_USERNAME: ${{ env.DB_USERNAME }}
@@ -395,7 +358,7 @@ jobs:
         run: docker compose down -v
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 4: Frontend Build Check (Node / Vite)
+  # JOB 4: Frontend Build (Node / Vite)
   # ─────────────────────────────────────────────────────────────────────────────
   frontend-build:
     name: 🎨 Frontend Build (Vite)
@@ -403,11 +366,6 @@ jobs:
     needs: lint
 
     steps:
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions (Linux only)
         if: runner.os == 'Linux'
         shell: bash
@@ -420,31 +378,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Create frontend .env (if not exists)
+      - name: Bootstrap .env files
         shell: bash
         run: |
-          if [ ! -f frontend/.env ] && [ -f frontend/.env.example ]; then
-            cp frontend/.env.example frontend/.env
-          elif [ ! -f frontend/.env ]; then
-            touch frontend/.env
+          [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
+          if [ ! -f frontend/.env ]; then
+            [ -f frontend/.env.example ] && cp frontend/.env.example frontend/.env || touch frontend/.env
           fi
-
-      - name: Create root .env (if not exists)
-        shell: bash
-        run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
-          fi
-
-      - name: Verify Docker Compose
-        shell: bash
-        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build node image
         shell: bash
@@ -454,8 +397,7 @@ jobs:
 
       - name: Install dependencies & build
         shell: bash
-        run: |
-          docker compose run --rm --no-deps node sh -c "npm ci && npm run build"
+        run: docker compose run --rm --no-deps node sh -c "npm ci && npm run build"
 
       - name: Cleanup
         if: always()
@@ -463,12 +405,12 @@ jobs:
         run: docker compose down -v
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 5: Push php-fpm & nginx images (только при push в feature/docker)
+  # JOB 5: Push images to GHCR
   # ─────────────────────────────────────────────────────────────────────────────
   push:
     name: 📦 Push images to GHCR
     runs-on: self-hosted
-    needs: [backend-tests, frontend-build]
+    needs: [ backend-tests, frontend-build ]
     if: github.ref == 'refs/heads/feature/docker' && github.event_name == 'push'
 
     permissions:
@@ -476,11 +418,6 @@ jobs:
       packages: write
 
     steps:
-      - name: Bypass PowerShell execution policy (Windows only)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-
       - name: Fix workspace permissions (Linux only)
         if: runner.os == 'Linux'
         shell: bash
@@ -493,22 +430,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Create root .env (if not exists)
+      - name: Bootstrap .env files
         shell: bash
         run: |
-          if [ ! -f .env ] && [ -f .env.example ]; then
-            cp .env.example .env
-          elif [ ! -f .env ]; then
-            echo "UID=1000" > .env
-            echo "GID=1000" >> .env
-          fi
+          [ ! -f .env ] && ([ -f .env.example ] && cp .env.example .env || printf 'UID=1000\nGID=1000\n' > .env)
 
-      - name: Verify Docker Compose
-        shell: bash
-        run: docker compose version || (echo "Docker Compose V2 not found, trying docker-compose" && docker-compose version)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -517,7 +448,7 @@ jobs:
       # ── php-fpm ──────────────────────────────
       - name: Metadata — php-fpm
         id: meta-php
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/php-fpm
           tags: |
@@ -525,7 +456,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & push — php-fpm
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./gateway/docker/development/php-fpm
           push: true
@@ -534,11 +465,13 @@ jobs:
           build-args: |
             UID=1000
             GID=1000
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
       # ── nginx ────────────────────────────────
       - name: Metadata — nginx
         id: meta-nginx
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/nginx
           tags: |
@@ -546,17 +479,19 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & push — nginx
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./gateway/docker/development/nginx
           push: true
           tags: ${{ steps.meta-nginx.outputs.tags }}
           labels: ${{ steps.meta-nginx.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
-      # ── node (frontend build artifact) ───────
+      # ── node ─────────────────────────────────
       - name: Metadata — node
         id: meta-node
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/node
           tags: |
@@ -564,15 +499,16 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & push — node
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./gateway/docker/development/node
           push: true
           tags: ${{ steps.meta-node.outputs.tags }}
           labels: ${{ steps.meta-node.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
-      # ✅ Ротация кеша слоёв (исправлено)
-      - name: Move Docker layer cache (if new cache exists)
+      - name: Rotate Docker layer cache
         shell: bash
         run: |
           if [ -d /tmp/.buildx-cache-new ]; then

@@ -11,10 +11,15 @@ import { WS_HOST, WS_PORT, WS_KEY, WS_SCHEME } from "@/app/config/app.config";
 import type { WsEventName, WsEventMap } from "./events";
 
 // Required by laravel-echo
+declare global {
+    interface Window {
+        Pusher: any;
+    }
+}
 window.Pusher = Pusher;
 
 class WsClient {
-    private echo: Echo | null = null;
+    private echo: Echo<any> | null = null;
     private _isConnected = false;
 
     get isConnected(): boolean {
@@ -81,7 +86,7 @@ class WsClient {
     /**
      * Exposes Echo instance for advanced use cases.
      */
-    get client(): Echo | null {
+    get client(): Echo<any> | null {
         return this.echo;
     }
 
@@ -111,6 +116,20 @@ class WsClient {
      */
     leave(channelName: string): void {
         this.echo?.leave(channelName);
+    }
+
+    /**
+     * Subscribe to a global event.
+     */
+    on<E extends WsEventName>(_event: E, _handler: (payload: WsEventMap[E]) => void): void {
+        console.warn(`wsClient.on() called for ${_event} but global bindings are not implemented yet.`);
+    }
+
+    /**
+     * Unsubscribe from a global event.
+     */
+    off<E extends WsEventName>(_event: E, _handler: (payload: WsEventMap[E]) => void): void {
+        // Not implemented
     }
 }
 
