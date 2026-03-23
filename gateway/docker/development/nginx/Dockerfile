@@ -1,12 +1,13 @@
 # docker/development/nginx/Dockerfile
-# Стабильная alpine-версия — минимальный образ для прокси
-FROM nginx:1.25-alpine
+FROM nginx:1.28.2-alpine3.23
 
-# Удаляем дефолтный конфиг (будем монтировать свой через volume)
+LABEL org.opencontainers.image.description="Nginx reverse proxy — development"
+
+
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Копируем кастомные конфиги (или монтируем через volume — см. docker-compose)
-# В dev удобнее монтировать, чтобы не пересобирать при изменении конфига
+# В dev конфиги монтируются через volume (docker-compose.yml),
+# COPY нужен только для production-образа
 COPY conf.d/ /etc/nginx/conf.d/
 
-EXPOSE 80
+EXPOSE 80 443
