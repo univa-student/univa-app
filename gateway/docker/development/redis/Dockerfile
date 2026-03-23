@@ -1,8 +1,13 @@
 # docker/development/redis/Dockerfile
-FROM redis:7.2-alpine
+FROM redis:7.2.7-alpine3.21
 
-# Кастомный конфиг (опционально)
-# COPY redis.conf /usr/local/etc/redis/redis.conf
+LABEL org.opencontainers.image.description="Redis — development"
 
-# В dev maxmemory не ограничиваем, но можно добавить для реалистичности:
-CMD ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+COPY redis.conf /usr/local/etc/redis/redis.conf
+
+EXPOSE 6379
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
+    CMD redis-cli ping || exit 1
+
+CMD ["redis-server", "/usr/local/etc/redis/redis.conf"]
