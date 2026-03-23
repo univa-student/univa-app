@@ -10,9 +10,6 @@ WORKDIR /app
 # node_modules монтируется как named volume из docker-compose,
 # поэтому COPY package*.json здесь не нужен — всё через volume
 
-# Встроенный пользователь node (uid=1000) — не запускаем от root
-USER node
-
 EXPOSE 5173
 
 # npm ci при старте только если node_modules ещё не заполнен volume-ом.
