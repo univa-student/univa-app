@@ -1,5 +1,5 @@
 # docker/development/nginx/Dockerfile
-FROM nginx:1.25.5-alpine3.21
+FROM nginx:1.28.2-alpine3.23
 
 LABEL org.opencontainers.image.description="Nginx reverse proxy — development"
 
