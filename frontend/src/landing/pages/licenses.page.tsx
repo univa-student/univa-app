@@ -20,7 +20,7 @@ const T = {
 function LegalLayout({
                          title, subtitle, icon: Icon, iconColor, updated, children,
                      }: {
-    title: string; subtitle: string; icon: any; iconColor: string
+    title: string; subtitle: string; icon: React.ElementType; iconColor: string
     updated: string; children: ReactNode
 }) {
     return (

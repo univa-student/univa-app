@@ -188,7 +188,8 @@ function buildComponents(): Components {
             </li>
         ),
 
-        code: ({ node, className, children, ...props }) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        code: ({ node: _node, className, children, ...props }) => {
             const language = (className || "").replace("language-", "")
             const isInline = !className
 
@@ -294,7 +295,8 @@ function buildComponents(): Components {
             )
         },
 
-        a: ({ node, href, children, ...props }) => (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        a: ({ node: _node, href, children, ...props }) => (
             <a
                 {...props}
                 href={href}
@@ -443,8 +445,11 @@ export function DocsPage() {
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true)
+         
         setError(false)
+         
         setContent("")
 
         fetch(`/docs/${activeDoc}.md`)

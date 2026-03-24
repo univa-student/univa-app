@@ -7,9 +7,6 @@ function applyTheme(dark: boolean) {
     root.setAttribute("data-theme", dark ? "dark" : "light");
 }
 
-function getSystemTheme(): boolean {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const { theme } = useUserSettings();

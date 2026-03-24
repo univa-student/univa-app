@@ -29,7 +29,9 @@ export function UploadDialog({ open, onOpenChange, folderId, subjectId, onUpload
 
     useEffect(() => {
         if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedFiles([]);
+             
             setUploading(false);
         }
     }, [open]);
@@ -40,6 +42,7 @@ export function UploadDialog({ open, onOpenChange, folderId, subjectId, onUpload
 
     useEffect(() => {
         if (subjectId !== undefined) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedSubjectId(subjectId || null);
         }
     }, [subjectId]);

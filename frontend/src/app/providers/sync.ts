@@ -6,8 +6,9 @@ let _initialized = false;
 const unsubscribers: Array<() => void> = [];
 
 // ─── mapping ─────────────────────────────────────────────
-const EVENT_MAP: Record<string, (payload: any) => void> = {
-    [WS_EVENTS.MESSAGE_CREATED]: ({ spaceId }) => {
+const EVENT_MAP: Record<string, (payload: unknown) => void> = {
+    [WS_EVENTS.MESSAGE_CREATED]: (payload: unknown) => {
+        const { spaceId } = payload as { spaceId: unknown };
         queryClient.invalidateQueries({queryKey: ["messages", spaceId]}).then(() => {});
     },
 

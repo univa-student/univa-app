@@ -4,8 +4,18 @@ import { Clock3, FileText, ChevronRight, ArrowRight, Sparkles, Layers3 } from "l
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import { formatRelativeDate } from "../lib/format-date";
 
+interface Summary {
+    id: number;
+    title: string;
+    createdAt: string;
+    contentJson?: {
+        meta?: { fileName?: string };
+        shortSummary?: string;
+    };
+}
+
 interface RecentSummariesProps {
-    recent: any[];
+    recent: Summary[];
     isLoading: boolean;
 }
 
@@ -85,7 +95,7 @@ export function RecentSummaries({ recent, isLoading }: RecentSummariesProps) {
 }
 
 interface FeaturedArtifactProps {
-    featuredArtifact?: any;
+    featuredArtifact?: Summary;
     isLoading: boolean;
 }
 

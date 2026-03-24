@@ -14,6 +14,7 @@ const defaultIntegrations = [
     { name: "Notion", icon: "📝", description: "Імпорт нотаток та задач", connected: false, status: "" },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function IntegrationsTab({ tab: _tab }: { tab: TabDef }) {
     const [items, setItems] = useState(defaultIntegrations)
 

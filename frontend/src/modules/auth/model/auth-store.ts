@@ -52,7 +52,7 @@ export const authStore = {
 
     reset() {
         state = { user: null, isReady: true };
-        try { localStorage.removeItem(LS_USER_KEY); } catch { }
+        try { localStorage.removeItem(LS_USER_KEY); } catch { /* ignore storage errors */ }
         notify();
     },
 

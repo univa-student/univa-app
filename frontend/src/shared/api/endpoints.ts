@@ -1,7 +1,7 @@
 const API = "/api/v1";
 
 // helper для query
-function withQuery(path: string, params?: Record<string, any>) {
+function withQuery(path: string, params?: Record<string, unknown>) {
     if (!params) return path;
 
     const search = new URLSearchParams();

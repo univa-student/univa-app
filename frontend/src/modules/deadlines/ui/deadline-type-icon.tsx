@@ -19,7 +19,7 @@ interface Props {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const typeConfig: Record<DeadlineType, { icon: React.FC<any>, label: string, color: string }> = {
+export const typeConfig: Record<DeadlineType, { icon: React.ComponentType<{ className?: string }>, label: string, color: string }> = {
     homework: { icon: BookOpenIcon, label: "Домашнє завдання", color: "text-blue-500 bg-blue-500/10" },
     lab: { icon: FlaskConicalIcon, label: "Лабораторна", color: "text-emerald-500 bg-emerald-500/10" },
     practice: { icon: PencilRulerIcon, label: "Практична", color: "text-teal-500 bg-teal-500/10" },

@@ -36,7 +36,7 @@ export function getSelectedValue(item: SettingItem): string {
     if (item.rawValue !== null && item.rawValue !== undefined) {
         return String(item.rawValue);
     }
-    const selectedId = item.selectedValueId ?? (item as any).selected_value_id;
+    const selectedId = item.selectedValueId ?? (item as unknown as { selected_value_id?: number | null }).selected_value_id;
     if (selectedId !== null && selectedId !== undefined) {
         const found = item.values.find(v => v.id === selectedId);
         if (found) return String(found.value);

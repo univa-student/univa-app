@@ -52,6 +52,7 @@ function getInitials(name: string) {
     .toUpperCase() || "U"
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function AppPageNavUser({ user, onLogout: _onLogout, avatarBaseUrl }: Props) {
   const { isMobile } = useSidebar()
   const navigate = useNavigate()

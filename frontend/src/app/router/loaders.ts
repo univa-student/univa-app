@@ -5,7 +5,7 @@ import { authStore } from "@/modules/auth/model/auth-store";
 import { userQueries } from "@/modules/auth/api/queries";
 
 // ─── helpers ─────────────────────────────────────────────
-function setAuth(user: any) {
+function setAuth(user: Parameters<typeof authStore.setUser>[0]) {
     authStore.setUser(user);
     authStore.setReady(true);
 }

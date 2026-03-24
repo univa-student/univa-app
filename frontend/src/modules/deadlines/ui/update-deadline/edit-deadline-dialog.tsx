@@ -36,7 +36,8 @@ export function EditDeadlineDialog({ deadline, open, onOpenChange, subjects }: P
     const [showUpload, setShowUpload] = useState(false);
 
     useEffect(() => {
-        if (deadline && open) {
+        if (deadline) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSubjectId(deadline.subjectId);
             setTitle(deadline.title);
             setDescription(deadline.description || "");

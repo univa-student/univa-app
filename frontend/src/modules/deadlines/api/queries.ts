@@ -6,7 +6,7 @@ import type { Deadline } from "../model/types";
 export const deadlineQueries = {
     all: () => ["deadlines"] as const,
 
-    list: (filters?: Record<string, any>) => queryOptions({
+    list: (filters?: Record<string, string | number | boolean | null | undefined>) => queryOptions({
         queryKey: [...deadlineQueries.all(), filters],
         queryFn: async () => {
             const params = new URLSearchParams();

@@ -79,6 +79,7 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
         return () => {
             if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, file?.id, isPdf]);
 
     // Скидаємо стан при зміні файлу або закритті
@@ -244,6 +245,7 @@ function TextPreview({ fileId, url }: { fileId: number; url: string }) {
             .then(t => setText(t))
             .catch(() => setError(true))
             .finally(() => setLoading(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fileId]);
 
     if (loading) return (

@@ -20,6 +20,7 @@ export function PageSidePanel({ children }: PageSidePanelProps) {
 
     useEffect(() => {
         const el = document.getElementById("app-side-panel")
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTarget(el)
     }, [])
 

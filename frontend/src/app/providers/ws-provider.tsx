@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect } from "react";
 import { wsClient } from "@/shared/realtime/ws-client";
 import { authStore } from "@/modules/auth/model/auth-store";

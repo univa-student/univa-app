@@ -101,12 +101,12 @@ export function AccountTab(_: { tab: TabDef }) {
     const isSuccess = updateProfile.isSuccess
     const isError = updateProfile.isError
     const errorMsg = isError
-        ? ((updateProfile.error as any)?.body?.message ?? "Не вдалося зберегти зміни.")
+        ? ((updateProfile.error as Error & { body?: { message?: string } })?.body?.message ?? "Не вдалося зберегти зміни.")
         : null
 
     const isAvatarUploading = uploadAvatar.isPending
     const avatarError = uploadAvatar.isError
-        ? ((uploadAvatar.error as any)?.body?.message ?? "Не вдалося завантажити аватар.")
+        ? ((uploadAvatar.error as Error & { body?: { message?: string } })?.body?.message ?? "Не вдалося завантажити аватар.")
         : null
 
     return (

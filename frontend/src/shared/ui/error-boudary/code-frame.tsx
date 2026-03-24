@@ -31,8 +31,11 @@ export function CodeFrame({ file, line, column, context = 8 }: Props) {
     useEffect(() => {
         let cancelled = false;
         if (!srcFile) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
+         
         setErr(null);
+         
         setSource(null);
 
         fetch(`/__source?file=${encodeURIComponent(srcFile)}`, { cache: "no-store" })

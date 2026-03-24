@@ -8,7 +8,7 @@ import { CreateDeadlineDialog } from "@/modules/deadlines/ui/create-deadline/cre
 import { Button } from "@/shared/shadcn/ui/button";
 
 interface Props {
-    baseFilters?: Record<string, any>;
+    baseFilters?: Record<string, string | number | boolean | null | undefined>;
     title?: string;
     showFilters?: boolean;
     className?: string;
@@ -21,7 +21,7 @@ export function DeadlinesBoard({ baseFilters = {}, title = "Всі завдан�
 
     // Merge static (base) filters with dynamic user filters for the API call
     const activeFilters = useMemo(() => {
-        const merged: Record<string, any> = { ...baseFilters };
+        const merged: Record<string, string | number | boolean | null | undefined> = { ...baseFilters };
         if (filters.search) merged.search = filters.search;
         if (filters.subjectId) merged.subjectId = filters.subjectId;
         if (filters.status) merged.status = filters.status;

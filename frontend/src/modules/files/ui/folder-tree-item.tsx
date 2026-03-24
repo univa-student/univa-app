@@ -14,7 +14,7 @@ interface Props {
 export function FolderTreeItem({ node, depth, currentFolderId, onSelectFolder, onSelectFile }: Props) {
     const [expanded, setExpanded] = useState(false);
     const isActive = currentFolderId === node.id;
-    const childrenFolders = node.folders || (node as any).recursive_children || [];
+    const childrenFolders = node.folders || (node as unknown as Record<string, FolderTreeNode[]>).recursive_children || [];
     const hasChildren = childrenFolders.length > 0;
     const hasFiles = (node.files?.length ?? 0) > 0;
     const hasContent = hasChildren || hasFiles;

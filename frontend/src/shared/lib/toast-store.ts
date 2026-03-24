@@ -1,74 +1,89 @@
-export type ToastVariant = "default" | "info" | "success" | "warning" | "destructive";
+export type ToastVariant = "default" | "success" | "warning" | "destructive" | "info";
 
 export type ToastInput = {
-    variant: ToastVariant;
     title?: string;
     message: string;
+    variant?: ToastVariant;
     autoCloseMs?: number;
 };
 
 export type Toast = ToastInput & {
     id: string;
+    createdAt: number;
 };
 
-type Listener = (toasts: Toast[]) => void;
+type ToastState = {
+    toasts: Toast[];
+};
 
-class ToastStore {
-    private toasts: Toast[] = [];
-    private listeners: Set<Listener> = new Set();
-    private timers: Map<string, number> = new Map();
-    private id = 0;
+let state: ToastState = {
+    toasts: [],
+};
 
-    private readonly MAX_TOASTS = 6;
-    private readonly DEFAULT_AUTOCLOSE = 3500;
+const listeners = new Set<() => void>();
 
-    subscribe = (listener: Listener) => {
-        this.listeners.add(listener);
-        return () => this.listeners.delete(listener);
-    };
-
-    getSnapshot = () => {
-        return [...this.toasts]; // 🔥 immutable
-    };
-
-    private notify() {
-        this.listeners.forEach((listener) => listener(this.getSnapshot()));
-    }
-
-    toast = (data: ToastInput) => {
-        const id = `${++this.id}`;
-        const newToast: Toast = { id, ...data };
-
-        this.toasts = [...this.toasts, newToast].slice(-this.MAX_TOASTS);
-        this.notify();
-
-        const ms = data.autoCloseMs ?? this.DEFAULT_AUTOCLOSE;
-        if (ms > 0) {
-            const timer = window.setTimeout(() => this.dismiss(id), ms);
-            this.timers.set(id, timer);
-        }
-
-        return id;
-    };
-
-    dismiss = (id: string) => {
-        const t = this.timers.get(id);
-        if (t) window.clearTimeout(t);
-        this.timers.delete(id);
-
-        this.toasts = this.toasts.filter((x) => x.id !== id);
-        this.notify();
-    };
-
-    clear = () => {
-        this.timers.forEach((t) => window.clearTimeout(t));
-        this.timers.clear();
-        this.toasts = [];
-        this.notify();
-    };
+function emit() {
+    listeners.forEach((listener) => listener());
 }
 
-export const toastStore = new ToastStore();
-export const toast = toastStore.toast;
-export const dismissToast = toastStore.dismiss;
-export const clearToasts = toastStore.clear;
+export const toastStore = {
+    subscribe(listener: () => void) {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+    },
+
+    getSnapshot() {
+        return state.toasts;
+    },
+};
+
+export function toast(input: ToastInput) {
+    const nextToast: Toast = {
+        id: crypto.randomUUID(),
+        createdAt: Date.now(),
+        variant: input.variant ?? "default",
+        title: input.title,
+        message: input.message,
+        autoCloseMs: input.autoCloseMs,
+    };
+
+    state = {
+        ...state,
+        toasts: [...state.toasts, nextToast],
+    };
+
+    emit();
+
+    if (nextToast.autoCloseMs !== 0) {
+        window.setTimeout(() => {
+            dismissToast(nextToast.id);
+        }, nextToast.autoCloseMs ?? 3500);
+    }
+
+    return nextToast.id;
+}
+
+export function dismissToast(id: string) {
+    const nextToasts = state.toasts.filter((toast) => toast.id !== id);
+
+    if (nextToasts === state.toasts) return;
+    if (nextToasts.length === state.toasts.length) return;
+
+    state = {
+        ...state,
+        toasts: nextToasts,
+    };
+
+    emit();
+}
+
+export function clearToasts() {
+    if (state.toasts.length === 0) return;
+
+    state = {
+        ...state,
+        toasts: [],
+    };
+
+    emit();
+}

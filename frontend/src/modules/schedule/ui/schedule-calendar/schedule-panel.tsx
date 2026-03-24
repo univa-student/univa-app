@@ -105,11 +105,13 @@ export function SchedulePanel() {
     const { data: schedule, isLoading: scheduleLoading } = useSchedule(from, to)
     const { data: deadlines, isLoading: deadlinesLoading } = useDeadlines({ status: "new,in_progress" })
 
+     
     const todayLessons = useMemo<LessonInstance[]>(() => {
         if (!schedule) return []
         return schedule
             .filter((l: LessonInstance) => isSameDay(parseISO(l.date), today))
             .sort((a: LessonInstance, b: LessonInstance) => a.startsAt.localeCompare(b.startsAt))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [schedule])
 
     const upcoming = useMemo<Deadline[]>(() => {

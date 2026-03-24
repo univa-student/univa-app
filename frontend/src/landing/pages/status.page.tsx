@@ -117,7 +117,7 @@ const incidents = [
     },
 ]
 
-const statusConfig: Record<Status, { label: string; color: string; bg: string; border: string; icon: any }> = {
+const statusConfig: Record<Status, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
     operational: { label: "Працює", color: T.green, bg: T.greenBg, border: T.greenBorder, icon: CheckCircleIcon },
     degraded: { label: "Знижена продуктивність", color: T.yellow, bg: T.yellowBg, border: T.yellowBorder, icon: AlertTriangleIcon },
     outage: { label: "Недоступно", color: T.red, bg: T.redBg, border: T.redBorder, icon: XCircleIcon },

@@ -253,6 +253,7 @@ export function DashboardOverview() {
     const storageLimit = storageInfo?.limit ?? 1;
     const storagePct = storageLimit > 0 ? Math.round((storageUsed / storageLimit) * 100) : 0;
 
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     const dailyDigest = useMemo(() => {
         const items: Array<{
             tone: "danger" | "warning" | "info" | "success";
@@ -311,6 +312,7 @@ export function DashboardOverview() {
 
         return items.slice(0, 3);
     }, [
+        // eslint-disable-next-line react-hooks/preserve-manual-memoization
         closestCritical,
         currentLesson,
         nextLesson,

@@ -5,7 +5,7 @@ import { ENDPOINTS } from "@/shared/api/endpoints";
 import { deadlineQueries } from "./queries";
 import type { Deadline, CreateDeadlinePayload, UpdateDeadlinePayload } from "../model/types";
 
-export function useDeadlines(filters?: Record<string, any>) {
+export function useDeadlines(filters?: Record<string, string | number | boolean | null | undefined>) {
     return useQuery(deadlineQueries.list(filters));
 }
 

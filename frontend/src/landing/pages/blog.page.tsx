@@ -6,7 +6,7 @@ import { GOOGLE_FONTS_URL } from "@/app/config/app.config.ts"
 import logoConfig from "@/app/config/logo.config.ts"
 import { Button } from "@/shared/shadcn/ui/button.tsx"
 import {
-    ArrowRightIcon, CalendarIcon, ClockIcon, TagIcon,
+    ArrowRightIcon, TagIcon,
     BriefcaseIcon, MapPinIcon, ZapIcon, HeartIcon, UsersIcon,
     TrendingUpIcon, MailIcon, MessageCircleIcon, SendIcon,
     SparklesIcon, RocketIcon, CheckCircleIcon, ArrowUpRightIcon,
@@ -459,7 +459,7 @@ export function ContactPage() {
                                 </div>
                                 <div>
                                     <label style={{ fontSize: 12, fontWeight: 600, color: T.text, display: "block", marginBottom: 6 }}>Тема</label>
-                                    <select value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} style={{ ...inputStyle, appearance: "none" as any }}>
+                                    <select value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} style={{ ...inputStyle, appearance: "none" as const }}>
                                         <option value="">Оберіть тему...</option>
                                         <option>Технічна підтримка</option>
                                         <option>Партнерство / Університет</option>

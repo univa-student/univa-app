@@ -6,7 +6,8 @@ interface Props {
     priority: DeadlinePriority;
 }
 
-export const priorityConfig: Record<DeadlinePriority, { icon: React.FC<any>, label: string, badgeVariant: "default" | "secondary" | "destructive" | "outline", color: string }> = {
+// eslint-disable-next-line react-refresh/only-export-components
+export const priorityConfig: Record<DeadlinePriority, { icon: React.ComponentType<{ className?: string }>, label: string, badgeVariant: "default" | "secondary" | "destructive" | "outline", color: string }> = {
     low: { icon: ArrowDownIcon, label: "Низький", badgeVariant: "secondary", color: "text-muted-foreground" },
     medium: { icon: ArrowRightIcon, label: "Середній", badgeVariant: "outline", color: "text-blue-500 border-blue-500/30" },
     high: { icon: ArrowUpIcon, label: "Високий", badgeVariant: "secondary", color: "text-orange-500 bg-orange-500/10" },
