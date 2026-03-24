@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Ai\UseCases;
 
-use App\Models\Files\File;
+use App\Modules\Files\Models\File;
 use App\Modules\Ai\Agents\FileSummaryAgent;
 use App\Modules\Ai\Contracts\AiUseCaseContract;
 use App\Modules\Ai\Context\Builders\FileSummaryContextBuilder;

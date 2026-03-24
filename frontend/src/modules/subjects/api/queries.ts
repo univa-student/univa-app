@@ -6,7 +6,9 @@ import type { FolderItem } from "@/modules/files/model/types";
 export const subjectQueries = {
     list: () => ({
         queryKey: ["subjects"],
-        queryFn: () => apiFetch<Subject[]>(ENDPOINTS.subjects.list),
+        queryFn: () => apiFetch<Subject[]>(ENDPOINTS.subjects.list, {
+            cacheTtlMs: 5 * 60 * 1000,
+        }),
         staleTime: 1000 * 60 * 10,
     }),
     create: (payload: CreateSubjectPayload) => ({
@@ -29,6 +31,8 @@ export const subjectQueries = {
     }),
     folder: (id: number) => ({
         queryKey: ["subjects", id, "folder"],
-        queryFn: () => apiFetch<FolderItem>(ENDPOINTS.subjects.folder(id)),
+        queryFn: () => apiFetch<FolderItem>(ENDPOINTS.subjects.folder(id), {
+            cacheTtlMs: 60_000,
+        }),
     }),
 };

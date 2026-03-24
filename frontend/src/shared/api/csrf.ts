@@ -3,11 +3,20 @@ import { ENDPOINTS } from "./endpoints";
 
 let _fetched = false;
 
+function hasXsrfCookie(): boolean {
+    return /(?:^|;\s*)XSRF-TOKEN=/.test(document.cookie);
+}
+
 /**
  * Fetch CSRF cookie from Sanctum.
  * Safe to call multiple times — request will be sent only once.
  */
 export async function fetchCsrfToken(): Promise<void> {
+    if (hasXsrfCookie()) {
+        _fetched = true;
+        return;
+    }
+
     if (_fetched) return;
 
     const res = await fetch(`${API_BASE_URL}${ENDPOINTS.auth.csrf}`, {

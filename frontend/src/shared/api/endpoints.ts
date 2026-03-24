@@ -31,6 +31,15 @@ export const ENDPOINTS = {
         avatar: `${API}/me/avatar`,
     },
 
+    profiles: {
+        me: `${API}/me/profile`,
+        update: `${API}/me/profile/details`,
+        university: `${API}/me/profile/university`,
+        universityInformation: `${API}/me/profile/university/information`,
+        selectRegion: `${API}/me/profile/university/select-region`,
+        selectUniversity: `${API}/me/profile/university/select`,
+    },
+
     settings: {
         me: `${API}/me/settings`,
         group: (groupId: number) =>

@@ -5,7 +5,10 @@ import type { User, UpdateProfilePayload, ChangePasswordPayload } from "../model
 export const userQueries = {
     me: () => ({
         queryKey: ["me"],
-        queryFn: () => apiFetch<User>(ENDPOINTS.auth.me),
+        queryFn: () => apiFetch<User>(ENDPOINTS.auth.me, {
+            silent401: true,
+            cacheTtlMs: 60_000,
+        }),
     }),
     updateProfile: (payload: UpdateProfilePayload) => ({
         queryKey: ["me", "profile"],

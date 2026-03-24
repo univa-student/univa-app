@@ -19,3 +19,12 @@ export type NotificationItem = {
     read_at?: string | null;
     readAt?: string | null;
 };
+
+export type PaginatedNotifications = {
+    data: NotificationItem[];
+    meta: {
+        current_page: number;
+        last_page: number;
+        [key: string]: unknown;
+    };
+};

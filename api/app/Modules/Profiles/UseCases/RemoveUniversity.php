@@ -1,0 +1,21 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Profiles\UseCases;
+
+use App\Models\User;
+use App\Modules\Profiles\Models\Profile;
+use App\Modules\Profiles\Services\ProfileService;
+
+class RemoveUniversity
+{
+    public function __construct(
+        private readonly ProfileService $profiles,
+    ) {}
+
+    public function handle(User $user): Profile
+    {
+        return $this->profiles->detachUniversity($user);
+    }
+}

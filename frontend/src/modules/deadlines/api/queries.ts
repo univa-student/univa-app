@@ -17,7 +17,9 @@ export const deadlineQueries = {
                     }
                 });
             }
-            return await apiFetch<Deadline[]>(`${ENDPOINTS.deadlines.base}?${params.toString()}`);
+            return await apiFetch<Deadline[]>(`${ENDPOINTS.deadlines.base}?${params.toString()}`, {
+                cacheTtlMs: 30_000,
+            });
         },
     }),
 
@@ -31,7 +33,9 @@ export const deadlineQueries = {
     stats: () => queryOptions({
         queryKey: [...deadlineQueries.all(), "stats"],
         queryFn: async () => {
-            return await apiFetch<Record<string, number>>(ENDPOINTS.deadlines.stats);
+            return await apiFetch<Record<string, number>>(ENDPOINTS.deadlines.stats, {
+                cacheTtlMs: 30_000,
+            });
         },
     }),
 };

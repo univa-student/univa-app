@@ -15,14 +15,27 @@ export function useNotifications() {
         if (!user) return;
 
         const channelName = `user.${user.id}`;
-        
+        let invalidateTimer: number | null = null;
+
         const handleNewNotification = () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
+            if (invalidateTimer !== null) {
+                return;
+            }
+
+            invalidateTimer = window.setTimeout(() => {
+                invalidateTimer = null;
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
+            }, 750);
         };
 
         wsClient.listen("private", channelName, "notification.created", handleNewNotification);
 
-        return () => {};
+        return () => {
+            if (invalidateTimer !== null) {
+                window.clearTimeout(invalidateTimer);
+            }
+            wsClient.leave(channelName);
+        };
     }, [user, queryClient]);
 
     return useInfiniteQuery({

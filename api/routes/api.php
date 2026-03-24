@@ -1,24 +1,25 @@
 <?php
 
 use App\Modules\Ai\Http\Controllers\SummarizeFileController;
-use App\Modules\Profiles\Http\Controllers\UniversityController;
-use App\Modules\User\Http\Controllers\UserController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\LogoutController;
-use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Files\FileController;
-use App\Http\Controllers\Files\FolderController;
-use App\Http\Controllers\Deadlines\DeadlineController;
-use App\Http\Controllers\Schedule\DictionaryController;
-use App\Http\Controllers\Schedule\ExamEventController;
-use App\Http\Controllers\Schedule\ScheduleController;
-use App\Http\Controllers\Schedule\ScheduleExceptionController;
-use App\Http\Controllers\Schedule\ScheduleLessonController;
-use App\Http\Controllers\Schedule\SubjectController;
-use App\Http\Controllers\Settings\SettingsController;
-use App\Http\Controllers\System\HealthController;
-use App\Http\Controllers\System\User\MeController;
+use App\Modules\Auth\Http\Controllers\LoginController;
+use App\Modules\Auth\Http\Controllers\LogoutController;
+use App\Modules\Auth\Http\Controllers\MeController;
+use App\Modules\Auth\Http\Controllers\RegisterController;
+use App\Modules\Deadlines\Http\Controllers\DeadlineController;
+use App\Modules\Files\Http\Controllers\FileController;
+use App\Modules\Files\Http\Controllers\FolderController;
 use App\Modules\Notification\Http\Controllers\NotificationController;
+use App\Modules\Profiles\Http\Controllers\ProfileController;
+use App\Modules\Profiles\Http\Controllers\UniversityController;
+use App\Modules\Schedule\Http\Controllers\DictionaryController;
+use App\Modules\Schedule\Http\Controllers\ExamEventController;
+use App\Modules\Schedule\Http\Controllers\ScheduleController;
+use App\Modules\Schedule\Http\Controllers\ScheduleExceptionController;
+use App\Modules\Schedule\Http\Controllers\ScheduleLessonController;
+use App\Modules\Settings\Http\Controllers\SettingsController;
+use App\Modules\Subjects\Http\Controllers\SubjectController;
+use App\Modules\System\HealthController;
+use App\Modules\User\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 $authMode = env('API_AUTH_MODE', 'hybrid');
@@ -62,6 +63,20 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
         Route::controller(MeController::class)->group(function () {
             Route::get('/univa-user', 'user');
             Route::get('/settings', 'settings');
+        });
+
+        Route::controller(ProfileController::class)->group(function () {
+            Route::get('/profile', 'show');
+            Route::patch('/profile/details', 'update');
+        });
+
+        Route::controller(UniversityController::class)->prefix('/profile/university')->group(function () {
+            Route::get('/', 'current');
+            Route::post('/', 'store');
+            Route::delete('/', 'destroy');
+            Route::get('/information', 'information');
+            Route::post('/select-region', 'selectRegion');
+            Route::post('/select', 'selectUniversity');
         });
 
         Route::controller(UserController::class)->group(function () {

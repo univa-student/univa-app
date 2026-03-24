@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Modules\Profiles\Models\Profile;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -37,5 +39,10 @@ class User extends Authenticatable
             'storage_used' => 'integer',
             'storage_limit' => 'integer',
         ];
+    }
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
     }
 }

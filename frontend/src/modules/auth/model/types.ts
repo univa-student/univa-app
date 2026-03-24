@@ -1,5 +1,3 @@
-// ─── Entity ───────────────────────────────────────────────────────────────────
-
 export interface User {
     id: number;
     firstName: string;
@@ -12,8 +10,6 @@ export interface User {
     updatedAt: string;
 }
 
-// ─── API Payloads ─────────────────────────────────────────────────────────────
-
 export interface UpdateProfilePayload {
     firstName: string;
     lastName?: string;
@@ -25,8 +21,6 @@ export interface ChangePasswordPayload {
     password: string;
     password_confirmation: string;
 }
-
-// ─── Form types ───────────────────────────────────────────────────────────────
 
 export interface RegisterFormData {
     last_name: string;

@@ -1,17 +1,38 @@
-/**
- * entities/llm-model/model/types.ts
- *
- * LLM (Large Language Model) domain types.
- */
-
 export type LlmProvider = "openai" | "anthropic" | "google" | "ollama" | "other";
 
 export interface LlmModel {
     id: number;
-    name: string;          // display name, e.g. "GPT-4o"
-    slug: string;          // API identifier, e.g. "gpt-4o"
+    name: string;
+    slug: string;
     provider: LlmProvider;
     description: string | null;
     isDefault: boolean;
-    contextWindow: number;        // max tokens
+    contextWindow: number;
+}
+
+export interface SummaryContentMeta {
+    fileName?: string;
+    subjectName?: string;
+    [key: string]: unknown;
+}
+
+export interface SummaryContentJson {
+    meta?: SummaryContentMeta;
+    shortSummary?: string;
+    mainPoints?: string[];
+    keyTerms?: string[];
+    possibleQuestions?: string[];
+    [key: string]: unknown;
+}
+
+export interface SummaryListItem {
+    id: number;
+    title: string;
+    createdAt: string;
+    updatedAt?: string;
+    contentJson?: SummaryContentJson | null;
+}
+
+export interface SummaryArtifact extends SummaryListItem {
+    contentJson: SummaryContentJson | null;
 }

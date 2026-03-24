@@ -5,5 +5,6 @@ import type { UserSettingsApiResponse } from "./types";
 export async function fetchUserSettings(): Promise<UserSettingsApiResponse> {
     return apiFetch<UserSettingsApiResponse>(ENDPOINTS.settings.me, {
         method: "GET",
+        cacheTtlMs: 5 * 60 * 1000,
     });
 }

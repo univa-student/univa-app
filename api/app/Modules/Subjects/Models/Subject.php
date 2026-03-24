@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Modules\Subjects\Models;
+
+use App\Modules\Files\Models\File;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Subject extends Model
+{
+    protected $fillable = [
+        'user_id',
+        'name',
+        'teacher_name',
+        'color',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function files(): BelongsTo
+    {
+        return $this->belongsTo(File::class);
+    }
+
+    public function lessons(): HasMany
+    {
+        return $this->hasMany(ScheduleLesson::class);
+    }
+
+    public function exams(): HasMany
+    {
+        return $this->hasMany(ExamEvent::class);
+    }
+}

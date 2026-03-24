@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Ai\Http\Requests;
 
 use App\Core\Request\UnivaRequest;
-use App\Models\Files\File;
+use App\Modules\Files\Models\File;
 use App\Modules\Ai\DTO\SummarizeFileData;
 use App\Modules\Ai\Enums\AiSessionMode;
 use Illuminate\Support\Facades\Gate;

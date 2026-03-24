@@ -449,7 +449,6 @@ html, body, #root {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 5px;
     gap: 16px;
     min-width: 0;
 }
@@ -561,6 +560,7 @@ html, body, #root {
     scrollbar-width: none;
     -ms-overflow-style: none;
     transition: width 0.2s ease, opacity 0.2s ease;
+    margin: 5px 0;
 }
 .app-side-panel::-webkit-scrollbar { display: none; }
 
@@ -579,6 +579,7 @@ html, body, #root {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    margin: 5px 0;
 }
 
 .island-header {
@@ -595,6 +596,7 @@ html, body, #root {
     padding-inline: 1rem;
     flex-shrink: 0;
     backdrop-filter: blur(6px);
+    margin: 5px 0;
 }
 
 /* (duplicate removed) */

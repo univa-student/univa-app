@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Ai\Context\Builders;
 
-use App\Models\Files\File;
+use App\Modules\Files\Models\File;
 use App\Modules\Ai\Contracts\ContextBuilderContract;
 use App\Modules\Ai\DTO\FileSummaryContextData;
 use App\Modules\Ai\DTO\SummarizeFileData;

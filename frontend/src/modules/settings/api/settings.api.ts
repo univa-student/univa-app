@@ -28,7 +28,9 @@ export function getSelectedValue(item: SettingItem): string {
  * Fetch all settings for a given group ID.
  */
 export async function fetchSettingsGroup(groupId: number): Promise<SettingItem[]> {
-    return apiFetch<SettingItem[]>(ENDPOINTS.settings.group(groupId));
+    return apiFetch<SettingItem[]>(ENDPOINTS.settings.group(groupId), {
+        cacheTtlMs: 5 * 60 * 1000,
+    });
 }
 
 /**

@@ -11,14 +11,18 @@ export const fileQueries = {
     list(folderId?: number | null, subjectId?: number | null) {
         return {
             queryKey: ["files", "list", folderId ?? "root", subjectId ?? "all"],
-            queryFn: () => apiFetch<FileItem[]>(ENDPOINTS.files.list(folderId, subjectId)),
+            queryFn: () => apiFetch<FileItem[]>(ENDPOINTS.files.list(folderId, subjectId), {
+                cacheTtlMs: 60_000,
+            }),
         };
     },
 
     recent() {
         return {
             queryKey: ["files", "recent"],
-            queryFn: () => apiFetch<FileItem[]>(ENDPOINTS.files.recent),
+            queryFn: () => apiFetch<FileItem[]>(ENDPOINTS.files.recent, {
+                cacheTtlMs: 60_000,
+            }),
         };
     },
 
@@ -33,7 +37,9 @@ export const fileQueries = {
     show(id: number) {
         return {
             queryKey: ["files", "detail", id],
-            queryFn: () => apiFetch<FileItem>(ENDPOINTS.files.show(id)),
+            queryFn: () => apiFetch<FileItem>(ENDPOINTS.files.show(id), {
+                cacheTtlMs: 60_000,
+            }),
         };
     },
 
@@ -76,7 +82,9 @@ export const folderQueries = {
     list(parentId?: number | null) {
         return {
             queryKey: ["folders", "list", parentId ?? "root"],
-            queryFn: () => apiFetch<FolderItem[]>(ENDPOINTS.folders.list(parentId)),
+            queryFn: () => apiFetch<FolderItem[]>(ENDPOINTS.folders.list(parentId), {
+                cacheTtlMs: 60_000,
+            }),
         };
     },
 
@@ -116,7 +124,9 @@ export const folderQueries = {
     tree() {
         return {
             queryKey: ["folders", "tree"],
-            queryFn: () => apiFetch<FolderTreeResponse>(ENDPOINTS.folders.tree),
+            queryFn: () => apiFetch<FolderTreeResponse>(ENDPOINTS.folders.tree, {
+                cacheTtlMs: 60_000,
+            }),
         };
     },
 };
@@ -127,7 +137,9 @@ export const storageQueries = {
     info() {
         return {
             queryKey: ["storage", "info"],
-            queryFn: () => apiFetch<StorageInfoResponse>(ENDPOINTS.storage.info),
+            queryFn: () => apiFetch<StorageInfoResponse>(ENDPOINTS.storage.info, {
+                cacheTtlMs: 60_000,
+            }),
         };
     },
 };

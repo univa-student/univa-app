@@ -1,13 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { userQueries, type UpdateProfilePayload, type ChangePasswordPayload } from "./queries";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authStore } from "../model/auth-store";
-import type { User } from "../model/types";
+import type {ChangePasswordPayload, UpdateProfilePayload, User} from "../model/types";
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
-
-export function useMe() {
-    return useQuery(userQueries.me());
-}
+import {userQueries} from "@/modules/auth/api/queries.ts";
 
 export function useUpdateProfile() {
     const queryClient = useQueryClient();

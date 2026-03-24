@@ -23,7 +23,9 @@ export { subjectQueries } from "@/modules/subjects/api/queries";
 export const scheduleQueries = {
     built: (from: string, to: string) => ({
         queryKey: ["schedule", from, to],
-        queryFn: () => apiFetch<LessonInstance[]>(ENDPOINTS.schedule(from, to)),
+        queryFn: () => apiFetch<LessonInstance[]>(ENDPOINTS.schedule(from, to), {
+            cacheTtlMs: 60_000,
+        }),
         staleTime: 1000 * 60 * 2, // 2 min
     }),
 };
@@ -33,12 +35,16 @@ export const scheduleQueries = {
 export const lessonQueries = {
     show: (id: number) => ({
         queryKey: ["schedule", "lesson", id],
-        queryFn: () => apiFetch<ScheduleLesson>(ENDPOINTS.lessons.show(id)),
+        queryFn: () => apiFetch<ScheduleLesson>(ENDPOINTS.lessons.show(id), {
+            cacheTtlMs: 60_000,
+        }),
         staleTime: 1000 * 60 * 5,
     }),
     materials: (id: number) => ({
         queryKey: ["schedule", "lesson", id, "materials"],
-        queryFn: () => apiFetch<FileItem[]>(ENDPOINTS.lessons.materials(id)),
+        queryFn: () => apiFetch<FileItem[]>(ENDPOINTS.lessons.materials(id), {
+            cacheTtlMs: 60_000,
+        }),
         staleTime: 1000 * 60 * 5,
     }),
     create: (payload: CreateLessonPayload) => ({
@@ -77,7 +83,9 @@ export const lessonQueries = {
 export const examQueries = {
     list: (from: string, to: string) => ({
         queryKey: ["exams", from, to],
-        queryFn: () => apiFetch<ExamEvent[]>(ENDPOINTS.exams.list(from, to)),
+        queryFn: () => apiFetch<ExamEvent[]>(ENDPOINTS.exams.list(from, to), {
+            cacheTtlMs: 60_000,
+        }),
     }),
     create: (payload: CreateExamPayload) => ({
         queryKey: [] as const,
@@ -104,22 +112,30 @@ export const examQueries = {
 export const dictionaryQueries = {
     lessonTypes: () => ({
         queryKey: ["dict", "lesson-types"],
-        queryFn: () => apiFetch<LessonType[]>(ENDPOINTS.dictionaries.lessonTypes),
+        queryFn: () => apiFetch<LessonType[]>(ENDPOINTS.dictionaries.lessonTypes, {
+            cacheTtlMs: 60 * 60 * 1000,
+        }),
         staleTime: Infinity,
     }),
     deliveryModes: () => ({
         queryKey: ["dict", "delivery-modes"],
-        queryFn: () => apiFetch<DeliveryMode[]>(ENDPOINTS.dictionaries.deliveryModes),
+        queryFn: () => apiFetch<DeliveryMode[]>(ENDPOINTS.dictionaries.deliveryModes, {
+            cacheTtlMs: 60 * 60 * 1000,
+        }),
         staleTime: Infinity,
     }),
     examTypes: () => ({
         queryKey: ["dict", "exam-types"],
-        queryFn: () => apiFetch<ExamType[]>(ENDPOINTS.dictionaries.examTypes),
+        queryFn: () => apiFetch<ExamType[]>(ENDPOINTS.dictionaries.examTypes, {
+            cacheTtlMs: 60 * 60 * 1000,
+        }),
         staleTime: Infinity,
     }),
     recurrenceRules: () => ({
         queryKey: ["dict", "recurrence-rules"],
-        queryFn: () => apiFetch<RecurrenceRule[]>(ENDPOINTS.dictionaries.recurrenceRules),
+        queryFn: () => apiFetch<RecurrenceRule[]>(ENDPOINTS.dictionaries.recurrenceRules, {
+            cacheTtlMs: 60 * 60 * 1000,
+        }),
         staleTime: Infinity,
     }),
 };

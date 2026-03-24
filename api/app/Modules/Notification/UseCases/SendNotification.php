@@ -2,9 +2,9 @@
 
 namespace App\Modules\Notification\UseCases;
 
-use App\Events\Realtime\NotificationCreated;
 use App\Modules\Notification\Contracts\NotificationUseCaseContract;
 use App\Modules\Notification\DTO\SendNotificationData;
+use App\Modules\Notification\Events\NotificationCreated;
 use App\Modules\Notification\Models\Notification;
 
 class SendNotification implements NotificationUseCaseContract

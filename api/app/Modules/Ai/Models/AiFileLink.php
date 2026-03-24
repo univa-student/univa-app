@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Ai\Models;
 
-use App\Models\Files\File;
+use App\Modules\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

@@ -1,10 +1,10 @@
-import React, { useEffect, useCallback, useMemo } from "react";
-import { apiFetch } from "@/shared/api/http";
-import { ENDPOINTS } from "@/shared/api/endpoints";
+import React, { useCallback, useMemo } from "react";
 import { authStore } from "@/modules/auth/model/auth-store";
+import { userQueries } from "@/modules/auth/api/queries";
 import type { User } from "@/modules/auth/model/types";
 import { AuthContext } from "@/app/context/auth-context";
 import { useSyncExternalStore } from "react";
+import { queryClient } from "@/shared/api/query-client";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const state = useSyncExternalStore(
@@ -25,9 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const refetch = useCallback(async () => {
         try {
-            const data = await apiFetch<User>(ENDPOINTS.auth.me, {
-                silent401: true,
-            });
+            const data = await queryClient.fetchQuery(userQueries.me());
             authStore.setUser(data);
         } catch {
             authStore.setUser(null);
@@ -35,12 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             authStore.setReady(true);
         }
     }, []);
-
-    useEffect(() => {
-        if (!isReady) {
-            refetch().then(() => {});
-        }
-    }, [isReady, refetch]);
 
     const value = useMemo(
         () => ({

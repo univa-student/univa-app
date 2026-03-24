@@ -2,13 +2,13 @@
 
 namespace Database\Factories\Deadlines;
 
-use App\Models\Deadlines\Deadline;
-use App\Models\Schedule\Subject;
+use App\Modules\Deadlines\Models\Deadline;
+use App\Modules\Subjects\Models\Subject;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Deadlines\Deadline>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Modules\Deadlines\Models\Deadline>
  */
 class DeadlineFactory extends Factory
 {
