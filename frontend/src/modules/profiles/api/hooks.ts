@@ -5,8 +5,19 @@ import type {
     UpdateStudentProfilePayload,
 } from "../model/types";
 
-export function useStudentProfile() {
-    return useQuery(profileQueries.me());
+export function useStudentProfile(enabled = true) {
+    return useQuery({
+        ...profileQueries.me(),
+        enabled,
+    });
+}
+
+export function useStudentProfileByUsername(username: string | null) {
+    return useQuery({
+        queryKey: ["profiles", "user", username],
+        queryFn: () => profileQueries.byUsername(username ?? "").queryFn(),
+        enabled: Boolean(username),
+    });
 }
 
 export function useProfileInformation() {

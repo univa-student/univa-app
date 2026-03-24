@@ -5,6 +5,7 @@ use App\Modules\Auth\Http\Controllers\LoginController;
 use App\Modules\Auth\Http\Controllers\LogoutController;
 use App\Modules\Auth\Http\Controllers\MeController;
 use App\Modules\Auth\Http\Controllers\RegisterController;
+use App\Modules\Auth\Http\Controllers\SessionController;
 use App\Modules\Deadlines\Http\Controllers\DeadlineController;
 use App\Modules\Files\Http\Controllers\FileController;
 use App\Modules\Files\Http\Controllers\FolderController;
@@ -30,11 +31,10 @@ $publicMiddleware = [];
 
 switch ($authMode) {
     case 'cookie':
+    case 'cookies':
         // Для stateful SPA через cookies / session / CSRF
-        $authMiddleware[] = 'web';
-        $authMiddleware[] = 'auth:sanctum';
+        $authMiddleware[] = 'auth:web';
 
-        $publicMiddleware[] = 'web';
         break;
 
     case 'token':
@@ -48,11 +48,9 @@ switch ($authMode) {
     case 'hybrid':
     default:
         // Sanctum сам спробує cookie/session, а потім token
-        $authMiddleware[] = 'web';
         $authMiddleware[] = 'auth:sanctum';
 
         // public routes з web потрібні тільки якщо на них є CSRF/session сценарії
-        $publicMiddleware[] = 'web';
         break;
 }
 
@@ -85,9 +83,15 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
             Route::post('/avatar', 'uploadAvatar');
             Route::delete('/avatar', 'deleteAvatar');
         });
+
+        Route::controller(SessionController::class)->group(function () {
+            Route::get('/sessions', 'index');
+            Route::delete('/sessions/{sessionId}', 'destroy');
+        });
     });
 
     Route::post('/logout', [LogoutController::class, 'store']);
+    Route::get('/profiles/{user:username}', [ProfileController::class, 'showUser']);
 
     // ── Settings ──────────────────────────────────────────────────────────────
     Route::controller(SettingsController::class)->prefix('/settings')->group(function () {

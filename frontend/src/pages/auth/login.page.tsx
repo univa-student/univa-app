@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useSignIn } from "@/modules/auth/ui/sign-in/use-sign-in";
@@ -7,6 +7,7 @@ import { useToast } from "@/shared/hooks/useToast";
 import usePageTitle from "@/shared/hooks/usePageTitle";
 import { LoginForm } from "@/modules/auth/ui/login-form";
 import { AuthPageShell } from "@/modules/auth/ui/auth-page-shell";
+import { fetchCsrfToken } from "@/shared/api/csrf";
 
 type LoginLocationState = {
     from?: string;
@@ -23,6 +24,10 @@ export function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        void fetchCsrfToken().catch(() => undefined);
+    }, []);
 
     async function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();

@@ -23,6 +23,9 @@ export const ENDPOINTS = {
         login: `${API}/login`,
         logout: `${API}/logout`,
         me: `${API}/me/univa-user`,
+        sessions: `${API}/me/sessions`,
+        revokeSession: (sessionId: string) =>
+            `${API}/me/sessions/${encodeURIComponent(sessionId)}`,
     },
 
     me: {
@@ -33,6 +36,8 @@ export const ENDPOINTS = {
 
     profiles: {
         me: `${API}/me/profile`,
+        byUsername: (username: string) =>
+            `${API}/profiles/${encodeURIComponent(username)}`,
         update: `${API}/me/profile/details`,
         university: `${API}/me/profile/university`,
         universityInformation: `${API}/me/profile/university/information`,

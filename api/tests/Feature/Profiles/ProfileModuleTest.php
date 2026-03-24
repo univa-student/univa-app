@@ -61,6 +61,29 @@ class ProfileModuleTest extends TestCase
         ]);
     }
 
+    public function test_it_can_view_another_users_profile_by_username(): void
+    {
+        $viewer = User::factory()->create();
+        $target = User::factory()->create([
+            'username' => 'student.target',
+        ]);
+
+        $this->actingAs($target)->patchJson('/api/v1/me/profile/details', [
+            'bio' => 'Люблю системний дизайн і математику.',
+            'telegram' => '@student_target',
+            'city' => 'Lviv',
+        ])->assertOk();
+
+        $response = $this->actingAs($viewer)->getJson('/api/v1/profiles/student.target');
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.user.username', 'student.target')
+            ->assertJsonPath('data.bio', 'Люблю системний дизайн і математику.')
+            ->assertJsonPath('data.telegram', '@student_target')
+            ->assertJsonPath('data.city', 'Lviv');
+    }
+
     public function test_it_saves_selected_university_for_current_profile(): void
     {
         $user = User::factory()->create();

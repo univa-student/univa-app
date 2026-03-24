@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authStore } from "../model/auth-store";
 import type {ChangePasswordPayload, UpdateProfilePayload, User} from "../model/types";
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
-import {userQueries} from "@/modules/auth/api/queries.ts";
+import {sessionQueries, userQueries} from "@/modules/auth/api/queries.ts";
 
 export function useUpdateProfile() {
     const queryClient = useQueryClient();
@@ -23,6 +23,24 @@ export function useChangePassword() {
     return useMutation({
         mutationFn: (payload: ChangePasswordPayload) =>
             userQueries.changePassword(payload).queryFn(),
+    });
+}
+
+export function useSessions() {
+    return useQuery(sessionQueries.list());
+}
+
+export function useRevokeSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (sessionId: string) =>
+            sessionQueries.revoke(sessionId).mutationFn(),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({
+                queryKey: sessionQueries.all(),
+            });
+        },
     });
 }
 

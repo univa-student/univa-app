@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useSearchParams } from "react-router-dom"
 import { SettingsIcon } from "lucide-react"
 import { Badge } from "@/shared/shadcn/ui/badge"
 import { PageSidePanel } from "@/shared/ui/page-side-panel"
@@ -46,9 +47,25 @@ const tabComponents: Record<string, TabFC> = {
    ═══════════════════════════════════════════════════════════ */
 export function SettingsPage() {
     usePageTitle("Налаштування", { suffix: true })
-    const [activeTab, setActiveTab] = useState("account")
+    const [searchParams, setSearchParams] = useSearchParams()
+    const tabParam = searchParams.get("tab")
+    const [activeTab, setActiveTab] = useState(() =>
+        tabs.some((tab) => tab.id === tabParam) ? tabParam! : "account",
+    )
+    React.useEffect(() => {
+        if (tabParam && tabs.some((tab) => tab.id === tabParam) && tabParam !== activeTab) {
+            setActiveTab(tabParam)
+        }
+    }, [activeTab, tabParam])
     const currentTab = tabs.find(t => t.id === activeTab)!
     const Content = tabComponents[activeTab]
+
+    const handleTabChange = (tabId: string) => {
+        setActiveTab(tabId)
+        const next = new URLSearchParams(searchParams)
+        next.set("tab", tabId)
+        setSearchParams(next, { replace: true })
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -81,7 +98,7 @@ export function SettingsPage() {
                                             </p>
                                         )}
                                         <button
-                                            onClick={() => setActiveTab(tab.id)}
+                                            onClick={() => handleTabChange(tab.id)}
                                             className={[
                                                 "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer text-left w-full",
                                                 isActive

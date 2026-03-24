@@ -6,6 +6,7 @@ namespace App\Modules\Profiles\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Notification\Enums\NotificationType;
 use App\Modules\Notification\Support\Notifier;
 use App\Modules\Profiles\Http\Requests\UpdateProfileRequest;
@@ -20,6 +21,13 @@ class ProfileController extends Controller
     public function show(Request $request, ProfileService $profiles): JsonResponse
     {
         $profile = $profiles->getForUser($request->user());
+
+        return ApiResponse::data(new ProfileResource($profile));
+    }
+
+    public function showUser(User $user, ProfileService $profiles): JsonResponse
+    {
+        $profile = $profiles->publicForUser($user);
 
         return ApiResponse::data(new ProfileResource($profile));
     }

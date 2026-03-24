@@ -18,6 +18,13 @@ export const profileQueries = {
                 cacheTtlMs: 60_000,
             }),
     }),
+    byUsername: (username: string) => ({
+        queryKey: ["profiles", "user", username],
+        queryFn: () =>
+            apiFetch<StudentProfile>(ENDPOINTS.profiles.byUsername(username), {
+                cacheTtlMs: 60_000,
+            }),
+    }),
     update: (payload: UpdateStudentProfilePayload) => ({
         queryKey: ["me", "student-profile", "update"],
         queryFn: () =>

@@ -12,14 +12,26 @@ export interface StudentUniversity {
     courseLabel: string | null;
 }
 
-export interface StudentProfile {
+export interface ProfileUser {
     id: number;
+    firstName: string;
+    lastName: string | null;
+    username: string;
+    email: string;
+    avatarPath: string | null;
+    emailVerifiedAt?: string | null;
+    createdAt: string;
+}
+
+export interface StudentProfile {
+    id: number | null;
     profileImage: string | null;
     bio: string | null;
     phone: string | null;
     telegram: string | null;
     city: string | null;
     birthDate: string | null;
+    user: ProfileUser | null;
     university: StudentUniversity | null;
     completion: {
         filled: number;

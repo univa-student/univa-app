@@ -16,6 +16,25 @@ class ProfileService
         return $this->load($this->ensureForUser($user));
     }
 
+    public function publicForUser(User $user): Profile
+    {
+        $profile = $user->profile()->with('university')->first();
+
+        if ($profile !== null) {
+            return $this->load($profile);
+        }
+
+        $profile = new Profile([
+            'user_id' => $user->id,
+            'profile_image' => $user->avatar_path,
+        ]);
+
+        $profile->setRelation('user', $user);
+        $profile->setRelation('university', null);
+
+        return $profile;
+    }
+
     public function currentUniversity(User $user): ?University
     {
         return $this->getForUser($user)->university;

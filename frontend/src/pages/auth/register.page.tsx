@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useSignUp } from "@/modules/auth/ui/sign-up/use-sign-up";
@@ -7,6 +7,7 @@ import { RegisterForm, type RegisterFormData } from "@/modules/auth/ui/register-
 import { AuthPageShell } from "@/modules/auth/ui/auth-page-shell";
 import { extractApiFieldErrors } from "@/shared/lib/forms/extract-api-field-errors";
 import usePageTitle from "@/shared/hooks/usePageTitle.ts";
+import { fetchCsrfToken } from "@/shared/api/csrf";
 
 export function RegisterPage() {
     usePageTitle("Реєстрація");
@@ -28,6 +29,10 @@ export function RegisterPage() {
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        void fetchCsrfToken().catch(() => undefined);
+    }, []);
 
     function onFieldChange<K extends keyof RegisterFormData>(
         field: K,

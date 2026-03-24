@@ -7,6 +7,7 @@ import { LandingPage } from "@/landing/pages/landing.page.tsx";
 import { DocsPage } from "@/landing/pages/docs.page.tsx";
 import { AboutPage } from "@/landing/pages/about.page.tsx";
 import { SettingsPage } from "@/pages/settings/settings.page.tsx";
+import { ProfilePage } from "@/pages/profile/profile.page.tsx";
 import { DashboardLayout } from "@/shared/ui/layouts/app/dashboard.layout.tsx";
 import { LoginPage } from "@/pages/auth/login.page.tsx";
 import { RegisterPage } from "@/pages/auth/register.page.tsx";
@@ -189,6 +190,36 @@ export const router = createBrowserRouter([
                                         { label: "Дашборд" },
                                     ]}>
                                         <DashboardPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/profile",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout breadcrumbs={[
+                                        { label: "Головна", href: "/dashboard" },
+                                        { label: "Мій профіль" },
+                                    ]}>
+                                        <ProfilePage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/profile/:username",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout breadcrumbs={[
+                                        { label: "Головна", href: "/dashboard" },
+                                        { label: "Профіль студента" },
+                                    ]}>
+                                        <ProfilePage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>

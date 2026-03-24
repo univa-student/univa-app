@@ -9,6 +9,7 @@ use App\Core\Response\ResponseState;
 use App\Http\Controllers\Controller;
 use App\Modules\Auth\Http\Requests\RegisterStoreRequest;
 use App\Modules\Auth\Http\Resources\UserResource;
+use App\Modules\Auth\Services\SessionMetadataService;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -23,6 +24,7 @@ class RegisterController extends Controller
         RegisterStoreRequest $request,
         InitializeUserSettings $initializeUserSettings,
         InitializeProfile $initializeProfile,
+        SessionMetadataService $sessionMetadataService,
     )
     {
         $data = $request->validated();
@@ -48,6 +50,7 @@ class RegisterController extends Controller
             $initializeProfile->handle($user);
 
             $request->session()->regenerate();
+            $sessionMetadataService->sync($request);
 
         DB::commit();
 

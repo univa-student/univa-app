@@ -22,6 +22,14 @@ export interface ChangePasswordPayload {
     password_confirmation: string;
 }
 
+export interface AuthSession {
+    id: string;
+    ipAddress: string | null;
+    userAgent: string | null;
+    lastActiveAt: string | null;
+    current: boolean;
+}
+
 export interface RegisterFormData {
     last_name: string;
     first_name: string;
