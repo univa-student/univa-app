@@ -8,18 +8,12 @@ import { AppBottomBar } from "./app-bottom-bar"
 import { AppRightRail } from "./app-right-rail"
 
 import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
+    Breadcrumb, BreadcrumbItem, BreadcrumbLink,
+    BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator,
 } from "@/shared/shadcn/ui/breadcrumb.tsx"
+import type { BreadcrumbEntry } from "@/shared/types/ui"
 
-export interface BreadcrumbEntry {
-    label: string
-    href?: string
-}
+export type { BreadcrumbEntry };
 
 interface DashboardLayoutProps {
     children: React.ReactNode

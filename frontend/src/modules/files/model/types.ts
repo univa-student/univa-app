@@ -1,3 +1,5 @@
+export type MimeGroup = "img" | "pdf" | "doc" | "xls" | "ppt" | "zip" | "other";
+
 export type FileStatus = "uploading" | "ready" | "failed" | "deleted";
 export type FileScope = "personal" | "subject" | "group";
 

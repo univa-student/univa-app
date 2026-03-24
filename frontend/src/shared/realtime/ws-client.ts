@@ -121,14 +121,14 @@ class WsClient {
     /**
      * Subscribe to a global event.
      */
-    on<E extends WsEventName>(_event: E, _handler: (payload: WsEventMap[E]) => void): void {
+    on<E extends WsEventName>(_event: string, _handler: (payload: WsEventMap[E]) => void): void {
         console.warn(`wsClient.on() called for ${_event} but global bindings are not implemented yet.`);
     }
 
     /**
      * Unsubscribe from a global event.
      */
-    off<E extends WsEventName>(_event: E, _handler: (payload: WsEventMap[E]) => void): void {
+    off<E extends WsEventName>(_event: string, _handler: (payload: WsEventMap[E]) => void): void {
         // Not implemented
     }
 }

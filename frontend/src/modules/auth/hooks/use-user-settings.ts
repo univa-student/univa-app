@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { DEFAULT_UI_SETTINGS } from "@/modules/auth/lib/settings/map-ui-settings";
 import type {UserSettings} from "@/modules/settings/model/types.ts";
-import {userSettingsStore} from "@/modules/auth/model/settings-store.ts";
+import {userSettingsStore} from "@/modules/settings/model/settings-store";
 
 /**
  * useUserSettings

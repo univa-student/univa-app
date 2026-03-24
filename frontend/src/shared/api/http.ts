@@ -2,13 +2,9 @@ import { API_BASE_URL } from "@/app/config/app.config";
 import { ApiError } from "@/shared/types/api";
 import { toast } from "@/shared/lib/toast-store";
 import { fetchCsrfToken } from "./csrf";
+import type { ApiFetchOptions, AlertVariant } from "@/shared/types/api";
 
-type AlertVariant = "success" | "warning" | "destructive" | "info";
-
-export interface ApiFetchOptions extends RequestInit {
-    silent401?: boolean;
-    skipCsrf?: boolean;
-}
+export type { ApiFetchOptions };
 
 function triggerAlert(status: number, message?: string) {
     if (!message) return;

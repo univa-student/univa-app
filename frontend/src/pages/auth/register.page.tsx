@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useSignUp } from "@/modules/auth/ui/sign-up/use-sign-up";
 import { useToast } from "@/shared/hooks/useToast";
-import { RegisterForm, type RegisterFormData } from "@/shared/shadcn/components/auth/register-form";
+import { RegisterForm, type RegisterFormData } from "@/modules/auth/ui/register-form";
 import { AuthPageShell } from "@/modules/auth/ui/auth-page-shell";
 import { extractApiFieldErrors } from "@/shared/lib/forms/extract-api-field-errors";
 import usePageTitle from "@/shared/hooks/usePageTitle.ts";

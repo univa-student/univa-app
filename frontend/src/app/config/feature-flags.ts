@@ -1,9 +1,3 @@
-/**
- * app/config/feature-flags.ts
- *
- * Boolean feature flags driven by environment variables.
- * Set VITE_ENABLE_* = "true" in .env to enable.
- */
 const flag = (key: string, fallback = false): boolean => {
     const val = import.meta.env[key];
     if (val === undefined) return fallback;

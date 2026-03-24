@@ -1,31 +1,19 @@
 import type { SettingItem } from "@/modules/settings/api/settings.api";
 import { getSelectedValue } from "@/modules/settings/api/settings.api";
+import type {
+    ViewMode,
+    WeekParityAnchor,
+    SchedulerConfig,
+} from "@/modules/schedule/model/types";
+import { DEFAULT_SCHEDULER_CONFIG } from "@/modules/schedule/model/types";
 
 // ── Constants ─────────────────────────────────────────────────
 
 export const PX_PER_MIN = 2.2;
 export const GRID_TOP_PADDING = 8;
 
-export type ViewMode = "semester" | "month" | "week" | "day";
-export type WeekParityAnchor = "even" | "odd";
-
-export type SchedulerConfig = {
-    defaultView: ViewMode;
-    showWeekends: boolean;
-    dayStartMin: number;
-    dayEndMin: number;
-    lessonReminderMin: number | null;
-    weekParityAnchor: WeekParityAnchor;
-};
-
-export const DEFAULT_SCHEDULER_CONFIG: SchedulerConfig = {
-    defaultView: "week",
-    showWeekends: false,
-    dayStartMin: 8 * 60,
-    dayEndMin: 20 * 60,
-    lessonReminderMin: 15,
-    weekParityAnchor: "even",
-};
+export type { ViewMode, WeekParityAnchor, SchedulerConfig };
+export { DEFAULT_SCHEDULER_CONFIG };
 
 export const WEEKDAYS_SHORT_WORKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт"];
 export const WEEKDAYS_SHORT_FULL = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];

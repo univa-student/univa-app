@@ -17,20 +17,12 @@ export function useNotifications() {
         const channelName = `user.${user.id}`;
         
         const handleNewNotification = () => {
-            // Найпростіший варіант – інвалідувати кеш, щоб відбувся перезапит
-            // Можна також робити optimistic update, вставляючи payload у кеш (див. нижче)
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
         };
 
         wsClient.listen("private", channelName, "notification.created", handleNewNotification);
 
-        return () => {
-            // При анмаунті ми можемо ігнорувати leave, якщо інші хуки теж слухають цей канал, 
-            // але в Echo ліпше просто не підписуватись двічі. 
-            // wsClient залишає канал відкритим, тому просто видаляємо лісенера (якщо в нас був би .off() для Echo).
-            // В даній реалізації наша обгортка Echo не дає простого способу відписати саме одну функцію, 
-            // проте для сторінки сповіщень це працює нормально.
-        };
+        return () => {};
     }, [user, queryClient]);
 
     return useInfiniteQuery({
@@ -51,7 +43,7 @@ export function useMarkNotificationAsRead() {
     return useMutation({
         mutationFn: notificationApi.markAsRead,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
         },
     });
 }
@@ -61,7 +53,7 @@ export function useMarkAllNotificationsAsRead() {
     return useMutation({
         mutationFn: notificationApi.markAllAsRead,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
         },
     });
 }
@@ -71,7 +63,7 @@ export function useDeleteNotification() {
     return useMutation({
         mutationFn: notificationApi.deleteNotification,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
         },
     });
 }

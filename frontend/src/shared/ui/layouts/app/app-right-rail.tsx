@@ -2,7 +2,7 @@ import {MaximizeIcon, MoonIcon, SunIcon,} from "lucide-react"
 import {Tooltip, TooltipContent, TooltipTrigger,} from "@/shared/shadcn/ui/tooltip"
 import {useCallback} from "react"
 import {useUserSettings} from "@/modules/auth/hooks/use-user-settings"
-import {userSettingsStore} from "@/modules/auth/model/settings-store"
+import {userSettingsStore} from "@/modules/settings/model/settings-store"
 import {applyDomSettings} from "@/modules/auth/lib/settings/apply-dom-settings"
 
 function useFullscreen() {

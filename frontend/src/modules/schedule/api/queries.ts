@@ -3,19 +3,20 @@ import { ENDPOINTS } from "@/shared/api/endpoints";
 import type {
     LessonInstance,
     ScheduleLesson,
-    Subject,
     ExamEvent,
     LessonType,
     DeliveryMode,
     ExamType,
     RecurrenceRule,
-    CreateSubjectPayload,
     CreateLessonPayload,
     CreateExceptionPayload,
     CreateExamPayload,
     ScheduleException,
 } from "../model/types";
-import type { FolderItem, FileItem } from "@/modules/files/model/types";
+import type { FileItem } from "@/modules/files/model/types";
+
+// ─── Subject queries — re-exported from modules/subjects for backward compat ──
+export { subjectQueries } from "@/modules/subjects/api/queries";
 
 // ─── Schedule (built) ─────────────────────────────────────────────────────────
 
@@ -24,38 +25,6 @@ export const scheduleQueries = {
         queryKey: ["schedule", from, to],
         queryFn: () => apiFetch<LessonInstance[]>(ENDPOINTS.schedule(from, to)),
         staleTime: 1000 * 60 * 2, // 2 min
-    }),
-};
-
-// ─── Subjects ─────────────────────────────────────────────────────────────────
-
-export const subjectQueries = {
-    list: () => ({
-        queryKey: ["subjects"],
-        queryFn: () => apiFetch<Subject[]>(ENDPOINTS.subjects.list),
-        staleTime: 1000 * 60 * 10,
-    }),
-    create: (payload: CreateSubjectPayload) => ({
-        queryKey: [] as const,
-        queryFn: () => apiFetch<Subject>(ENDPOINTS.subjects.create, {
-            method: "POST",
-            body: JSON.stringify(payload),
-        }),
-    }),
-    update: (id: number, payload: Partial<CreateSubjectPayload>) => ({
-        queryKey: [] as const,
-        queryFn: () => apiFetch<Subject>(ENDPOINTS.subjects.update(id), {
-            method: "PATCH",
-            body: JSON.stringify(payload),
-        }),
-    }),
-    delete: (id: number) => ({
-        queryKey: [] as const,
-        queryFn: () => apiFetch<void>(ENDPOINTS.subjects.delete(id), { method: "DELETE" }),
-    }),
-    folder: (id: number) => ({
-        queryKey: ["subjects", id, "folder"],
-        queryFn: () => apiFetch<FolderItem>(ENDPOINTS.subjects.folder(id)),
     }),
 };
 

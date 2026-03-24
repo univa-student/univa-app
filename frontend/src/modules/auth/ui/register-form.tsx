@@ -6,34 +6,12 @@ import { cn } from "@/shared/shadcn/lib/utils";
 import { Button } from "@/shared/shadcn/ui/button";
 import { Card, CardContent } from "@/shared/shadcn/ui/card";
 import {
-    Field,
-    FieldDescription,
-    FieldError,
-    FieldGroup,
-    FieldLabel,
+    Field, FieldDescription, FieldError, FieldGroup, FieldLabel,
 } from "@/shared/shadcn/ui/field";
 import { Input } from "@/shared/shadcn/ui/input";
+import type { RegisterFormData } from "@/modules/auth/model/types";
 
-/** ===== Types ===== */
-
-export interface RegisterFormData {
-    // Персональні
-    last_name: string;
-    first_name: string;
-    middle_name: string;
-
-    // Акаунт
-    username: string;
-    email: string;
-
-    // Безпека
-    password: string;
-    password_confirmation: string;
-
-    // Згоди
-    agree_terms: boolean;
-    marketing_opt_in: boolean;
-}
+export type { RegisterFormData };
 
 type RegisterFieldName = keyof RegisterFormData;
 type FieldType = "text" | "email" | "password" | "checkbox";

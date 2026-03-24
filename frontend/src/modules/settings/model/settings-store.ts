@@ -1,13 +1,6 @@
-import type { UserSettings } from "./types";
-import type { UserSettingItem } from "@/modules/auth/api/settings/types";
+import type { UserSettings, UserSettingItem, SettingsState } from "./types";
 
 type Listener = () => void;
-
-export interface SettingsState {
-    ui: UserSettings | null;        // тільки те, що потрібно для DOM/UI
-    items: UserSettingItem[];       // повний список з API
-    isReady: boolean;               // бек завантажився (або впав)
-}
 
 let state: SettingsState = {
     ui: null,

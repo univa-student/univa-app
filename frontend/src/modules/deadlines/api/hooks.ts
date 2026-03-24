@@ -1,16 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "@/shared/api/http";
-import { ENDPOINTS } from "@/shared/api/endpoints";
-import { deadlineQueries } from "./queries";
-import type { Deadline, CreateDeadlinePayload, UpdateDeadlinePayload } from "../model/types";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {apiFetch} from "@/shared/api/http";
+import {ENDPOINTS} from "@/shared/api/endpoints";
+import {deadlineQueries} from "./queries";
+import type {CreateDeadlinePayload, Deadline, UpdateDeadlinePayload} from "../model/types";
 
 export function useDeadlines(filters?: Record<string, string | number | boolean | null | undefined>) {
     return useQuery(deadlineQueries.list(filters));
-}
-
-export function useDeadline(id: number) {
-    return useQuery(deadlineQueries.detail(id));
 }
 
 export function useDeadlinesStats() {
@@ -21,14 +16,13 @@ export function useCreateDeadline() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: async (payload: CreateDeadlinePayload) => {
-            const res = await apiFetch<Deadline>(ENDPOINTS.deadlines.base, {
+            return await apiFetch<Deadline>(ENDPOINTS.deadlines.base, {
                 method: "POST",
                 body: JSON.stringify(payload),
             });
-            return res;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: deadlineQueries.all() });
+            qc.invalidateQueries({ queryKey: deadlineQueries.all() }).then(() => {});
         },
     });
 }
@@ -37,14 +31,13 @@ export function useUpdateDeadline() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: async ({ id, payload }: { id: number; payload: UpdateDeadlinePayload }) => {
-            const res = await apiFetch<Deadline>(ENDPOINTS.deadlines.id(id), {
+            return await apiFetch<Deadline>(ENDPOINTS.deadlines.id(id), {
                 method: "PATCH",
                 body: JSON.stringify(payload),
             });
-            return res;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: deadlineQueries.all() });
+            qc.invalidateQueries({ queryKey: deadlineQueries.all() }).then(() => {});
         },
     });
 }
@@ -56,7 +49,7 @@ export function useDeleteDeadline() {
             await apiFetch(ENDPOINTS.deadlines.id(id), { method: "DELETE" });
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: deadlineQueries.all() });
+            qc.invalidateQueries({ queryKey: deadlineQueries.all() }).then(() => {});
         },
     });
 }

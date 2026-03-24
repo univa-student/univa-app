@@ -4,41 +4,31 @@ import { Button } from "@/shared/shadcn/ui/button";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/shared/shadcn/ui/dropdown-menu";
 import { typeConfig } from "@/modules/deadlines/ui/deadline-type-icon";
 import { priorityConfig } from "@/modules/deadlines/ui/deadline-priority-badge";
+import type { DeadlineFiltersState } from "@/modules/deadlines/model/types";
+
+export type { DeadlineFiltersState };
 
 function FilterMultiSelect({ title, value, options, onChange }: {
-    title: string, value?: string, options: { value: string, label: string }[], onChange: (val: string | undefined) => void
+    title: string; value?: string; options: { value: string; label: string }[]; onChange: (val: string | undefined) => void;
 }) {
-    const selectedValues = value ? value.split(',') : [];
-
+    const selectedValues = value ? value.split(",") : [];
     const toggleOption = (optValue: string) => {
         let newVals = [...selectedValues];
-        if (newVals.includes(optValue)) {
-            newVals = newVals.filter(v => v !== optValue);
-        } else {
-            newVals.push(optValue);
-        }
-        onChange(newVals.length > 0 ? newVals.join(',') : undefined);
+        if (newVals.includes(optValue)) newVals = newVals.filter(v => v !== optValue);
+        else newVals.push(optValue);
+        onChange(newVals.length > 0 ? newVals.join(",") : undefined);
     };
-
-    const label = selectedValues.length > 0
-        ? `${title} (${selectedValues.length})`
-        : title;
-
+    const label = selectedValues.length > 0 ? `${title} (${selectedValues.length})` : title;
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-9 font-normal justify-between w-full sm:w-auto sm:min-w-[130px] bg-background">
-                    {label}
-                    <ChevronDownIcon className="size-4 ml-2 opacity-50" />
+                    {label}<ChevronDownIcon className="size-4 ml-2 opacity-50" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[200px]">
                 {options.map(opt => (
-                    <DropdownMenuCheckboxItem
-                        key={opt.value}
-                        checked={selectedValues.includes(opt.value)}
-                        onCheckedChange={() => toggleOption(opt.value)}
-                    >
+                    <DropdownMenuCheckboxItem key={opt.value} checked={selectedValues.includes(opt.value)} onCheckedChange={() => toggleOption(opt.value)}>
                         {opt.label}
                     </DropdownMenuCheckboxItem>
                 ))}
@@ -47,15 +37,6 @@ function FilterMultiSelect({ title, value, options, onChange }: {
     );
 }
 
-export interface DeadlineFiltersState {
-    search: string;
-    subjectId?: string;
-    status?: string;
-    priority?: string;
-    type?: string;
-    sortBy?: string;
-    sortDir?: "asc" | "desc";
-}
 
 interface Props {
     filters: DeadlineFiltersState;

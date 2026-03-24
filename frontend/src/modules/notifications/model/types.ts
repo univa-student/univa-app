@@ -1,3 +1,13 @@
+import type React from "react";
+
+export type NotificationMeta = {
+    title: string;
+    icon: React.ElementType;
+    badgeClass: string;
+    iconClass: string;
+    dotClass: string;
+};
+
 export type NotificationFilter = "all" | "unread" | "ai" | "files" | "profile" | "avatar";
 
 export type NotificationItem = {

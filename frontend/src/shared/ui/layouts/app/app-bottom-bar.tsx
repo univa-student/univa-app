@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/ui/avatar"
+import React, {useEffect, useMemo, useState} from "react"
+import {Avatar, AvatarFallback, AvatarImage} from "@/shared/shadcn/ui/avatar"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,20 +9,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/shared/shadcn/ui/dropdown-menu"
-import {
-    CalendarDaysIcon,
-    FolderIcon,
-    LayoutGridIcon,
-    LogOutIcon,
-    SettingsIcon,
-    SparklesIcon,
-} from "lucide-react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { userQueries } from "@/modules/auth/api/queries.ts"
-import { authStore } from "@/modules/auth/model/auth-store.ts"
-import { useAuthUser } from "@/modules/auth/model/useAuthUser.ts"
-import { Link, useLocation, useNavigate } from "react-router-dom"
-import { cn } from "@/shared/shadcn/lib/utils"
+import {CalendarDaysIcon, FolderIcon, LayoutGridIcon, LogOutIcon, SettingsIcon, SparklesIcon,} from "lucide-react"
+import {useMutation, useQueryClient} from "@tanstack/react-query"
+import {userQueries} from "@/modules/auth/api/queries.ts"
+import {authStore} from "@/modules/auth/model/auth-store.ts"
+import {useAuthUser} from "@/modules/auth/model/useAuthUser.ts"
+import {Link, useLocation, useNavigate} from "react-router-dom"
+import {cn} from "@/shared/shadcn/lib/utils"
 import {APP_VERSION} from "@/app/config/app.config.ts";
 
 function getInitials(name: string) {
@@ -48,7 +41,7 @@ type BottomBarMeta = {
 }
 
 function useBottomBarMeta(): BottomBarMeta {
-    const { pathname } = useLocation()
+    const {pathname} = useLocation()
 
     return useMemo(() => {
         if (pathname.startsWith("/dashboard/calendar")) {
@@ -83,16 +76,6 @@ function useBottomBarMeta(): BottomBarMeta {
     }, [pathname])
 }
 
-function StatusDot({ state = "online" }: { state?: "online" | "syncing" | "offline" }) {
-    const stateClass = {
-        online: "bg-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.45)]",
-        syncing: "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.45)]",
-        offline: "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.45)]",
-    }[state]
-
-    return <span className={cn("inline-block size-1.5 rounded-full", stateClass)} />
-}
-
 function StatusBadge({
                          children,
                          className,
@@ -103,9 +86,9 @@ function StatusBadge({
     return (
         <div
             className={cn(
-                "inline-flex h-7 items-center gap-2 rounded-md border border-border/70",
-                "bg-background/70 px-2.5 text-[12px] text-muted-foreground",
-                "backdrop-blur-sm",
+                "inline-flex items-center border text-xs whitespace-nowrap transition-colors",
+                "rounded-full px-2.5 py-1",
+                "border-border/60 bg-muted/30",
                 className
             )}
         >
@@ -121,12 +104,12 @@ export function AppBottomBar() {
     const now = useClock()
     const meta = useBottomBarMeta()
 
-    const { mutate: logout, isPending } = useMutation({
+    const {mutate: logout, isPending} = useMutation({
         ...userQueries.logout(),
         onSettled: () => {
             authStore.reset()
             queryClient.clear()
-            navigate("/login", { replace: true })
+            navigate("/login", {replace: true})
         },
     })
 
@@ -174,13 +157,15 @@ export function AppBottomBar() {
                             aria-label="Профіль"
                         >
                             <Avatar className="size-6 rounded-full">
-                                <AvatarImage src={avatarUrl} alt={userName} />
-                                <AvatarFallback className="rounded-full bg-primary/15 text-[9px] font-semibold text-primary">
+                                <AvatarImage src={avatarUrl} alt={userName}/>
+                                <AvatarFallback
+                                    className="rounded-full bg-primary/15 text-[9px] font-semibold text-primary">
                                     {getInitials(userName)}
                                 </AvatarFallback>
                             </Avatar>
 
-                            <span className="hidden max-w-[140px] truncate text-[14px] font-medium text-foreground/85 md:block">
+                            <span
+                                className="hidden max-w-[140px] truncate text-[14px] font-medium text-foreground/85 md:block">
                                 {userName}
                             </span>
                         </button>
@@ -195,7 +180,7 @@ export function AppBottomBar() {
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-3 px-3 py-3">
                                 <Avatar className="size-9 rounded-lg">
-                                    <AvatarImage src={avatarUrl} alt={userName} />
+                                    <AvatarImage src={avatarUrl} alt={userName}/>
                                     <AvatarFallback className="rounded-lg text-xs font-semibold">
                                         {getInitials(userName)}
                                     </AvatarFallback>
@@ -212,18 +197,18 @@ export function AppBottomBar() {
                             </div>
                         </DropdownMenuLabel>
 
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator/>
 
                         <DropdownMenuGroup>
                             <DropdownMenuItem asChild>
                                 <Link to="/dashboard/settings" className="cursor-pointer">
-                                    <SettingsIcon className="size-4" />
+                                    <SettingsIcon className="size-4"/>
                                     <span>Налаштування</span>
                                 </Link>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
 
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator/>
 
                         <DropdownMenuItem
                             disabled={isPending}
@@ -233,16 +218,16 @@ export function AppBottomBar() {
                             }}
                             className="cursor-pointer text-destructive focus:text-destructive"
                         >
-                            <LogOutIcon className="size-4" />
+                            <LogOutIcon className="size-4"/>
                             <span>{isPending ? "Вихід..." : "Вийти"}</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <div className="hidden h-4 w-px bg-border/80 sm:block" />
+                <div className="hidden h-4 w-px bg-border/80 sm:block"/>
 
                 <div className="hidden min-w-0 items-center gap-2 text-[13px] text-muted-foreground sm:flex">
-                    <Icon className="size-4.5 shrink-0" />
+                    <Icon className="size-4.5 shrink-0"/>
                     <span className="truncate font-medium text-foreground/80">{meta.title}</span>
                     <span className="text-muted-foreground/50">—</span>
                     <span className="truncate">{meta.hint}</span>
@@ -250,7 +235,8 @@ export function AppBottomBar() {
             </div>
 
             <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
-                <div className="flex min-w-0 items-center gap-2 rounded-md border border-border/60 bg-background/60 px-2.5 py-1">
+                <div
+                    className="flex min-w-0 items-center gap-2 rounded-md border border-border/60 bg-background/60 px-2.5 py-1">
                     <span className="font-medium text-foreground/80">
                         Univa
                     </span>
@@ -260,26 +246,32 @@ export function AppBottomBar() {
                 </div>
             </div>
 
-            <div className="flex min-w-0 items-center gap-1.5">
-                <StatusBadge className="hidden sm:inline-flex">
-                    <StatusDot state="online" />
-                    <span>Синхронізовано</span>
+            <div className="flex min-w-0 items-center gap-2">
+                <StatusBadge
+                    className="hidden h-8 items-center gap-2 rounded-full border-border/60 bg-muted/35 px-3 md:inline-flex">
+                    <CalendarDaysIcon className="size-3.5 shrink-0 text-muted-foreground"/>
+
+                    <span className="max-w-[170px] truncate text-[12px] font-medium capitalize text-foreground/85">
+                        {dateStr}
+                    </span>
+
+                    <span className="text-muted-foreground/50">•</span>
+
+                    <span className="tabular-nums text-[12px] text-muted-foreground">
+                        {shortDateStr}
+                    </span>
                 </StatusBadge>
 
-                <StatusBadge className="hidden md:inline-flex">
-                    <CalendarDaysIcon className="size-3.5" />
-                    <span className="max-w-[180px] truncate capitalize">{dateStr}</span>
+                <StatusBadge className="h-8 items-center rounded-full border-border/70 bg-background px-3 shadow-sm">
+                    <span className="tabular-nums text-[13px] font-semibold tracking-[0.03em] text-foreground">
+                        {timeStr}
+                    </span>
                 </StatusBadge>
 
-                <StatusBadge>
-                    <span className="tabular-nums font-semibold text-foreground/85">{timeStr}</span>
-                </StatusBadge>
-
-                <StatusBadge className="hidden xl:inline-flex">
-                    <span className="tabular-nums">{shortDateStr}</span>
-                </StatusBadge>
-
-                <div id="app-bottom-bar-content" className="flex items-center gap-1.5" />
+                <div
+                    id="app-bottom-bar-content"
+                    className="ml-1 flex items-center gap-1.5"
+                />
             </div>
         </footer>
     )

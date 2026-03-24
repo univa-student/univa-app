@@ -2,8 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fileQueries, folderQueries, storageQueries } from "./queries";
 import type { CreateFolderPayload, UpdateFolderPayload, UpdateFilePayload } from "../model/types";
 
-// ─── Files ────────────────────────────────────────────────────────────────────
-
 export function useFiles(folderId?: number | null, subjectId?: number | null) {
     return useQuery(fileQueries.list(folderId, subjectId));
 }
@@ -19,18 +17,14 @@ export function useSearchFiles(query: string, subjectId?: number | null) {
     });
 }
 
-export function useFileDetail(id: number) {
-    return useQuery(fileQueries.show(id));
-}
-
 export function useUploadFile() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (formData: FormData) => fileQueries.upload(formData).queryFn(),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ["files"] });
-            qc.invalidateQueries({ queryKey: ["folders", "tree"] });
-            qc.invalidateQueries({ queryKey: ["storage", "info"] });
+            qc.invalidateQueries({ queryKey: ["files"] }).then(() => {});
+            qc.invalidateQueries({ queryKey: ["folders", "tree"] }).then(() => {});
+            qc.invalidateQueries({ queryKey: ["storage", "info"] }).then(() => {});
         },
     });
 }
@@ -49,9 +43,9 @@ export function useDeleteFile() {
     return useMutation({
         mutationFn: (id: number) => fileQueries.delete(id).queryFn(),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ["files"] });
-            qc.invalidateQueries({ queryKey: ["folders", "tree"] });
-            qc.invalidateQueries({ queryKey: ["storage", "info"] });
+            qc.invalidateQueries({ queryKey: ["files"] }).then(() => {});
+            qc.invalidateQueries({ queryKey: ["folders", "tree"] }).then(() => {});
+            qc.invalidateQueries({ queryKey: ["storage", "info"] }).then(() => {});
         },
     });
 }

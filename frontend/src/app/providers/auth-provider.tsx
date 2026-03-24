@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         if (!isReady) {
-            refetch();
+            refetch().then(() => {});
         }
     }, [isReady, refetch]);
 

@@ -9,15 +9,6 @@ export function useSummary(id: number) {
     return useQuery(summaryQueries.show(id));
 }
 
-/** Returns the first summary that was generated from the given file, or undefined */
-export function useFileSummary(fileId: number) {
-    const { data: summaries, ...rest } = useSummaries();
-    const found = summaries?.find(
-        (s) => s.sourceContextId === fileId && s.sourceContextType?.includes("File"),
-    );
-    return { data: found, ...rest };
-}
-
 export function useGenerateSummary() {
     const qc = useQueryClient();
     return useMutation({
@@ -31,7 +22,7 @@ export function useGenerateSummary() {
             return result.artifact; // повертаємо SummaryArtifact
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ["summaries"] });
+            qc.invalidateQueries({queryKey: ["summaries"]}).then(() => {});
         },
     });
 }
@@ -41,7 +32,7 @@ export function useDeleteSummary() {
     return useMutation({
         mutationFn: (id: number) => summaryQueries.delete(id).queryFn(),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ["summaries"] });
+            qc.invalidateQueries({ queryKey: ["summaries"] }).then(() => {});
         },
     });
 }

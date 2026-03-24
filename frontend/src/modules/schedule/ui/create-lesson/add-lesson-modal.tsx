@@ -49,10 +49,10 @@ const WEEKDAYS = [
 
 /* ── Field wrapper ── */
 function Field({
-                   label,
-                   required,
-                   children,
-               }: {
+    label,
+    required,
+    children,
+}: {
     label: string;
     required?: boolean;
     children: ReactNode;

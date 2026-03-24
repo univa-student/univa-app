@@ -1,30 +1,8 @@
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
+import type { SettingValue, SettingItem } from "../model/types";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface SettingValue {
-    id: number;
-    value: string;
-    label: string;
-    meta: Record<string, unknown> | null;
-}
-
-export interface SettingItem {
-    id: number;
-    groupId: number;
-    key: string;
-    type: "bool" | "int" | "string" | "json" | "enum";
-    label: string;
-    description: string | null;
-    constraints: Record<string, unknown> | null;
-    /** The currently active value id (user override or default) */
-    selectedValueId: number | null;
-    /** For input based settings (not enum) */
-    rawValue?: string | null;
-    /** All allowed values for this setting */
-    values: SettingValue[];
-}
+export type { SettingValue, SettingItem };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -3,9 +3,8 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/shared/shadcn/ui/dialog";
 import { Button } from "@/shared/shadcn/ui/button";
-import { Input } from "@/shared/shadcn/ui/input";
 import { UploadIcon, Trash2Icon } from "lucide-react";
-import { useUploadFile, useCreateFolder } from "@/modules/files/api/hooks";
+import { useUploadFile } from "@/modules/files/api/hooks";
 import { useSubjects } from "@/modules/schedule/api/hooks";
 
 // ── Upload Dialog ─────────────────────────────────────────────
@@ -162,55 +161,6 @@ export function UploadDialog({ open, onOpenChange, folderId, subjectId, onUpload
                     className="hidden"
                     onChange={(e) => e.target.files && handleFiles(e.target.files)}
                 />
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-// ── New Folder Dialog ─────────────────────────────────────────
-
-interface NewFolderDialogProps {
-    open: boolean;
-    onOpenChange: (v: boolean) => void;
-    parentId: number | null;
-}
-
-export function NewFolderDialog({ open, onOpenChange, parentId }: NewFolderDialogProps) {
-    const [name, setName] = useState("");
-    const createFolder = useCreateFolder();
-
-    const handleSubmit = async () => {
-        if (!name.trim()) return;
-        await createFolder.mutateAsync({ name: name.trim(), parentId });
-        setName("");
-        onOpenChange(false);
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-sm">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <div className="flex size-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600">
-                            <UploadIcon className="size-4" />
-                        </div>
-                        Нова папка
-                    </DialogTitle>
-                </DialogHeader>
-                <Input
-                    autoFocus
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                    placeholder="Назва папки"
-                    className="mt-1"
-                />
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Скасувати</Button>
-                    <Button onClick={handleSubmit} disabled={!name.trim() || createFolder.isPending}>
-                        {createFolder.isPending ? "Створення..." : "Створити"}
-                    </Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

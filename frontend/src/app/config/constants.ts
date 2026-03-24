@@ -1,7 +1,3 @@
-/**
- * app/config/constants.ts — backward-compat re-export shim.
- * All values now live in app.config.ts. Import from there directly.
- */
 export {
     QUERY_RETRY,
     QUERY_STALE_MS,

@@ -7,7 +7,6 @@ interface Props {
     onClose: () => void;
 }
 
-/* ── Shared field wrapper ── */
 function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
     return (
         <div className="flex flex-col gap-1.5">
@@ -74,7 +73,6 @@ export function AddExamModal({ onClose }: Props) {
             title=""
             className="sm:max-w-[440px] p-0 overflow-hidden"
         >
-            {/* Modal header */}
             <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-border">
                 <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
                     <GraduationCapIcon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -172,7 +170,6 @@ export function AddExamModal({ onClose }: Props) {
                     </div>
                 )}
 
-                {/* Footer */}
                 <div className="flex items-center justify-end gap-2 pt-1">
                     <button
                         type="button"

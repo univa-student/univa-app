@@ -156,3 +156,26 @@ export interface CreateExamPayload {
     locationText?: string | null;
     note?: string | null;
 }
+
+// ─── Scheduler UI config ──────────────────────────────────────────────────────
+
+export type ViewMode = "semester" | "month" | "week" | "day";
+export type WeekParityAnchor = "even" | "odd";
+
+export type SchedulerConfig = {
+    defaultView: ViewMode;
+    showWeekends: boolean;
+    dayStartMin: number;
+    dayEndMin: number;
+    lessonReminderMin: number | null;
+    weekParityAnchor: WeekParityAnchor;
+};
+
+export const DEFAULT_SCHEDULER_CONFIG: SchedulerConfig = {
+    defaultView: "week",
+    showWeekends: false,
+    dayStartMin: 8 * 60,
+    dayEndMin: 20 * 60,
+    lessonReminderMin: 15,
+    weekParityAnchor: "even",
+};

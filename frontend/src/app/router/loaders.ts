@@ -4,13 +4,11 @@ import { queryClient } from "@/shared/api/query-client";
 import { authStore } from "@/modules/auth/model/auth-store";
 import { userQueries } from "@/modules/auth/api/queries";
 
-// ─── helpers ─────────────────────────────────────────────
 function setAuth(user: Parameters<typeof authStore.setUser>[0]) {
     authStore.setUser(user);
     authStore.setReady(true);
 }
 
-// ─── loaders ─────────────────────────────────────────────
 export const routesLoaders = {
     publicRoot: async () => {
         setAuth(null);

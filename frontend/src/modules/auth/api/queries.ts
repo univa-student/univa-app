@@ -1,18 +1,6 @@
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
-import type { User } from "../model/types";
-
-export interface UpdateProfilePayload {
-    firstName: string;
-    lastName?: string;
-    username: string;
-}
-
-export interface ChangePasswordPayload {
-    currentPassword: string;
-    password: string;
-    password_confirmation: string;
-}
+import type { User, UpdateProfilePayload, ChangePasswordPayload } from "../model/types";
 
 export const userQueries = {
     me: () => ({
