@@ -1,22 +1,25 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useCallback, useMemo } from "react";
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
-import { authStore } from "@/entities/user/model/auth-store";
-import type { User } from "@/entities/user/model/types";
+import { authStore } from "@/modules/auth/model/auth-store";
+import type { User } from "@/modules/auth/model/types";
 import { AuthContext } from "@/app/context/auth-context";
+import { useSyncExternalStore } from "react";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(() => authStore.getState().user);
-    const [isReady, setIsReadyState] = useState<boolean>(() => authStore.getState().isReady);
+    const state = useSyncExternalStore(
+        authStore.subscribe,
+        authStore.getState,
+        authStore.getState
+    );
+
+    const { user, isReady } = state;
 
     const setAuthenticatedUser = useCallback((nextUser: User | null) => {
-        setUser(nextUser);
         authStore.setUser(nextUser);
     }, []);
 
     const setReady = useCallback((value: boolean) => {
-        setIsReadyState(value);
         authStore.setReady(value);
     }, []);
 
@@ -25,21 +28,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const data = await apiFetch<User>(ENDPOINTS.auth.me, {
                 silent401: true,
             });
-            setAuthenticatedUser(data);
+            authStore.setUser(data);
         } catch {
-            setAuthenticatedUser(null);
+            authStore.setUser(null);
         } finally {
-            setReady(true);
+            authStore.setReady(true);
         }
-    }, [setAuthenticatedUser, setReady]);
+    }, []);
 
     useEffect(() => {
-        return authStore.subscribe(() => {
-            const s = authStore.getState();
-            setUser(s.user);
-            setIsReadyState(s.isReady);
-        });
-    }, []);
+        if (!isReady) {
+            refetch();
+        }
+    }, [isReady, refetch]);
 
     const value = useMemo(
         () => ({

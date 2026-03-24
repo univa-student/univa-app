@@ -19,12 +19,12 @@ import {
     useDeliveryModes,
     useRecurrenceRules,
     useLessonMaterials,
-} from "@/entities/schedule/api/hooks";
-import type { ScheduleLesson } from "@/entities/schedule/model/types";
+} from "@/modules/schedule/api/hooks";
+import type { ScheduleLesson } from "@/modules/schedule/model/types";
 import { ModalShell } from "@/shared/ui/modal-shell";
-import { FilePreviewDialog } from "@/features/files/preview-file/file-preview-dialog";
-import { isPreviewable } from "@/shared/ui/files/file-type-icon";
-import type { FileItem } from "@/entities/file/model/types";
+import { FilePreviewDialog } from "@/modules/files/ui/preview-file/file-preview-dialog";
+import { isPreviewable } from "@/modules/files/ui/file-type-icon";
+import type { FileItem } from "@/modules/files/model/types";
 import { API_BASE_URL } from "@/app/config/app.config";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 

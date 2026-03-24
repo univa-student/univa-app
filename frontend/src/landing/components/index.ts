@@ -1,0 +1,8 @@
+export { LandingHeader } from "./landing-header.tsx"
+export { LandingHero } from "./landing-hero.tsx"
+export { LandingFeatures } from "./landing-features.tsx"
+export { LandingHowItWorks } from "./landing-how-it-works.tsx"
+export { LandingTestimonials } from "./landing-testimonials.tsx"
+export { LandingComparison } from "./landing-comparison.tsx"
+export { LandingCta } from "./landing-cta.tsx"
+export { LandingFooter } from "./landing-footer.tsx"

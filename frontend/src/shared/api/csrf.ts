@@ -1,12 +1,22 @@
 import { API_BASE_URL } from "@/app/config/app.config";
 import { ENDPOINTS } from "./endpoints";
 
+let _fetched = false;
+
 /**
  * Fetch CSRF cookie from Sanctum.
- * Must be called once before any state-changing request (login, register, logout).
+ * Safe to call multiple times — request will be sent only once.
  */
 export async function fetchCsrfToken(): Promise<void> {
-    await fetch(`${API_BASE_URL}${ENDPOINTS.auth.csrf}`, {
+    if (_fetched) return;
+
+    const res = await fetch(`${API_BASE_URL}${ENDPOINTS.auth.csrf}`, {
         credentials: "include",
     });
+
+    if (!res.ok) {
+        throw new Error("Failed to fetch CSRF token");
+    }
+
+    _fetched = true;
 }

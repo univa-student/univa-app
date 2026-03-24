@@ -1,11 +1,13 @@
 import { API_BASE_URL } from "@/app/config/app.config";
 import { ApiError } from "@/shared/types/api";
 import { toast } from "@/shared/lib/toast-store";
+import { fetchCsrfToken } from "./csrf";
 
 type AlertVariant = "success" | "warning" | "destructive" | "info";
 
 export interface ApiFetchOptions extends RequestInit {
     silent401?: boolean;
+    skipCsrf?: boolean;
 }
 
 function triggerAlert(status: number, message?: string) {
@@ -20,29 +22,25 @@ function triggerAlert(status: number, message?: string) {
     toast({ variant, message });
 }
 
-// ─── XSRF token reader ──────────────────────────────────────────────────────
+// ─── XSRF token reader ───────────────────────────────────
 function getXsrfToken(): string | null {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
-    if (!match) return null;
-
-    return decodeURIComponent(match[1]);
+    return match ? decodeURIComponent(match[1]) : null;
 }
 
-// ─── Core fetch ──────────────────────────────────────────────────────────────
-
-/**
- * Universal API fetch wrapper.
- *
- * - Uses `credentials: "include"` for Sanctum cookie auth
- * - Automatically sends XSRF-TOKEN header
- * - Parses Laravel `ApiResponse` and returns `.data`
- * - Throws `ApiError` on non-2xx responses
- */
+// ─── Core fetch ──────────────────────────────────────────
 export async function apiFetch<T>(
     path: string,
     init: ApiFetchOptions = {},
 ): Promise<T> {
-    const { silent401 = false, ...requestInit } = init;
+    const { silent401 = false, skipCsrf = false, ...requestInit } = init;
+
+    const method = (requestInit.method ?? "GET").toUpperCase();
+
+    // 🔥 авто-CSRF для mutation
+    if (!skipCsrf && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+        await fetchCsrfToken();
+    }
 
     const xsrf = getXsrfToken();
     const requestBody = requestInit.body;
@@ -63,18 +61,19 @@ export async function apiFetch<T>(
         },
     });
 
-    if (!res.ok) {
-        const errorBody = await res.json().catch(() => ({}));
+    // читаємо body 1 раз
+    const json = await res.json().catch(() => ({}));
 
+    if (!res.ok) {
         const shouldSilence401 = silent401 && res.status === 401;
 
-        if (!shouldSilence401 && typeof errorBody.message === "string") {
-            triggerAlert(res.status, errorBody.message);
+        if (!shouldSilence401 && typeof json.message === "string") {
+            triggerAlert(res.status, json.message);
         }
 
         throw new ApiError(res.status, {
-            message: errorBody.message ?? `HTTP ${res.status}`,
-            errors: errorBody.errors,
+            message: json.message ?? `HTTP ${res.status}`,
+            errors: json.errors,
         });
     }
 
@@ -82,9 +81,7 @@ export async function apiFetch<T>(
         return undefined as T;
     }
 
-    const json = await res.json();
-
-    if (json.message && typeof json.message === "string") {
+    if (typeof json.message === "string") {
         triggerAlert(res.status, json.message);
     }
 
@@ -95,13 +92,11 @@ export async function apiFetch<T>(
     return (json.data !== undefined ? json.data : json) as T;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
+// ─── Helpers ─────────────────────────────────────────────
 function hasBody(init?: RequestInit): boolean {
     if (!init) return false;
     if (init.body) return true;
 
     const method = (init.method ?? "GET").toUpperCase();
-
-    return method === "POST" || method === "PUT" || method === "PATCH";
+    return ["POST", "PUT", "PATCH"].includes(method);
 }

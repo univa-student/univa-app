@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 export type AlertVariant = "default" | "info" | "success" | "warning" | "destructive";
 
@@ -8,24 +8,36 @@ export type AppAlert = {
     title?: string;
     message: string;
     icon?: React.ReactNode;
-    autoCloseMs?: number; // наприклад 4000
+    autoCloseMs?: number;
 };
 
 export function useAlert() {
-    const [alert, setAlert] = useState<AppAlert | null>(null);
+    const [alerts, setAlerts] = useState<AppAlert[]>([]);
+    const idRef = useRef(0);
 
     const show = useCallback((next: Omit<AppAlert, "id">) => {
-        const id = Date.now();
-        setAlert({ id, ...next });
+        const id = ++idRef.current;
+
+        const alert: AppAlert = { id, ...next };
+
+        setAlerts((prev) => [...prev, alert]);
 
         if (next.autoCloseMs && next.autoCloseMs > 0) {
-            window.setTimeout(() => {
-                setAlert((current) => (current?.id === id ? null : current));
+            const timer = window.setTimeout(() => {
+                setAlerts((prev) => prev.filter((a) => a.id !== id));
             }, next.autoCloseMs);
+
+            return () => clearTimeout(timer);
         }
     }, []);
 
-    const hide = useCallback(() => setAlert(null), []);
+    const hide = useCallback((id?: number) => {
+        if (id === undefined) {
+            setAlerts([]);
+        } else {
+            setAlerts((prev) => prev.filter((a) => a.id !== id));
+        }
+    }, []);
 
-    return { alert, show, hide };
+    return { alerts, show, hide };
 }

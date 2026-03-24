@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useSummary } from "@/entities/summary/api/hooks";
+import { useSummary } from "@/modules/ai/api/hooks";
 import {
     ArrowLeft,
     BookOpen,

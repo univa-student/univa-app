@@ -1,20 +1,18 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import { LazyBoundary } from "@/shared/ui/lazy-boundary";
-import { UiKitPage } from "@/pages/ui-kit/ui-kit.page.tsx";
 import { RouterErrorPage } from "@/shared/ui/error-boudary/router-error-boundary.tsx";
-import { UiKitLayout } from "@/widgets/layouts/ui-kit/ui-kit.layout.tsx";
 import { DashboardPage } from "@/pages/dashboard/dashboard.page.tsx";
-import { LandingPage } from "@/pages/main/landing.page.tsx";
-import { DocsPage } from "@/pages/main/docs.page.tsx";
-import { AboutPage } from "@/pages/main/about.page.tsx";
+import { LandingPage } from "@/landing/pages/landing.page.tsx";
+import { DocsPage } from "@/landing/pages/docs.page.tsx";
+import { AboutPage } from "@/landing/pages/about.page.tsx";
 import { SettingsPage } from "@/pages/settings/settings.page.tsx";
-import { DashboardLayout } from "@/widgets/layouts/app/dashboard.layout.tsx";
+import { DashboardLayout } from "@/shared/ui/layouts/app/dashboard.layout.tsx";
 import { LoginPage } from "@/pages/auth/login.page.tsx";
 import { RegisterPage } from "@/pages/auth/register.page.tsx";
-import { AuthGuard } from "@/processes/auth-guard/auth-guard.tsx";
-import { SubjectsPage } from "@/pages/schedule/subjects/subjects.page.tsx";
-import { SubjectDetailPage } from "@/pages/schedule/subjects/subject-detail.page.tsx";
+import { AuthGuard } from "@/app/router/guards/auth-guard.tsx";
+import { SubjectsPage } from "@/pages/subjects/subjects.page";
+import { SubjectDetailPage } from "@/pages/subjects/subject-detail.page";
 import { TodoPage } from "@/pages/dashboard/organizer/todo.page.tsx";
 import { SchedulePage } from "@/pages/schedule/schedule.page.tsx";
 import { PlaceholderPage } from "@/pages/dashboard/placeholder.page.tsx";
@@ -29,12 +27,12 @@ import { routesLoaders } from "./loaders.ts";
 import { AiHome } from "@/pages/ai/ai-home.tsx";
 import { SummariesListPage } from "@/pages/ai/summaries-list.tsx";
 import { SummaryViewPage } from "@/pages/ai/summary-view.tsx";
-import {IntegrationsPage} from "@/pages/main/integrations.page.tsx";
-import {StatusPage} from "@/pages/main/status.page.tsx";
-import {ApiPage} from "@/pages/main/api.page.tsx";
-import {SupportPage} from "@/pages/main/support.page.tsx";
-import {CookiesPage, LicensesPage, PrivacyPage, TermsPage} from "@/pages/main/licenses.page.tsx";
-import {BlogPage, CareerPage, ContactPage} from "@/pages/main/blog.page.tsx";
+import {IntegrationsPage} from "@/landing/pages/integrations.page.tsx";
+import {StatusPage} from "@/landing/pages/status.page.tsx";
+import {ApiPage} from "@/landing/pages/api.page.tsx";
+import {SupportPage} from "@/landing/pages/support.page.tsx";
+import {CookiesPage, LicensesPage, PrivacyPage, TermsPage} from "@/landing/pages/licenses.page.tsx";
+import {BlogPage, CareerPage, ContactPage} from "@/landing/pages/blog.page.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -442,17 +440,6 @@ export const router = createBrowserRouter([
                         ),
                     },
                 ]
-            },
-
-            {
-                path: "ui-kit-page",
-                element: (
-                    <LazyBoundary>
-                        <UiKitLayout>
-                            <UiKitPage />
-                        </UiKitLayout>
-                    </LazyBoundary>
-                ),
             },
         ]
     },

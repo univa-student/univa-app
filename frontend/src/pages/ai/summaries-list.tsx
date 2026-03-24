@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { useSummaries, useDeleteSummary } from "@/entities/summary/api/hooks";
-import type { SummaryListItem } from "@/entities/summary/model/types";
+import { useSummaries, useDeleteSummary } from "@/modules/ai/api/hooks";
+import type { SummaryListItem } from "@/modules/ai/model/types";
 import {
     FileText,
     Trash2,

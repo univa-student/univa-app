@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { DeadlinesBoard } from "@/widgets/deadlines-board";
+import { DeadlinesBoard } from "@/modules/deadlines/ui/deadlines-board";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/shadcn/ui/tabs";
-import { useDeadlinesStats } from "@/entities/deadline/api/hooks";
+import { useDeadlinesStats } from "@/modules/deadlines/api/hooks";
 import usePageTitle from "@/shared/hooks/usePageTitle";
 
 export function DeadlinesPage() {

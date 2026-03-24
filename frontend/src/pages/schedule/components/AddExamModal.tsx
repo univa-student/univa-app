@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { GraduationCapIcon, MapPinIcon, StickyNoteIcon, ClockIcon, BookOpenIcon } from "lucide-react";
-import { useSubjects, useCreateExam, useExamTypes } from "@/entities/schedule/api/hooks";
+import { useSubjects, useCreateExam, useExamTypes } from "@/modules/schedule/api/hooks";
 import { ModalShell } from "@/shared/ui/modal-shell";
 
 interface Props {

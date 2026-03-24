@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useSignUp } from "@/features/auth/sign-up/use-sign-up";
+import { useSignUp } from "@/modules/auth/ui/sign-up/use-sign-up";
 import { useToast } from "@/shared/hooks/useToast";
-import usePageTitle from "@/shared/hooks/usePageTitle";
 import { RegisterForm, type RegisterFormData } from "@/shared/shadcn/components/auth/register-form";
-import { AuthPageShell } from "@/shared/ui/auth/auth-page-shell";
+import { AuthPageShell } from "@/modules/auth/ui/auth-page-shell";
 import { extractApiFieldErrors } from "@/shared/lib/forms/extract-api-field-errors";
+import usePageTitle from "@/shared/hooks/usePageTitle.ts";
 
 export function RegisterPage() {
     usePageTitle("Реєстрація");

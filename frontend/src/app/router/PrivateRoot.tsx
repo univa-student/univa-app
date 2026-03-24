@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { PrivateProviders } from "@/app/providers/providers";
-import { AppFrame } from "@/widgets/layouts/app/app-frame";
+import { AppFrame } from "@/shared/ui/layouts/app/app-frame";
 
 export function PrivateRoot() {
     return (

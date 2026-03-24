@@ -139,7 +139,7 @@ export function AvatarPicker({
         e.preventDefault()
     }
 
-    const onCropComplete = useCallback((_area: any, areaPixels: Area) => {
+    const onCropComplete = useCallback((_area: Area, areaPixels: Area) => {
         setCroppedAreaPixels(areaPixels)
     }, [])
 
@@ -194,7 +194,6 @@ export function AvatarPicker({
                 <div className="flex items-center gap-4">
                     <div className="h-14 w-14 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
                         {currentPreview ? (
-                            // eslint-disable-next-line @next/next/no-img-element
                             <img src={currentPreview} alt="Avatar preview" className="h-full w-full object-cover" />
                         ) : (
                             <ImageIcon className="h-5 w-5 text-muted-foreground" />

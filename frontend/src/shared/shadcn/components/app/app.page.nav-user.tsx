@@ -1,7 +1,7 @@
 import { useNavigate, Link } from "react-router-dom"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { userQueries } from "@/entities/user/api/queries"
-import { authStore } from "@/entities/user/model/auth-store"
+import { userQueries } from "@/modules/auth/api/queries"
+import { authStore } from "@/modules/auth/model/auth-store"
 import {
   Avatar,
   AvatarFallback,
@@ -52,6 +52,7 @@ function getInitials(name: string) {
     .toUpperCase() || "U"
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function AppPageNavUser({ user, onLogout: _onLogout, avatarBaseUrl }: Props) {
   const { isMobile } = useSidebar()
   const navigate = useNavigate()

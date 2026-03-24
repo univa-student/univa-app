@@ -1,17 +1,24 @@
 import { redirect } from "react-router-dom";
 
-import { queryClient } from "@/shared/api/query-client.ts";
-import { authStore } from "@/entities/user/model/auth-store.ts";
-import { userQueries } from "@/entities/user/api/queries.ts";
+import { queryClient } from "@/shared/api/query-client";
+import { authStore } from "@/modules/auth/model/auth-store";
+import { userQueries } from "@/modules/auth/api/queries";
 
+// ─── helpers ─────────────────────────────────────────────
+function setAuth(user: Parameters<typeof authStore.setUser>[0]) {
+    authStore.setUser(user);
+    authStore.setReady(true);
+}
+
+// ─── loaders ─────────────────────────────────────────────
 export const routesLoaders = {
     publicRoot: async () => {
-        authStore.setReady(true);
+        setAuth(null);
         return null;
     },
 
     guestOnly: async () => {
-        authStore.setReady(true);
+        setAuth(null);
 
         if (authStore.getState().user !== null) {
             return redirect("/dashboard");
@@ -23,15 +30,10 @@ export const routesLoaders = {
     privateRoot: async () => {
         try {
             const user = await queryClient.ensureQueryData(userQueries.me());
-
-            authStore.setUser(user);
-            authStore.setReady(true);
-
+            setAuth(user);
             return null;
         } catch {
-            authStore.setUser(null);
-            authStore.setReady(true);
-
+            setAuth(null);
             return redirect("/login");
         }
     },
