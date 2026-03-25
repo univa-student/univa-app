@@ -17,7 +17,8 @@ import {
 import { useChangePassword, useRevokeSession, useSessions } from "@/modules/auth/api/hooks";
 import type { AuthSession } from "@/modules/auth/model/types";
 import type { TabDef } from "@/modules/settings/model/settings.types";
-import { containerAnim, itemAnim } from "@/modules/settings/ui/settings.animations";
+import { TabShell } from "@/modules/settings/ui/settings.renderers";
+import { itemAnim } from "@/modules/settings/ui/settings.animations";
 import { Alert, AlertDescription } from "@/shared/shadcn/ui/alert";
 import { Badge } from "@/shared/shadcn/ui/badge";
 import { Button } from "@/shared/shadcn/ui/button";
@@ -241,12 +242,7 @@ export function SecurityTab(_: { tab: TabDef }) {
         : null;
 
     return (
-        <motion.div
-            className="flex flex-col gap-6"
-            variants={containerAnim}
-            initial="hidden"
-            animate="visible"
-        >
+        <TabShell showSave={false}>
             <motion.div variants={itemAnim}>
                 <Card>
                     <CardHeader>
@@ -422,6 +418,6 @@ export function SecurityTab(_: { tab: TabDef }) {
                     </CardContent>
                 </Card>
             </motion.div>
-        </motion.div>
+        </TabShell>
     );
 }

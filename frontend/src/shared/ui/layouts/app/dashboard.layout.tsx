@@ -13,11 +13,6 @@ export type { BreadcrumbEntry }
 interface DashboardLayoutProps {
     children: React.ReactNode
     breadcrumbs?: BreadcrumbEntry[]
-    /**
-     * When true the content wrapper fills height (no padding), useful for
-     * calendar / files pages. Also renders #dashboard-right-panel portal slot
-     * as a sibling island.
-     */
     fullHeight?: boolean
 }
 
@@ -36,7 +31,6 @@ export function DashboardLayout({
 
     return (
         <div className="island-content">
-            {/* Breadcrumb header */}
             {breadcrumbs.length > 0 && (
                 <header className="island-header">
                     <Breadcrumb>
@@ -71,9 +65,8 @@ export function DashboardLayout({
                 </header>
             )}
 
-            {/* Scroll container */}
             <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden">
-                <div className={fullHeight ? "h-full flex flex-col" : "flex flex-col gap-4 p-4"}>
+                <div className={fullHeight ? "h-full flex flex-col" : "flex flex-col gap-4 p-3 md:p-4"}>
                     {children}
                 </div>
             </div>

@@ -18,7 +18,6 @@ import {
     PhoneIcon,
     SparklesIcon,
     Trash2Icon,
-    SaveIcon,
     AlertTriangleIcon,
 } from "lucide-react"
 import { useAuthUser } from "@/modules/auth/model/useAuthUser"
@@ -34,9 +33,9 @@ import {
 } from "@/modules/profiles/api/hooks"
 import type { TabDef } from "@/modules/settings/model/settings.types.ts"
 import {
-    containerAnim,
     itemAnim,
 } from "@/modules/settings/ui/settings.animations.ts"
+import { TabShell } from "@/modules/settings/ui/settings.renderers.tsx"
 
 const selectClassName = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
 const textAreaClassName = "flex min-h-[112px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -266,9 +265,24 @@ export function ProfileTab(_: { tab: TabDef }) {
         : null
 
     return (
-        <div className="relative pb-24">
-            <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">
-                {/* Avatar and Basic Info */}
+        <TabShell
+            isDirty={hasAnyChanges}
+            isSaving={isAnySaving}
+            onSave={handleSaveAll}
+            onCancel={() => {
+                setForm(initialForm)
+                setEducationForm(initialEducationForm)
+            }}
+            canSave={(!hasProfileChanges && hasEducationChanges && !canSaveEducation) ? false : true}
+            dirtyMessage={
+                hasProfileChanges && hasEducationChanges
+                    ? "Є незбережені зміни в особистій інформації та освітньому профілі"
+                    : hasProfileChanges
+                        ? "Є незбережені зміни в особистій інформації"
+                        : "Є незбережені зміни в освітньому профілі"
+            }
+        >
+            {/* Avatar and Basic Info */}
                 <motion.div variants={itemAnim}>
                     <Card>
                         <CardContent className="flex items-center gap-5">
@@ -716,59 +730,6 @@ export function ProfileTab(_: { tab: TabDef }) {
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </motion.div>
-
-            {/* Sticky Save Button */}
-            <AnimatePresence>
-                {hasAnyChanges && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4"
-                    >
-                        <Card className="shadow-lg">
-                            <CardContent className="flex items-center gap-4 p-4">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <AlertTriangleIcon className="size-4 text-amber-500" />
-                                    <span className="font-medium">
-                                        {hasProfileChanges && hasEducationChanges
-                                            ? "Є незбережені зміни в особистій інформації та освітньому профілі"
-                                            : hasProfileChanges
-                                                ? "Є незбережені зміни в особистій інформації"
-                                                : "Є незбережені зміни в освітньому профілі"}
-                                    </span>
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            setForm(initialForm)
-                                            setEducationForm(initialEducationForm)
-                                        }}
-                                        disabled={isAnySaving}
-                                    >
-                                        Скасувати
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        onClick={handleSaveAll}
-                                        disabled={isAnySaving || (!hasProfileChanges && hasEducationChanges && !canSaveEducation)}
-                                    >
-                                        {isAnySaving ? (
-                                            <LoaderCircleIcon className="mr-2 size-4 animate-spin" />
-                                        ) : (
-                                            <SaveIcon className="mr-2 size-4" />
-                                        )}
-                                        Зберегти всі зміни
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+        </TabShell>
     )
 }

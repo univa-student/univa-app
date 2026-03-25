@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/shadcn/ui/car
 import { Separator } from "@/shared/shadcn/ui/separator"
 import { UnplugIcon } from "lucide-react"
 import type {TabDef} from "@/modules/settings/model/settings.types.ts";
-import {containerAnim, itemAnim} from "@/modules/settings/ui/settings.animations.ts";
+import { TabShell } from "@/modules/settings/ui/settings.renderers.tsx";
+import { itemAnim } from "@/modules/settings/ui/settings.animations.ts";
 
 const defaultIntegrations = [
     { name: "Google Calendar", icon: "📅", description: "Синхронізація подій та розкладу", connected: false, status: "" },
@@ -22,7 +23,7 @@ export function IntegrationsTab({ tab: _tab }: { tab: TabDef }) {
         setItems(prev => prev.map(i => i.name === name ? { ...i, connected: !i.connected, status: i.connected ? "" : "Підключено" } : i))
 
     return (
-        <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">
+        <TabShell showSave={false}>
             <motion.div variants={itemAnim}>
                 <Card>
                     <CardHeader>
@@ -56,6 +57,6 @@ export function IntegrationsTab({ tab: _tab }: { tab: TabDef }) {
                     </CardContent>
                 </Card>
             </motion.div>
-        </motion.div>
+        </TabShell>
     )
 }

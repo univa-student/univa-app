@@ -11,9 +11,11 @@ import {
     SettingsIcon,
     SparklesIcon,
     MaximizeIcon,
-    MoonIcon,
     SunIcon,
-    UserIcon
+    UserIcon,
+    MenuIcon,
+    ChevronRightIcon,
+    MoonIcon
 } from "lucide-react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -40,6 +42,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/shared/shadcn/ui/dropdown-menu";
+import {
+    Sheet,
+    SheetContent,
+    SheetTrigger,
+    SheetTitle,
+    SheetHeader
+} from "@/shared/shadcn/ui/sheet";
 
 /* ─── Context ────────────────────────────────────────────────────── */
 
@@ -131,21 +140,140 @@ function useFullscreen() {
 
 /* ─── UI Parts ─────────────────────────────────────────────────────── */
 
+function MobileNavDrawer() {
+    const { pathname, setSidePanelOpen } = useAppFrame();
+    const [open, setOpen] = useState(false);
+    const { theme } = useUserSettings();
+    const isDark = theme === "dark";
+    const logoSrc = useThemeLogo("full-no-bg");
+
+    // Auth & Logout
+    const user = useAuthUser();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const { mutate: logout, isPending } = useMutation({
+        ...userQueries.logout(),
+        onSettled: () => {
+            authStore.reset();
+            queryClient.clear();
+            navigate("/login", { replace: true });
+        },
+    });
+
+    const userName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Користувач";
+    const userEmail = user?.email ?? "";
+    const avatarUrl = user?.avatarPath ?? "";
+
+    const toggleTheme = () => {
+        const current = userSettingsStore.getState().ui;
+        if (!current) return;
+        const next = isDark ? "light" : "dark";
+        const updated = { ...current, theme: next as "light" | "dark" };
+        userSettingsStore.setAll({ ui: updated, items: userSettingsStore.getState().items });
+        applyDomSettings(updated);
+    };
+
+    return (
+        <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+                <button className="flex items-center justify-center size-8 rounded-md bg-transparent hover:bg-accent/50 text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <MenuIcon className="size-5" />
+                </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] p-0 flex flex-col gap-0 border-r-border/60 bg-background/95 backdrop-blur-md">
+                <SheetHeader className="px-4 py-4 border-b border-border/50 text-left">
+                    <SheetTitle className="flex items-center gap-2 text-lg">
+                        <img src={logoSrc} alt="Univa" className="h-8 object-contain" />
+                    </SheetTitle>
+                </SheetHeader>
+                
+                {/* User Profile Area */}
+                <Link 
+                    to="/dashboard/profile"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 border-b border-border/50 hover:bg-accent/30 transition-colors"
+                >
+                    <Avatar className="size-9 rounded-full border border-border/50 shrink-0">
+                        <AvatarImage src={avatarUrl} alt={userName} />
+                        <AvatarFallback className="rounded-full bg-primary/10 text-primary font-semibold text-xs">
+                            {getInitials(userName)}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold truncate text-foreground">{userName}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{userEmail}</div>
+                    </div>
+                    <ChevronRightIcon className="size-4 text-muted-foreground opacity-50" />
+                </Link>
+
+                {/* Navigation Links */}
+                <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
+                    {navItems.map((item) => {
+                        const active = item.url === "/dashboard"
+                            ? pathname === "/dashboard"
+                            : pathname.startsWith(item.url);
+                        const Icon = item.icon;
+
+                        return (
+                            <Link
+                                key={item.url}
+                                to={item.url}
+                                onClick={() => { setOpen(false); setSidePanelOpen(false); }}
+                                className={cn(
+                                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                                    active
+                                        ? "bg-primary/10 text-primary"
+                                        : "hover:bg-accent/40 text-foreground/80 hover:text-foreground"
+                                )}
+                            >
+                                <Icon className="size-5" />
+                                {item.title}
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* Footer Actions */}
+                <div className="p-3 border-t border-border/50 flex flex-col gap-1">
+                    <button
+                        onClick={toggleTheme}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-foreground/80 hover:bg-accent/40 w-full transition-colors"
+                    >
+                        {isDark ? <SunIcon className="size-5" /> : <MoonIcon className="size-5" />}
+                        {isDark ? "Світла тема" : "Темна тема"}
+                    </button>
+                    <button
+                        onClick={() => logout()}
+                        disabled={isPending}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 w-full transition-colors"
+                    >
+                        <LogOutIcon className="size-5" />
+                        {isPending ? "Вихід..." : "Вийти"}
+                    </button>
+                </div>
+            </SheetContent>
+        </Sheet>
+    );
+}
+
 function AppTopBar() {
     const { pageTitle, toggleSidePanel, sidePanelOpen } = useAppFrame();
     const logoSrc = useThemeLogo("logo-no-bg");
 
     return (
         <header className="app-top-bar">
-            {/* ── Left: logo ── */}
-            <div className="app-top-bar-left">
+            {/* ── Left: mobile menu + logo ── */}
+            <div className="app-top-bar-left !w-auto !justify-start">
+                <div className="md:hidden flex items-center">
+                    <MobileNavDrawer />
+                </div>
                 <Tooltip delayDuration={200}>
                     <TooltipTrigger asChild>
                         <Link
                             to="/dashboard"
-                            className="flex items-center justify-center size-[28px] rounded-md"
+                            className="hidden md:flex flex items-center justify-center size-8 rounded-md hover:bg-accent/40 transition-colors"
                         >
-                            <img src={logoSrc} alt="Univa" className="size-7 object-contain" />
+                            <img src={logoSrc} alt="Univa" className="size-6 object-contain" />
                         </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -161,16 +289,17 @@ function AppTopBar() {
                         <button
                             onClick={toggleSidePanel}
                             className={cn(
-                                "flex size-[26px] items-center justify-center rounded-md border border-transparent transition-all",
+                                "sidebar-toggle-btn",
+                                "flex size-8 items-center justify-center rounded-md border border-transparent transition-all",
                                 "outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                                 sidePanelOpen
                                     ? "bg-primary text-primary-foreground shadow-sm"
-                                    : "bg-transparent hover:bg-accent/90 hover:text-foreground"
+                                    : "bg-transparent hover:bg-accent/60 hover:text-foreground"
                             )}
                             aria-label="Бокова панель"
                             type="button"
                         >
-                            <SidebarIcon className="size-[18px]" />
+                            <SidebarIcon className="size-5" />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
@@ -178,16 +307,16 @@ function AppTopBar() {
                     </TooltipContent>
                 </Tooltip>
 
-                <span className="text-[12px] font-medium text-foreground/80 truncate">
+                <span className="text-[12px] font-medium text-foreground/80 truncate ml-2">
                     {pageTitle}
                 </span>
             </div>
 
             {/* ── Right: clock + utility icons ── */}
-            <div className="app-top-bar-right">
+            <div className="app-top-bar-right gap-1">
                 <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
-                        <button className="app-top-bar-icon" aria-label="Пошук">
+                        <button className="flex size-8 items-center justify-center rounded-md hover:bg-accent/60 text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Пошук">
                             <SearchIcon className="size-5" />
                         </button>
                     </TooltipTrigger>
@@ -196,7 +325,7 @@ function AppTopBar() {
 
                 <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
-                        <Link to="/dashboard/notifications" className="app-top-bar-icon" aria-label="Сповіщення">
+                        <Link to="/dashboard/notifications" className="flex size-8 items-center justify-center rounded-md hover:bg-accent/60 text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Сповіщення">
                             <BellIcon className="size-5" />
                         </Link>
                     </TooltipTrigger>
@@ -228,14 +357,14 @@ function AppRail() {
                                 <Link
                                     to={item.url}
                                     className={cn(
-                                        "relative flex items-center justify-center size-[40px] rounded-md transition-all duration-150",
-                                        active ? "" : "hover:bg-accent/20 hover:text-foreground"
+                                        "relative flex items-center justify-center size-10 rounded-lg transition-all duration-150",
+                                        active ? "" : "hover:bg-accent/50 hover:text-foreground"
                                     )}
                                     aria-label={item.title}
                                 >
-                                    <Icon className="size-6" />
+                                    <Icon className="size-5" />
                                     {active && (
-                                        <span className="absolute left-1 top-1/2 -translate-y-1/2 w-[2.5px] h-6 rounded-full bg-primary" />
+                                        <span className="absolute left-1 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-full bg-primary" />
                                     )}
                                 </Link>
                             </TooltipTrigger>
@@ -279,8 +408,8 @@ function AppRightRail() {
                         <button
                             onClick={toggleTheme}
                             className={cn(
-                                "flex items-center justify-center size-[40px] rounded-md border-none bg-transparent cursor-pointer",
-                                "hover:bg-accent/70 hover:text-foreground transition-colors"
+                                "flex items-center justify-center size-10 rounded-lg border-none bg-transparent cursor-pointer",
+                                "hover:bg-accent/50 hover:text-foreground transition-colors"
                             )}
                             aria-label={isDark ? "Світла тема" : "Темна тема"}
                         >
@@ -297,8 +426,8 @@ function AppRightRail() {
                         <button
                             onClick={toggleFs}
                             className={cn(
-                                "flex items-center justify-center size-[40px] rounded-md border-none bg-transparent cursor-pointer",
-                                "hover:bg-accent/70 hover:text-foreground transition-colors"
+                                "flex items-center justify-center size-10 rounded-lg border-none bg-transparent cursor-pointer",
+                                "hover:bg-accent/50 hover:text-foreground transition-colors"
                             )}
                             aria-label="Повний екран"
                         >
@@ -341,16 +470,15 @@ function AppBottomBar() {
     const Icon = meta.icon;
 
     return (
-        <footer className="app-bottom-bar flex items-center justify-between gap-2 text-xs w-full px-2">
+        <footer className="app-bottom-bar flex items-center justify-between gap-2 text-xs w-full">
 
-            {/* ── Profile & Helper Text ── */}
             <div className="flex flex-1 items-center gap-2 min-w-0">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button
                             className={cn(
-                                "flex h-7 items-center gap-2 rounded-md px-1.5 transition-colors",
-                                "hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                "flex h-8 items-center gap-2 rounded-md px-2 transition-colors",
+                                "hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             )}
                             aria-label="Профіль"
                         >
@@ -417,17 +545,15 @@ function AppBottomBar() {
                 </div>
             </div>
 
-            {/* ── Center: Version ── */}
             <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
-                <div className="flex min-w-0 items-center gap-2 rounded-md border border-border/60 bg-background/60 px-2.5 py-1">
+                <div className="flex h-8 items-center justify-center gap-2 rounded-lg border border-border/60 bg-background/60 px-2.5">
                     <span className="font-medium text-foreground/80">Univa</span>
                     <span className="text-muted-foreground/45">{APP_VERSION}</span>
                 </div>
             </div>
 
-            {/* ── Right: Time & Portal ── */}
-            <div className="flex flex-1 justify-end items-center gap-2 min-w-0">
-                <StatusBadge className="hidden h-8 items-center gap-2 px-3 md:inline-flex">
+            <div className="flex flex-1 justify-end items-center min-w-0">
+                <StatusBadge className="hidden h-8 items-center gap-2 px-2.5 md:inline-flex rounded-lg">
                     <CalendarDaysIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     <span className="max-w-[170px] truncate text-[12px] font-medium capitalize text-foreground/85">
                         {dateStr}
@@ -438,7 +564,7 @@ function AppBottomBar() {
                     </span>
                 </StatusBadge>
 
-                <StatusBadge className="h-8 items-center border-border/70 bg-background px-3 shadow-sm">
+                <StatusBadge className="h-8 items-center border-border/70 bg-background px-3 shadow-sm rounded-lg">
                     <span className="tabular-nums text-[13px] font-semibold tracking-[0.03em] text-foreground">
                         {timeStr}
                     </span>
@@ -450,12 +576,13 @@ function AppBottomBar() {
     );
 }
 
-/* ─── Provider & Wrapper ───────────────────────────────────────────── */
-
 export function AppFrame({ children }: { children: React.ReactNode }) {
     const { pathname } = useLocation();
     const [pageTitle, setPageTitle] = useState("");
-    const [sidePanelOpen, setSidePanelOpen] = useState(true);
+    const [sidePanelOpen, setSidePanelOpen] = useState(() => {
+        if (typeof window !== "undefined") return window.innerWidth > 768;
+        return true;
+    });
 
     const toggleSidePanel = useCallback(() => {
         setSidePanelOpen((prev) => !prev);
@@ -492,9 +619,17 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 <AppRail />
 
                 <div className="app-center">
+                    {/* Mobile Backdrop for Side Panel */}
+                    <div
+                        className={cn(
+                            "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-all md:hidden",
+                            sidePanelOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                        )}
+                        onClick={() => setSidePanelOpen(false)}
+                    />
                     <div
                         id="app-side-panel"
-                        className={cn("app-side-panel", !sidePanelOpen && "!hidden")}
+                        className={cn("app-side-panel", sidePanelOpen && "is-open")}
                     />
                     {children}
                 </div>

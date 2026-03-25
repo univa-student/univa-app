@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { Input } from "@/shared/shadcn/ui/input"
-import { Button } from "@/shared/shadcn/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/shadcn/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/ui/avatar"
 import { Alert, AlertDescription } from "@/shared/shadcn/ui/alert"
@@ -10,13 +9,13 @@ import {
     UserIcon,
     GraduationCapIcon,
     CheckCircle2Icon,
-    AlertCircleIcon,
     LoaderCircleIcon,
 } from "lucide-react"
 import { useAuthUser } from "@/modules/auth/model/useAuthUser"
 import { useUpdateProfile, useUploadAvatar } from "@/modules/auth/api/hooks"
 import type {TabDef} from "@/modules/settings/model/settings.types.ts";
-import {containerAnim, itemAnim} from "@/modules/settings/ui/settings.animations.ts";
+import { TabShell } from "@/modules/settings/ui/settings.renderers.tsx";
+import { itemAnim } from "@/modules/settings/ui/settings.animations.ts";
 
 interface FieldDef {
     id: string
@@ -85,6 +84,23 @@ export function AccountTab(_: { tab: TabDef }) {
         })
     }
 
+    const handleCancel = () => {
+        if (!user) return
+        setForm({
+            firstName: user.firstName ?? "",
+            lastName: user.lastName ?? "",
+            username: user.username ?? "",
+            email: user.email ?? "",
+        })
+    }
+
+    const isDirty = JSON.stringify(form) !== JSON.stringify({
+        firstName: user?.firstName ?? "",
+        lastName: user?.lastName ?? "",
+        username: user?.username ?? "",
+        email: user?.email ?? "",
+    })
+
     const handleAvatarClick = () => {
         fileInputRef.current?.click()
     }
@@ -93,7 +109,6 @@ export function AccountTab(_: { tab: TabDef }) {
         const file = e.target.files?.[0]
         if (!file) return
         uploadAvatar.mutate(file)
-        // Reset so same file can be re-selected
         e.target.value = ""
     }
 
@@ -110,7 +125,13 @@ export function AccountTab(_: { tab: TabDef }) {
         : null
 
     return (
-        <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">
+        <TabShell
+            isDirty={isDirty}
+            isSaving={isLoading}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            error={errorMsg}
+        >
             {/* Avatar */}
             <motion.div variants={itemAnim}>
                 <Card>
@@ -216,27 +237,12 @@ export function AccountTab(_: { tab: TabDef }) {
                 </Card>
             </motion.div>
 
-            {/* Status messages */}
-            {isSuccess && (
+            {isSuccess && !isDirty && (
                 <Alert variant="default" className="border-green-500/30 bg-green-500/5">
                     <CheckCircle2Icon className="size-4 text-green-500" />
                     <AlertDescription className="text-green-600">Профіль успішно оновлено!</AlertDescription>
                 </Alert>
             )}
-            {isError && (
-                <Alert variant="destructive">
-                    <AlertCircleIcon className="size-4" />
-                    <AlertDescription>{errorMsg}</AlertDescription>
-                </Alert>
-            )}
-
-            {/* Save button */}
-            <div className="flex justify-end">
-                <Button onClick={handleSave} disabled={isLoading}>
-                    {isLoading && <LoaderCircleIcon className="size-4 mr-2 animate-spin" />}
-                    Зберегти зміни
-                </Button>
-            </div>
-        </motion.div>
+        </TabShell>
     )
 }
