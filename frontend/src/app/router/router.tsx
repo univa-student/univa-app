@@ -22,6 +22,7 @@ import { ChatPage } from "@/pages/chat/chat.page";
 import { DeadlinesPage } from "@/pages/deadlines/deadlines.page";
 import { SpacesPage } from "@/pages/spaces/spaces.page";
 import { NotificationsPage } from "@/pages/notifications/notifications.page";
+import { FriendsPage } from "@/pages/friends/friends.page.tsx";
 
 import { PrivateRoot } from "./PrivateRoot.tsx";
 import { routesLoaders } from "./loaders.ts";
@@ -397,6 +398,23 @@ export const router = createBrowserRouter([
                                         ]}
                                     >
                                         <AiHome />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/friends",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Друзі" },
+                                        ]}
+                                    >
+                                        <FriendsPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>

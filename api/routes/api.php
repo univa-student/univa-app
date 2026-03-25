@@ -20,6 +20,7 @@ use App\Modules\Schedule\Http\Controllers\ScheduleLessonController;
 use App\Modules\Settings\Http\Controllers\SettingsController;
 use App\Modules\Subjects\Http\Controllers\SubjectController;
 use App\Modules\System\HealthController;
+use App\Modules\User\Http\Controllers\FriendshipController;
 use App\Modules\User\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -82,6 +83,16 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
             Route::post('/password', 'changePassword');
             Route::post('/avatar', 'uploadAvatar');
             Route::delete('/avatar', 'deleteAvatar');
+        });
+
+        Route::controller(FriendshipController::class)->group(function () {
+            Route::get('/friends', 'index');
+            Route::get('/friends/pending', 'pending');
+            Route::get('/friends/search', 'search');
+            Route::get('/users/{user}/friendship', 'status');
+            Route::post('/users/{user}/friends', 'store');
+            Route::patch('/friends/{user}/accept', 'accept');
+            Route::delete('/friends/{user}', 'destroy');
         });
 
         Route::controller(SessionController::class)->group(function () {

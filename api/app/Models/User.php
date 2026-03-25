@@ -3,8 +3,12 @@
 namespace App\Models;
 
 use App\Modules\Profiles\Models\Profile;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Modules\User\Enums\FriendshipStatus;
+use App\Modules\User\Models\Friendship;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -44,5 +48,15 @@ class User extends Authenticatable
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
+    }
+
+    public function sentFriendships(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'user_id');
+    }
+
+    public function receivedFriendships(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'friend_id');
     }
 }

@@ -26,6 +26,9 @@ export const WS_EVENTS = {
 
     // Notifications
     NOTIFICATION_CREATED: "notification.created",
+
+    // Friends
+    FRIENDSHIP_UPDATED: "friendship.updated",
 } as const;
 
 export type WsEventName = typeof WS_EVENTS[keyof typeof WS_EVENTS];
@@ -42,4 +45,10 @@ export interface WsEventMap {
     "task.updated": { id: number };
     "schedule.updated": { userId: number };
     "notification.created": { id: number; type: string; payload: unknown };
+    "friendship.updated": {
+        action: "request_sent" | "accepted" | "removed";
+        actorId: number;
+        otherUserId: number;
+        friendshipStatus: "none" | "accepted" | "pending_sent" | "pending_received" | "self";
+    };
 }

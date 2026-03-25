@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationApi } from "./index";
 import { useEffect } from "react";
+import { WS_EVENTS } from "@/shared/realtime/events";
 import { wsClient } from "@/shared/realtime/ws-client";
 import { authStore } from "@/modules/auth/model/auth-store";
 
@@ -28,7 +29,7 @@ export function useNotifications() {
             }, 750);
         };
 
-        wsClient.listen("private", channelName, "notification.created", handleNewNotification);
+        wsClient.listen("private", channelName, WS_EVENTS.NOTIFICATION_CREATED, handleNewNotification);
 
         return () => {
             if (invalidateTimer !== null) {

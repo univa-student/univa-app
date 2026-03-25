@@ -7,6 +7,7 @@ import {
     ListChecksIcon,
     Settings2Icon,
     AlertCircleIcon,
+    UsersIcon,
     type LucideIcon, BookCheckIcon,
 } from "lucide-react"
 
@@ -51,6 +52,12 @@ export const navItems: NavItem[] = [
         title: "Файли",
         url: "/dashboard/files",
         icon: FolderOpenIcon,
+        items: [],
+    },
+    {
+        title: "Друзі",
+        url: "/dashboard/friends",
+        icon: UsersIcon,
         items: [],
     },
     {

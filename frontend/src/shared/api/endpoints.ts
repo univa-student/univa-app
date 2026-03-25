@@ -34,6 +34,16 @@ export const ENDPOINTS = {
         avatar: `${API}/me/avatar`,
     },
 
+    friends: {
+        list: `${API}/me/friends`,
+        pending: `${API}/me/friends/pending`,
+        search: (query: string) => withQuery(`${API}/me/friends/search`, { q: query }),
+        status: (userId: number) => `${API}/me/users/${userId}/friendship`,
+        send: (userId: number) => `${API}/me/users/${userId}/friends`,
+        accept: (userId: number) => `${API}/me/friends/${userId}/accept`,
+        remove: (userId: number) => `${API}/me/friends/${userId}`,
+    },
+
     profiles: {
         me: `${API}/me/profile`,
         byUsername: (username: string) =>

@@ -15,18 +15,19 @@ import {
     UserRoundIcon,
 } from "lucide-react"
 
-import { useAuthUser } from "@/modules/auth/model/useAuthUser"
 import {
     useStudentProfile,
     useStudentProfileByUsername,
 } from "@/modules/profiles/api/hooks"
+import { useFriendsRealtime } from "@/modules/user/api/hooks"
+import { FriendshipButton } from "@/modules/user/ui/friendship-button"
 import usePageTitle from "@/shared/hooks/usePageTitle"
 import { cn } from "@/shared/shadcn/lib/utils.ts"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/ui/avatar"
 import { Badge } from "@/shared/shadcn/ui/badge"
 import { Button } from "@/shared/shadcn/ui/button"
-import { Progress } from "@/shared/shadcn/ui/progress"
 import { Skeleton } from "@/shared/shadcn/ui/skeleton"
+import {useAuthUser} from "@/modules/auth/model/useAuthUser.ts";
 
 function getInitials(name: string) {
     return (
@@ -145,6 +146,7 @@ export function ProfilePage() {
 
     const ownProfileQuery = useStudentProfile(!isForeignProfile)
     const foreignProfileQuery = useStudentProfileByUsername(foreignUsername)
+    useFriendsRealtime(isForeignProfile)
 
     const profile = isForeignProfile ? foreignProfileQuery.data : ownProfileQuery.data
     const isLoading = isForeignProfile
@@ -191,9 +193,7 @@ export function ProfilePage() {
     const birthDate = formatBirthDate(profile.birthDate)
     const phone = profile.phone ?? "—"
     const email = profileUser?.email ?? "—"
-    const publicUsername = profileUser?.username ? `@${profileUser.username}` : "—"
     const university = profile.university
-    const completion = profile.completion.percent
 
     return (
         <div className="mx-auto w-full max-w-5xl space-y-6 py-8">
@@ -244,6 +244,8 @@ export function ProfilePage() {
                         <div className="flex shrink-0 flex-wrap gap-2">
                             {isForeignProfile ? (
                                 <>
+                                    {profileUser?.id ? <FriendshipButton userId={profileUser.id} /> : null}
+
                                     {telegramUrl ? (
                                         <Button asChild className="rounded-xl shadow-sm">
                                             <a href={telegramUrl} target="_blank" rel="noreferrer">
@@ -290,9 +292,11 @@ export function ProfilePage() {
                     <div className="space-y-3">
                         <InfoItem icon={MailIcon} label="Email" value={email} />
                         <InfoItem icon={PhoneIcon} label="Телефон" value={phone} />
-                        <a href={telegramUrl} target="_blank" rel="noreferrer">
-                            <InfoItem icon={UserRoundIcon} label="Telegram" value={telegram} />
-                        </a>
+                        {telegramUrl && (
+                            <a href={telegramUrl} target="_blank" rel="noreferrer">
+                                <InfoItem icon={UserRoundIcon} label="Telegram" value={telegram} />
+                            </a>
+                        )}
                     </div>
                 </SectionCard>
 

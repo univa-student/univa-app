@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from "@/shared/shadcn/ui/alert"
 import {
     CameraIcon,
     UserIcon,
-    GraduationCapIcon,
     CheckCircle2Icon,
     LoaderCircleIcon,
 } from "lucide-react"
@@ -30,13 +29,6 @@ const profileFields: FieldDef[] = [
     { id: "lastName", label: "Прізвище", placeholder: "Петренко" },
     { id: "username", label: "Нікнейм", placeholder: "@nickname" },
     { id: "email", label: "Email", placeholder: "ivan@example.com", type: "email", fullWidth: true },
-]
-
-const educationFields: FieldDef[] = [
-    { id: "university", label: "Університет", placeholder: "КПІ", fullWidth: true },
-    { id: "faculty", label: "Факультет", placeholder: "ФІОТ" },
-    { id: "year", label: "Рік навчання", placeholder: "3" },
-    { id: "group", label: "Група", placeholder: "ІО-31" },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -206,33 +198,6 @@ export function AccountTab(_: { tab: TabDef }) {
                                 />
                             </div>
                         ))}
-                    </CardContent>
-                </Card>
-            </motion.div>
-
-            {/* Education fields (UI-only placeholder) */}
-            <motion.div variants={itemAnim}>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <GraduationCapIcon className="size-5 text-primary" />
-                            Освіта
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-4">
-                        {educationFields.map(f => (
-                            <div key={f.id} className={f.fullWidth ? "col-span-2" : ""}>
-                                <label className="text-sm font-medium mb-1.5">{f.label}</label>
-                                <Input
-                                    type="text"
-                                    placeholder={f.placeholder}
-                                    className="opacity-60"
-                                />
-                            </div>
-                        ))}
-                        <p className="col-span-2 text-xs text-muted-foreground">
-                            Освітні дані будуть доступні для редагування у наступних версіях.
-                        </p>
                     </CardContent>
                 </Card>
             </motion.div>
