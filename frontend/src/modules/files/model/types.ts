@@ -8,6 +8,8 @@ export interface FileItem {
     userId: number;
     folderId: number | null;
     subjectId: number | null;
+    groupId?: number | null;
+    groupSubjectId?: number | null;
     originalName: string;
     mimeType: string | null;
     size: number;
@@ -21,6 +23,7 @@ export interface FileItem {
     updatedAt: string;
     folder?: FolderItem | null;
     subject?: { id: number; name: string; color: string | null } | null;
+    groupSubject?: { id: number; name: string; color: string | null } | null;
 }
 
 export interface FolderItem {

@@ -5,6 +5,8 @@ namespace App\Modules\Files\Models;
 use App\Modules\Files\Enums\FileScope;
 use App\Modules\Files\Enums\FileStatus;
 use App\Modules\Deadlines\Models\Deadline;
+use App\Modules\Groups\Models\Group;
+use App\Modules\Groups\Models\GroupSubject;
 use App\Modules\Subjects\Models\Subject;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +23,8 @@ class File extends Model
         'user_id',
         'folder_id',
         'subject_id',
+        'group_id',
+        'group_subject_id',
         'original_name',
         'mime_type',
         'size',
@@ -54,6 +58,16 @@ class File extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function groupSubject(): BelongsTo
+    {
+        return $this->belongsTo(GroupSubject::class);
     }
 
     public function deadlines(): BelongsToMany

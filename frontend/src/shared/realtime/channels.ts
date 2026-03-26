@@ -8,8 +8,8 @@
 /** Personal notifications & events for a specific user. */
 export const userChannel = (userId: number) => `user.${userId}`;
 
-/** Group chat & events for a specific space. */
-export const spaceChannel = (spaceId: number) => `space.${spaceId}`;
+/** Group chat & events for a specific group. */
+export const groupChannel = (groupId: number) => `group.${groupId}`;
 
 /** File processing / indexing progress for a specific file (optional). */
 export const fileChannel = (fileId: number) => `file.${fileId}`;

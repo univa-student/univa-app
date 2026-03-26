@@ -28,6 +28,7 @@ class FileService
     {
         $query = File::query()
             ->where('user_id', $userId)
+            ->whereNull('group_id')
             ->where('status', FileStatus::Ready);
 
         if ($folderId !== null) {
@@ -59,6 +60,7 @@ class FileService
     {
         return File::query()
             ->where('user_id', $userId)
+            ->whereNull('group_id')
             ->where('status', FileStatus::Ready)
             ->orderByDesc('updated_at')
             ->limit($limit)
@@ -75,6 +77,7 @@ class FileService
     {
         $q = File::query()
             ->where('user_id', $userId)
+            ->whereNull('group_id')
             ->where('status', FileStatus::Ready)
             ->where('original_name', 'ILIKE', '%' . $query . '%');
 
@@ -102,6 +105,8 @@ class FileService
         ?int $folderId = null,
         ?int $subjectId = null,
         string $scope = 'personal',
+        ?int $groupId = null,
+        ?int $groupSubjectId = null,
     ): File {
         $user = User::findOrFail($userId);
         $fileSize = $uploadedFile->getSize();
@@ -134,11 +139,33 @@ class FileService
             }
         }
 
+        if ($groupSubjectId !== null && $folderId === null) {
+            $groupSubject = \App\Modules\Groups\Models\GroupSubject::find($groupSubjectId);
+            if ($groupSubject !== null) {
+                $folder = \App\Modules\Files\Models\Folder::firstOrCreate(
+                    [
+                        'user_id' => $userId,
+                        'group_id' => $groupId ?? $groupSubject->group_id,
+                        'group_subject_id' => $groupSubjectId,
+                        'parent_id' => null,
+                    ],
+                    [
+                        'name' => $groupSubject->name,
+                    ]
+                );
+
+                $groupId ??= $groupSubject->group_id;
+                $folderId = $folder->id;
+            }
+        }
+
         // 1. Create metadata record with status "uploading"
         $file = File::create([
             'user_id'       => $userId,
             'folder_id'     => $folderId,
             'subject_id'    => $subjectId,
+            'group_id'      => $groupId,
+            'group_subject_id' => $groupSubjectId,
             'original_name' => $uploadedFile->getClientOriginalName(),
             'mime_type'     => $uploadedFile->getMimeType(),
             'size'          => 0,
@@ -209,6 +236,12 @@ class FileService
     public function moveToSubject(File $file, ?int $subjectId): File
     {
         $file->update(['subject_id' => $subjectId]);
+        return $file->fresh();
+    }
+
+    public function moveToGroupSubject(File $file, ?int $groupSubjectId): File
+    {
+        $file->update(['group_subject_id' => $groupSubjectId]);
         return $file->fresh();
     }
 

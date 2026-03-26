@@ -20,7 +20,8 @@ import { PlaceholderPage } from "@/pages/dashboard/placeholder.page.tsx";
 import { FilesPage } from "@/pages/files/files.page";
 import { ChatPage } from "@/pages/chat/chat.page";
 import { DeadlinesPage } from "@/pages/deadlines/deadlines.page";
-import { SpacesPage } from "@/pages/spaces/spaces.page";
+import { GroupsPage } from "@/pages/groups/groups.page";
+import { GroupDetailPage } from "@/pages/groups/group-detail.page";
 import { NotificationsPage } from "@/pages/notifications/notifications.page";
 import { FriendsPage } from "@/pages/friends/friends.page.tsx";
 
@@ -357,15 +358,33 @@ export const router = createBrowserRouter([
                         ),
                     },
                     {
-                        path: "dashboard/spaces",
+                        path: "dashboard/groups",
                         element: (
                             <LazyBoundary>
                                 <AuthGuard>
                                     <DashboardLayout breadcrumbs={[
                                         { label: "Головна", href: "/dashboard" },
-                                        { label: "Спейси" },
+                                        { label: "Групи" },
                                     ]}>
-                                        <SpacesPage />
+                                        <GroupsPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/groups/:groupId",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Групи", href: "/dashboard/groups" },
+                                            { label: "Робочий простір" },
+                                        ]}
+                                    >
+                                        <GroupDetailPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>

@@ -15,7 +15,8 @@ class FolderService
     public function list(int $userId, ?int $parentId = null): array
     {
         $query = Folder::query()
-            ->where('user_id', $userId);
+            ->where('user_id', $userId)
+            ->whereNull('group_id');
 
         if ($parentId !== null) {
             $query->where('parent_id', $parentId);
@@ -37,6 +38,7 @@ class FolderService
         // Папки верхнього рівня (дерево)
         $folders = Folder::query()
             ->where('user_id', $userId)
+            ->whereNull('group_id')
             ->whereNull('parent_id')
             ->with([
                 'recursiveChildren',
@@ -48,6 +50,7 @@ class FolderService
         // Файли в корені (не в папці)
         $rootFiles = File::query()
             ->where('user_id', $userId)
+            ->whereNull('group_id')
             ->whereNull('folder_id')
             ->orderByDesc('is_pinned')
             ->orderByDesc('created_at')
@@ -62,12 +65,21 @@ class FolderService
     /**
      * Create a new folder.
      */
-    public function create(int $userId, string $name, ?int $parentId = null, ?int $subjectId = null): Folder
+    public function create(
+        int $userId,
+        string $name,
+        ?int $parentId = null,
+        ?int $subjectId = null,
+        ?int $groupId = null,
+        ?int $groupSubjectId = null,
+    ): Folder
     {
         return Folder::create([
             'user_id'    => $userId,
             'parent_id'  => $parentId,
             'subject_id' => $subjectId,
+            'group_id' => $groupId,
+            'group_subject_id' => $groupSubjectId,
             'name'       => $name,
         ]);
     }

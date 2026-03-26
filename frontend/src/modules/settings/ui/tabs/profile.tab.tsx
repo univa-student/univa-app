@@ -273,14 +273,7 @@ export function ProfileTab(_: { tab: TabDef }) {
                 setForm(initialForm)
                 setEducationForm(initialEducationForm)
             }}
-            canSave={(!hasProfileChanges && hasEducationChanges && !canSaveEducation) ? false : true}
-            dirtyMessage={
-                hasProfileChanges && hasEducationChanges
-                    ? "Є незбережені зміни в особистій інформації та освітньому профілі"
-                    : hasProfileChanges
-                        ? "Є незбережені зміни в особистій інформації"
-                        : "Є незбережені зміни в освітньому профілі"
-            }
+            canSave={(!(!hasProfileChanges && hasEducationChanges && !canSaveEducation))}
         >
             {/* Avatar and Basic Info */}
                 <motion.div variants={itemAnim}>

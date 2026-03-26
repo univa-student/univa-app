@@ -2,6 +2,8 @@
 
 namespace App\Modules\Files\Models;
 
+use App\Modules\Groups\Models\Group;
+use App\Modules\Groups\Models\GroupSubject;
 use App\Modules\Subjects\Models\Subject;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +19,8 @@ class Folder extends Model
         'user_id',
         'parent_id',
         'subject_id',
+        'group_id',
+        'group_subject_id',
         'name',
     ];
 
@@ -53,6 +57,16 @@ class Folder extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function groupSubject(): BelongsTo
+    {
+        return $this->belongsTo(GroupSubject::class);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

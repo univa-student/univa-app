@@ -144,6 +144,7 @@ export function PendingRequestsList() {
     const { data: requests, isLoading } = usePendingFriendRequests();
     const acceptReq = useAcceptFriendRequest();
     const declineReq = useRemoveFriend();
+    const [processingUserId, setProcessingUserId] = useState<number | null>(null);
 
     if (isLoading) {
         return (
@@ -166,42 +167,57 @@ export function PendingRequestsList() {
 
     return (
         <div className="grid gap-3 sm:grid-cols-2">
-            {requests.map((request: PendingFriendRequest) => (
-                <FriendUserCard
-                    key={request.id}
-                    user={request.user}
-                    statusText="Хоче додати вас у друзі"
-                    accentClassName="border-primary/20 bg-primary/5 hover:bg-primary/10"
-                    actions={
-                        <ButtonGroup className="w-full sm:w-auto">
-                            <Button
-                                variant="outline"
-                                size="default"
-                                className="text-destructive hover:bg-destructive/10"
-                                onClick={() => declineReq.mutate(request.user.id)}
-                                disabled={declineReq.isPending || acceptReq.isPending}
-                                title="Відхилити"
-                            >
-                                <XIcon className="size-4" />
-                            </Button>
-                            <Button
-                                variant="default"
-                                size="icon-sm"
-                                className="bg-primary"
-                                onClick={() => acceptReq.mutate(request.user.id)}
-                                disabled={declineReq.isPending || acceptReq.isPending}
-                                title="Прийняти"
-                            >
-                                <CheckIcon className="size-4" />
-                            </Button>
-                        </ButtonGroup>
-                    }
-                />
-            ))}
+            {requests.map((request: PendingFriendRequest) => {
+                const isCurrentPending = processingUserId === request.user.id;
+
+                return (
+                    <FriendUserCard
+                        key={request.id}
+                        user={request.user}
+                        statusText="Хоче додати вас у друзі"
+                        accentClassName="border-primary/20 bg-primary/5 hover:bg-primary/10"
+                        actions={
+                            <ButtonGroup className="w-full sm:w-auto">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1 text-destructive hover:bg-destructive/10 sm:flex-none"
+                                    onClick={() => {
+                                        setProcessingUserId(request.user.id);
+                                        declineReq.mutate(request.user.id, {
+                                            onSettled: () => setProcessingUserId(null),
+                                        });
+                                    }}
+                                    disabled={isCurrentPending}
+                                    title="Відхилити"
+                                >
+                                    <XIcon className="size-4" />
+                                    <span className="ml-2 sm:hidden">Відхилити</span>
+                                </Button>
+
+                                <Button
+                                    size="sm"
+                                    className="flex-1 sm:flex-none"
+                                    onClick={() => {
+                                        setProcessingUserId(request.user.id);
+                                        acceptReq.mutate(request.user.id, {
+                                            onSettled: () => setProcessingUserId(null),
+                                        });
+                                    }}
+                                    disabled={isCurrentPending}
+                                    title="Прийняти"
+                                >
+                                    <CheckIcon className="size-4" />
+                                    <span className="ml-2 sm:hidden">Прийняти</span>
+                                </Button>
+                            </ButtonGroup>
+                        }
+                    />
+                );
+            })}
         </div>
     );
 }
-
 export function FriendsSearchList() {
     const [query, setQuery] = useState("");
     const [debouncedQuery, setDebouncedQuery] = useState("");

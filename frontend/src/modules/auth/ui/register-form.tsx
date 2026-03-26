@@ -14,8 +14,6 @@ import {
 } from "@/shared/shadcn/ui/field";
 import { Input } from "@/shared/shadcn/ui/input";
 
-/** ===== Types ===== */
-
 export interface RegisterFormData {
     // Персональні
     last_name: string;
@@ -39,7 +37,6 @@ type RegisterFieldName = keyof RegisterFormData;
 type FieldType = "text" | "email" | "password" | "checkbox";
 type SectionName =
     | "Персональні дані"
-    | "Дані акаунта"
     | "Безпека"
     | "Підтвердження";
 
@@ -117,17 +114,6 @@ const FIELDS: FieldDef[] = [
     },
     {
         section: "Персональні дані",
-        name: "middle_name",
-        label: "По батькові",
-        type: "text",
-        placeholder: "Григорович",
-        autoComplete: "additional-name",
-        required: false,
-        icon: <User className="h-4 w-4" />,
-        colSpan: 2,
-    },
-    {
-        section: "Дані акаунта",
         name: "username",
         label: "Нік (логін)",
         type: "text",
@@ -136,10 +122,9 @@ const FIELDS: FieldDef[] = [
         required: true,
         icon: <Hash className="h-4 w-4" />,
         colSpan: 1,
-        helper: "Лише для входу та профілю.",
     },
     {
-        section: "Дані акаунта",
+        section: "Персональні дані",
         name: "email",
         label: "Email",
         type: "email",
@@ -192,7 +177,6 @@ const FIELDS: FieldDef[] = [
 
 const SECTIONS: SectionName[] = [
     "Персональні дані",
-    "Дані акаунта",
     "Безпека",
     "Підтвердження",
 ];
@@ -221,7 +205,6 @@ export function RegisterForm({
             },
             {
                 "Персональні дані": [],
-                "Дані акаунта": [],
                 "Безпека": [],
                 "Підтвердження": [],
             }
@@ -344,12 +327,12 @@ export function RegisterForm({
     };
 
     return (
-        <div className={cn("flex w-full flex-col items-center justify-center gap-6", className)}>
+        <div className={cn("flex w-full flex-col items-center justify-center", className)}>
             <Card className="w-full overflow-hidden border-0 bg-gradient-to-br from-background via-background to-muted/20 p-0 shadow-xl">
                 <CardContent className="grid p-0">
                     <form onSubmit={onSubmit} className="p-8 md:p-10">
                         <FieldGroup>
-                            <div className="mb-4 flex flex-col items-center gap-3 text-center">
+                            <div className="flex flex-col items-center gap-3 text-center">
                                 <h1 className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-3xl font-bold text-transparent">
                                     Створити акаунт
                                 </h1>
@@ -362,7 +345,7 @@ export function RegisterForm({
                                 const fields = sectionFields[section];
 
                                 return (
-                                    <div key={section} className="mt-4">
+                                    <div key={section}>
                                         <div className="mb-3 flex items-center gap-2">
                                             <div className="h-px flex-1 bg-border/60" />
                                             <h2 className="text-muted-foreground text-xs font-semibold tracking-wide">

@@ -9,6 +9,17 @@ use App\Modules\Auth\Http\Controllers\SessionController;
 use App\Modules\Deadlines\Http\Controllers\DeadlineController;
 use App\Modules\Files\Http\Controllers\FileController;
 use App\Modules\Files\Http\Controllers\FolderController;
+use App\Modules\Groups\Http\Controllers\GroupAnnouncementController;
+use App\Modules\Groups\Http\Controllers\GroupChannelController;
+use App\Modules\Groups\Http\Controllers\GroupController;
+use App\Modules\Groups\Http\Controllers\GroupDeadlineController;
+use App\Modules\Groups\Http\Controllers\GroupFileController;
+use App\Modules\Groups\Http\Controllers\GroupInviteController;
+use App\Modules\Groups\Http\Controllers\GroupJoinRequestController;
+use App\Modules\Groups\Http\Controllers\GroupMemberController;
+use App\Modules\Groups\Http\Controllers\GroupPollController;
+use App\Modules\Groups\Http\Controllers\GroupScheduleController;
+use App\Modules\Groups\Http\Controllers\GroupSubjectController;
 use App\Modules\Notification\Http\Controllers\NotificationController;
 use App\Modules\Profiles\Http\Controllers\ProfileController;
 use App\Modules\Profiles\Http\Controllers\UniversityController;
@@ -188,6 +199,102 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
     });
 
     // ── Notifications ─────────────────────────────────────────────────────────
+    Route::post('/groups/join', [GroupInviteController::class, 'join']);
+
+    Route::controller(GroupController::class)->prefix('/groups')->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::get('/{group}', 'show');
+        Route::patch('/{group}', 'update');
+        Route::delete('/{group}', 'destroy');
+        Route::get('/{group}/overview', 'overview');
+    });
+
+    Route::prefix('/groups/{group}')->group(function () {
+        Route::controller(GroupMemberController::class)->prefix('/members')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::patch('/{member}', 'update');
+            Route::delete('/{member}', 'destroy');
+        });
+        Route::post('/leave', [GroupMemberController::class, 'leave']);
+
+        Route::controller(GroupInviteController::class)->prefix('/invites')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::delete('/{invite}', 'destroy');
+        });
+
+        Route::controller(GroupJoinRequestController::class)->prefix('/join-requests')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::patch('/{joinRequest}', 'update');
+        });
+
+        Route::controller(GroupSubjectController::class)->prefix('/subjects')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::patch('/{subject}', 'update');
+            Route::delete('/{subject}', 'destroy');
+        });
+
+        Route::controller(GroupAnnouncementController::class)->prefix('/announcements')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::get('/{announcement}', 'show');
+            Route::patch('/{announcement}', 'update');
+            Route::delete('/{announcement}', 'destroy');
+            Route::post('/{announcement}/acknowledge', 'acknowledge');
+        });
+
+        Route::controller(GroupPollController::class)->prefix('/polls')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::get('/{poll}', 'show');
+            Route::delete('/{poll}', 'destroy');
+            Route::post('/{poll}/vote', 'vote');
+        });
+
+        Route::controller(GroupScheduleController::class)->group(function () {
+            Route::get('/schedule', 'index');
+            Route::post('/schedule/lessons', 'storeLesson');
+            Route::patch('/schedule/lessons/{lesson}', 'updateLesson');
+            Route::delete('/schedule/lessons/{lesson}', 'destroyLesson');
+            Route::post('/schedule/lessons/{lesson}/exceptions', 'storeException');
+            Route::delete('/schedule/exceptions/{exception}', 'destroyException');
+            Route::post('/schedule/exams', 'storeExam');
+            Route::patch('/schedule/exams/{exam}', 'updateExam');
+            Route::delete('/schedule/exams/{exam}', 'destroyExam');
+        });
+
+        Route::controller(GroupDeadlineController::class)->prefix('/deadlines')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::get('/{deadline}', 'show');
+            Route::patch('/{deadline}', 'update');
+            Route::delete('/{deadline}', 'destroy');
+            Route::patch('/{deadline}/progress', 'progress');
+        });
+
+        Route::controller(GroupChannelController::class)->prefix('/channels')->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::get('/{channel}/messages', 'messages');
+            Route::post('/{channel}/messages', 'storeMessage');
+            Route::delete('/{channel}/messages/{message}', 'destroyMessage');
+        });
+
+        Route::controller(GroupFileController::class)->group(function () {
+            Route::get('/files', 'index');
+            Route::get('/files/recent', 'recent');
+            Route::post('/files', 'store');
+            Route::get('/files/{file}', 'show');
+            Route::get('/files/{file}/download', 'download');
+            Route::get('/folders', 'folders');
+            Route::post('/folders', 'storeFolder');
+        });
+    });
+
     Route::controller(NotificationController::class)->prefix('/notifications')->group(function () {
         Route::get('/', 'index');
         Route::patch('/read-all', 'markAllAsRead');

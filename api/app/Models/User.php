@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Modules\Profiles\Models\Profile;
+use App\Modules\Groups\Models\Group;
+use App\Modules\Groups\Models\GroupMember;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -58,5 +60,25 @@ class User extends Authenticatable
     public function receivedFriendships(): HasMany
     {
         return $this->hasMany(Friendship::class, 'friend_id');
+    }
+
+    public function groupMemberships(): HasMany
+    {
+        return $this->hasMany(GroupMember::class);
+    }
+
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_members')
+            ->withPivot([
+                'role',
+                'status',
+                'nickname_in_group',
+                'subgroup',
+                'invited_by',
+                'joined_at',
+                'left_at',
+            ])
+            ->withTimestamps();
     }
 }

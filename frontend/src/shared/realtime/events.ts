@@ -36,7 +36,7 @@ export type WsEventName = typeof WS_EVENTS[keyof typeof WS_EVENTS];
 // ─── Payload shapes ──────────────────────────────────────────────────────────
 
 export interface WsEventMap {
-    "message.created": { id: number; spaceId: number; content: string; userId: number };
+    "message.created": { id: number; groupId: number; content: string; userId: number };
     "message.updated": { id: number; content: string };
     "message.deleted": { id: number };
     "file.uploaded": { id: number; name: string };

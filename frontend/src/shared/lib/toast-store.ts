@@ -9,7 +9,10 @@ export type ToastInput = {
 
 export type Toast = ToastInput & {
     id: string;
-    createdAt: number;
+    variant: ToastVariant;
+    message: string;
+    title?: string;
+    autoCloseMs?: number;
 };
 
 type ToastState = {
@@ -40,7 +43,6 @@ export const toastStore = {
 export function toast(input: ToastInput) {
     const nextToast: Toast = {
         id: crypto.randomUUID(),
-        createdAt: Date.now(),
         variant: input.variant ?? "default",
         title: input.title,
         message: input.message,
