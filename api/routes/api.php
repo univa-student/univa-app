@@ -288,6 +288,7 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
             Route::get('/files', 'index');
             Route::get('/files/recent', 'recent');
             Route::post('/files', 'store');
+            Route::post('/files/import', 'import');
             Route::get('/files/{file}', 'show');
             Route::get('/files/{file}/download', 'download');
             Route::get('/folders', 'folders');

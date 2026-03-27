@@ -24,6 +24,7 @@ import { GroupsPage } from "@/pages/groups/groups.page";
 import { GroupDetailPage } from "@/pages/groups/group-detail.page";
 import { NotificationsPage } from "@/pages/notifications/notifications.page";
 import { FriendsPage } from "@/pages/friends/friends.page.tsx";
+import { CommunityPage } from "@/pages/community/community.page.tsx";
 
 import { PrivateRoot } from "./PrivateRoot.tsx";
 import { routesLoaders } from "./loaders.ts";
@@ -400,6 +401,23 @@ export const router = createBrowserRouter([
                                         { label: "Сповіщення" },
                                     ]}>
                                         <NotificationsPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/community",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Спільнота" },
+                                        ]}
+                                    >
+                                        <CommunityPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>

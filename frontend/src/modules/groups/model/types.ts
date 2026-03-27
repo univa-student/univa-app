@@ -226,7 +226,9 @@ export interface CreateGroupPayload {
     description?: string;
     color?: string;
     institutionName?: string;
+    institutionShortName?: string;
     facultyName?: string;
+    departmentName?: string;
     specialtyName?: string;
     course?: number;
     studyYear?: number;
@@ -295,6 +297,11 @@ export interface CreateGroupInvitePayload {
 export interface CreateGroupFolderPayload {
     name: string;
     parentId?: number;
+    groupSubjectId?: number;
+}
+
+export interface ImportGroupFilesPayload {
+    fileIds: number[];
     groupSubjectId?: number;
 }
 

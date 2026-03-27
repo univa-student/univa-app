@@ -10,6 +10,7 @@ import type {
     CreateGroupPayload,
     CreateGroupPollPayload,
     CreateGroupSubjectPayload,
+    ImportGroupFilesPayload,
     JoinGroupPayload,
     UpdateGroupPayload,
 } from "../model/types";
@@ -47,17 +48,17 @@ export function useGroupMembers(groupId: number | null) {
     });
 }
 
-export function useGroupInvites(groupId: number | null) {
+export function useGroupInvites(groupId: number | null, enabled = true) {
     return useQuery({
         ...groupQueries.invites(groupId!),
-        enabled: groupId != null && groupId > 0,
+        enabled: enabled && groupId != null && groupId > 0,
     });
 }
 
-export function useGroupJoinRequests(groupId: number | null) {
+export function useGroupJoinRequests(groupId: number | null, enabled = true) {
     return useQuery({
         ...groupQueries.joinRequests(groupId!),
-        enabled: groupId != null && groupId > 0,
+        enabled: enabled && groupId != null && groupId > 0,
     });
 }
 
@@ -177,6 +178,18 @@ export function useCreateGroupInvite() {
     });
 }
 
+export function useRevokeGroupInvite() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ groupId, inviteId }: { groupId: number; inviteId: number }) =>
+            groupQueries.revokeInvite(groupId, inviteId).queryFn(),
+        onSuccess: (_, variables) => {
+            invalidateGroupScope(queryClient, variables.groupId).then(() => {});
+        },
+    });
+}
+
 export function useRespondToGroupJoinRequest() {
     const queryClient = useQueryClient();
 
@@ -269,6 +282,19 @@ export function useCreateGroupFile() {
             groupQueries.createFile(groupId, payload).queryFn(),
         onSuccess: (_, variables) => {
             invalidateGroupScope(queryClient, variables.groupId).then(() => {});
+        },
+    });
+}
+
+export function useImportGroupFiles() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ groupId, payload }: { groupId: number; payload: ImportGroupFilesPayload }) =>
+            groupQueries.importFiles(groupId, payload).queryFn(),
+        onSuccess: (_, variables) => {
+            invalidateGroupScope(queryClient, variables.groupId).then(() => {});
+            queryClient.invalidateQueries({ queryKey: ["files"] }).then(() => {});
         },
     });
 }

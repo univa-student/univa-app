@@ -65,7 +65,7 @@ export function DashboardLayout({
                 </header>
             )}
 
-            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden h-full">
                 <div className={fullHeight ? "h-full flex flex-col" : "flex flex-col gap-4 p-3 md:p-4"}>
                     {children}
                 </div>

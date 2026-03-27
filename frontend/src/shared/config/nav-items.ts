@@ -6,7 +6,6 @@ import {
     FolderOpenIcon,
     LayoutDashboardIcon,
     ListChecksIcon,
-    MessagesSquareIcon,
     Settings2Icon,
     UsersIcon,
     type LucideIcon,
@@ -44,8 +43,8 @@ export const navItems: NavItem[] = [
         items: [],
     },
     {
-        title: "Групи",
-        url: "/dashboard/groups",
+        title: "Спільнота",
+        url: "/dashboard/community",
         icon: UsersIcon,
         items: [],
     },
@@ -59,18 +58,6 @@ export const navItems: NavItem[] = [
         title: "Файли",
         url: "/dashboard/files",
         icon: FolderOpenIcon,
-        items: [],
-    },
-    {
-        title: "Друзі",
-        url: "/dashboard/friends",
-        icon: UsersIcon,
-        items: [],
-    },
-    {
-        title: "Чати",
-        url: "/dashboard/chats",
-        icon: MessagesSquareIcon,
         items: [],
     },
     {

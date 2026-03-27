@@ -13,8 +13,10 @@ use App\Modules\Files\Services\FileService;
 use App\Modules\Files\Services\FolderService;
 use App\Modules\Groups\Http\Requests\StoreGroupFileRequest;
 use App\Modules\Groups\Http\Requests\StoreGroupFolderRequest;
+use App\Modules\Groups\Http\Requests\ImportGroupFilesRequest;
 use App\Modules\Groups\Models\Group;
 use App\Modules\Groups\Services\GroupPermissionService;
+use App\Modules\Groups\UseCases\ImportFilesToGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -82,6 +84,24 @@ class GroupFileController extends Controller
         );
 
         return ApiResponse::created('File uploaded.', new FileResource($file->load(['user', 'groupSubject'])));
+    }
+
+    public function import(
+        Group $group,
+        ImportGroupFilesRequest $request,
+        GroupPermissionService $permissions,
+        ImportFilesToGroup $useCase,
+    ): JsonResponse {
+        $permissions->authorize($request->user(), $group, 'manage_files');
+
+        $files = $useCase->handle(
+            $request->user(),
+            $group,
+            $request->input('file_ids', []),
+            $request->integer('group_subject_id') ?: null,
+        );
+
+        return ApiResponse::created('Files imported.', FileResource::collection($files));
     }
 
     public function show(Group $group, File $file, Request $request, GroupPermissionService $permissions): JsonResponse

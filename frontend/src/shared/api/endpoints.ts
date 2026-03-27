@@ -183,6 +183,7 @@ export const ENDPOINTS = {
                 folder_id: folderId,
                 group_subject_id: groupSubjectId,
             }),
+        importFiles: (id: number) => `${API}/groups/${id}/files/import`,
         file: (groupId: number, fileId: number) => `${API}/groups/${groupId}/files/${fileId}`,
         downloadFile: (groupId: number, fileId: number) => `${API}/groups/${groupId}/files/${fileId}/download`,
         recentFiles: (id: number) => `${API}/groups/${id}/files/recent`,

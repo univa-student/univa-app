@@ -30,9 +30,10 @@ interface Props {
     file: FileItem | null;
     open: boolean;
     onOpenChange: (v: boolean) => void;
+    downloadUrl?: string;
 }
 
-export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
+export function FilePreviewDialog({ file, open, onOpenChange, downloadUrl: customDownloadUrl }: Props) {
     const [iframeLoading, setIframeLoading] = useState(true);
     // Зберігаємо blob URL для PDF щоб уникнути повторного завантаження
     const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
@@ -93,7 +94,7 @@ export function FilePreviewDialog({ file, open, onOpenChange }: Props) {
 
     if (!file) return null;
 
-    const url = downloadUrl(file.id);
+    const url = customDownloadUrl ?? downloadUrl(file.id);
 
     const handleDownload = () => {
         const a = document.createElement("a");

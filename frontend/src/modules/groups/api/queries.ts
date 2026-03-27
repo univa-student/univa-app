@@ -7,6 +7,7 @@ import type {
     CreateGroupAnnouncementPayload,
     CreateGroupDeadlinePayload,
     CreateGroupFolderPayload,
+    ImportGroupFilesPayload,
     CreateGroupInvitePayload,
     CreateGroupLessonPayload,
     CreateGroupMessagePayload,
@@ -137,6 +138,12 @@ export const groupQueries = {
             body: JSON.stringify(payload),
         }),
     }),
+    revokeInvite: (groupId: number, inviteId: number) => ({
+        queryKey: [] as const,
+        queryFn: () => apiFetch<void>(ENDPOINTS.groups.invite(groupId, inviteId), {
+            method: "DELETE",
+        }),
+    }),
     respondJoinRequest: (groupId: number, joinRequestId: number, status: "approved" | "rejected") => ({
         queryKey: [] as const,
         queryFn: () => apiFetch<GroupJoinRequest>(ENDPOINTS.groups.joinRequest(groupId, joinRequestId), {
@@ -196,6 +203,13 @@ export const groupQueries = {
         queryFn: () => apiFetch<FileItem>(ENDPOINTS.groups.files(groupId), {
             method: "POST",
             body: payload,
+        }),
+    }),
+    importFiles: (groupId: number, payload: ImportGroupFilesPayload) => ({
+        queryKey: [] as const,
+        queryFn: () => apiFetch<FileItem[]>(ENDPOINTS.groups.importFiles(groupId), {
+            method: "POST",
+            body: JSON.stringify(payload),
         }),
     }),
     createFolder: (groupId: number, payload: CreateGroupFolderPayload) => ({
