@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { summaryQueries } from "./queries";
+import { dailyDigestQueries, summaryQueries } from "./queries";
 
 export function useSummaries() {
     return useQuery(summaryQueries.list());
@@ -34,5 +34,12 @@ export function useDeleteSummary() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["summaries"] }).then(() => {});
         },
+    });
+}
+
+export function useLatestDailyDigest(date?: string, enabled = true) {
+    return useQuery({
+        ...dailyDigestQueries.latest(date),
+        enabled,
     });
 }

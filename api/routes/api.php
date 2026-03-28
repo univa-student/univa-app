@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Ai\Http\Controllers\DailyDigestController;
 use App\Modules\Ai\Http\Controllers\SummarizeFileController;
 use App\Modules\Auth\Http\Controllers\LoginController;
 use App\Modules\Auth\Http\Controllers\LogoutController;
@@ -196,6 +197,10 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
         Route::get('/summaries/{artifact}', 'show');
         Route::delete('/summaries/{artifact}', 'destroy');
         Route::post('/{file}/summary', 'store');
+    });
+
+    Route::controller(DailyDigestController::class)->group(function () {
+        Route::get('/daily-digests/latest', 'latest');
     });
 
     // ── Notifications ─────────────────────────────────────────────────────────

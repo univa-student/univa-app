@@ -5,6 +5,7 @@ use App\Core\Middleware\ConvertKeysToSnakeCase;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule
+            ->command('ai:daily-digest')
+            ->dailyAt('06:00')
+            ->timezone(config('app.timezone'));
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
 

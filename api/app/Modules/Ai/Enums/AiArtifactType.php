@@ -7,6 +7,7 @@ namespace App\Modules\Ai\Enums;
 enum AiArtifactType: string
 {
     case SUMMARY = 'summary';
+    case DAILY_DIGEST = 'daily_digest';
     case EXPLANATION = 'explanation';
     case QUIZ = 'quiz';
     case STUDY_PLAN = 'study_plan';
@@ -21,6 +22,7 @@ enum AiArtifactType: string
     {
         return match ($this) {
             self::SUMMARY => 'Summary',
+            self::DAILY_DIGEST => 'Daily digest',
             self::EXPLANATION => 'Explanation',
             self::QUIZ => 'Quiz',
             self::STUDY_PLAN => 'Study plan',

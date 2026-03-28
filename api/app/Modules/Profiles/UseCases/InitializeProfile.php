@@ -8,10 +8,10 @@ use App\Models\User;
 use App\Modules\Profiles\Models\Profile;
 use App\Modules\Profiles\Services\ProfileService;
 
-class InitializeProfile
+readonly class InitializeProfile
 {
     public function __construct(
-        private readonly ProfileService $profiles,
+        private ProfileService $profiles,
     ) {}
 
     public function handle(User $user): Profile

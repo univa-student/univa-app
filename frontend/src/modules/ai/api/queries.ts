@@ -1,6 +1,6 @@
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
-import type { SummaryArtifact, SummaryListItem } from "../model/types";
+import type { DailyDigestArtifact, SummaryArtifact, SummaryListItem } from "../model/types";
 
 interface GenerateSummaryResponse {
     run: { id: number; [key: string]: unknown };
@@ -38,6 +38,17 @@ export const summaryQueries = {
                 apiFetch<void>(ENDPOINTS.summaries.delete(id), {
                     method: "DELETE",
                 }),
+        };
+    },
+};
+
+export const dailyDigestQueries = {
+    latest(date?: string) {
+        return {
+            queryKey: ["daily-digests", "latest", date ?? "current"],
+            queryFn: () => apiFetch<DailyDigestArtifact | null>(ENDPOINTS.dailyDigests.latest(date), {
+                cacheTtlMs: 60_000,
+            }),
         };
     },
 };

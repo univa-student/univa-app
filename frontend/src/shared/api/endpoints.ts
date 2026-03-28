@@ -202,4 +202,9 @@ export const ENDPOINTS = {
         generate: (fileId: number) =>
             `${API}/files/${fileId}/summary`,
     },
+
+    dailyDigests: {
+        latest: (date?: string) =>
+            withQuery(`${API}/daily-digests/latest`, { date }),
+    },
 } as const;

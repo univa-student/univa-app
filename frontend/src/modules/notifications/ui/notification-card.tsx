@@ -1,4 +1,3 @@
-import React from "react";
 import { CheckIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import { Button } from "@/shared/shadcn/ui/button";
 import { cn } from "@/shared/shadcn/lib/utils";

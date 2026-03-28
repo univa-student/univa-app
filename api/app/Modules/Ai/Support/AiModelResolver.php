@@ -26,6 +26,11 @@ final readonly class AiModelResolver
                 'openai' => 'gpt-4.1-mini',
                 'anthropic' => 'claude-3-5-haiku-latest',
             ],
+            'generate_daily_digest' => [
+                'gemini' => 'gemini-2.5-flash',
+                'openai' => 'gpt-4.1-mini',
+                'anthropic' => 'claude-3-5-haiku-latest',
+            ],
         ],
     ) {
     }

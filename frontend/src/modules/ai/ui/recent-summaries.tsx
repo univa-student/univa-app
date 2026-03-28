@@ -1,21 +1,11 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock3, FileText, ChevronRight, ArrowRight, Sparkles, Layers3 } from "lucide-react";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import { formatRelativeDate } from "../lib/format-date";
-
-interface Summary {
-    id: number;
-    title: string;
-    createdAt: string;
-    contentJson?: {
-        meta?: { fileName?: string };
-        shortSummary?: string;
-    };
-}
+import type { SummaryListItem } from "../model/types";
 
 interface RecentSummariesProps {
-    recent: Summary[];
+    recent: SummaryListItem[];
     isLoading: boolean;
 }
 
@@ -95,7 +85,7 @@ export function RecentSummaries({ recent, isLoading }: RecentSummariesProps) {
 }
 
 interface FeaturedArtifactProps {
-    featuredArtifact?: Summary;
+    featuredArtifact?: SummaryListItem;
     isLoading: boolean;
 }
 
