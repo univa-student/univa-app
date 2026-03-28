@@ -2,9 +2,10 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ feature/*, fix/*, develop, main ]
+    branches: [ main, "release/20**", 2026* ]
+    tags: [ "20**w*" ]
   pull_request:
-    branches: [ feature/*, fix/*, develop, main ]
+    branches: [ main, "release/20**", 2026* ]
 
 env:
   REGISTRY: ghcr.io
@@ -33,7 +34,7 @@ jobs:
           fi
 
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6.0.2
 
       - name: Bootstrap .env files
         shell: bash
@@ -102,7 +103,7 @@ jobs:
           fi
 
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6.0.2
 
       - name: Bootstrap .env files
         shell: bash
@@ -229,7 +230,7 @@ jobs:
           fi
 
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6.0.2
 
       - name: Bootstrap .env files
         shell: bash
@@ -323,8 +324,8 @@ jobs:
           DB_USERNAME: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
-      # key:generate пишет APP_KEY в api/.env через примонтированный том.
-      # Проверяем что ключ реально записался на хост перед следующим шагом.
+
+
       - name: Verify APP_KEY was written to host
         shell: bash
         run: |
@@ -376,7 +377,7 @@ jobs:
           fi
 
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6.0.2
 
       - name: Bootstrap .env files
         shell: bash
@@ -411,7 +412,7 @@ jobs:
     name: 📦 Push images to GHCR
     runs-on: self-hosted
     needs: [ backend-tests, frontend-build ]
-    if: github.ref == 'refs/heads/feature/docker' && github.event_name == 'push'
+    if: startsWith(github.ref, 'refs/tags/20') || github.ref == 'refs/heads/main'
 
     permissions:
       contents: read
@@ -428,7 +429,7 @@ jobs:
           fi
 
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6.0.2
 
       - name: Bootstrap .env files
         shell: bash
@@ -452,11 +453,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/php-fpm
           tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag       
+            type=ref,event=branch    
+            type=sha,prefix=sha-     
+            type=raw,value=latest,enable={{is_default_branch}} 
 
       - name: Build & push — php-fpm
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./gateway/docker/development/php-fpm
           push: true
@@ -475,11 +478,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/nginx
           tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag       
+            type=ref,event=branch    
+            type=sha,prefix=sha-     
+            type=raw,value=latest,enable={{is_default_branch}} 
 
       - name: Build & push — nginx
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./gateway/docker/development/nginx
           push: true
@@ -495,11 +500,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/node
           tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag       
+            type=ref,event=branch    
+            type=sha,prefix=sha-     
+            type=raw,value=latest,enable={{is_default_branch}} 
 
       - name: Build & push — node
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./gateway/docker/development/node
           push: true
