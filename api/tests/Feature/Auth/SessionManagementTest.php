@@ -51,7 +51,7 @@ class SessionManagementTest extends TestCase
 
         $response = $this
             ->withCredentials()
-            ->withCookie(config('session.cookie'), $currentSessionId)
+            ->withCookie(config('session.cookie'), encrypt($currentSessionId))
             ->actingAs($user)
             ->getJson('/api/v1/me/sessions');
 
@@ -99,7 +99,7 @@ class SessionManagementTest extends TestCase
 
         $response = $this
             ->withCredentials()
-            ->withCookie(config('session.cookie'), $currentSessionId)
+            ->withCookie(config('session.cookie'), encrypt($currentSessionId))
             ->actingAs($user)
             ->deleteJson("/api/v1/me/sessions/{$otherSessionId}");
 
@@ -134,7 +134,7 @@ class SessionManagementTest extends TestCase
 
         $response = $this
             ->withCredentials()
-            ->withCookie(config('session.cookie'), $currentSessionId)
+            ->withCookie(config('session.cookie'), encrypt($currentSessionId))
             ->actingAs($user)
             ->deleteJson("/api/v1/me/sessions/{$currentSessionId}");
 
@@ -177,7 +177,7 @@ class SessionManagementTest extends TestCase
 
         $response = $this
             ->withCredentials()
-            ->withCookie(config('session.cookie'), $currentSessionId)
+            ->withCookie(config('session.cookie'), encrypt($currentSessionId))
             ->actingAs($user)
             ->getJson('/api/v1/me/sessions');
 
@@ -223,7 +223,7 @@ class SessionManagementTest extends TestCase
 
         $response = $this
             ->withCredentials()
-            ->withCookie(config('session.cookie'), $currentSessionId)
+            ->withCookie(config('session.cookie'), encrypt($currentSessionId))
             ->actingAs($user)
             ->deleteJson("/api/v1/me/sessions/{$otherSessionId}");
 
