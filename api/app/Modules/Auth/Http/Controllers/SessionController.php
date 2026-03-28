@@ -60,13 +60,6 @@ class SessionController extends Controller
 
     private function resolveCurrentSessionId(Request $request): string
     {
-        $cookieName = (string) config('session.cookie', '');
-        $cookieSessionId = $cookieName !== '' ? $request->cookie($cookieName) : null;
-
-        if (is_string($cookieSessionId) && $cookieSessionId !== '') {
-            return $cookieSessionId;
-        }
-
         if (! $request->hasSession()) {
             return '';
         }
