@@ -55,7 +55,7 @@ switch ($authMode) {
         $authMiddleware[] = 'auth:sanctum';
         $authMiddleware[] = 'api';
 
-        $publicMiddleware[] = [];
+
         break;
 
     case 'hybrid':
@@ -308,27 +308,6 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
         Route::delete('/{notification}', 'destroy');
     });
 
-    // ── Profiles ──────────────────────────────────────────────────────────────
-
-    Route::get('/information', [
-        UniversityController::class,
-        'information'
-    ]);
-
-    Route::post('/select-region', [
-        UniversityController::class,
-        'selectRegion'
-    ]);
-
-    Route::post('/select-university', [
-        UniversityController::class,
-        'selectUniversity'
-    ]);
-
-    Route::post('/save-university', [
-        UniversityController::class,
-        'store'
-    ]);
 });
 
 Route::group(['prefix' => '/v1', 'middleware' => $publicMiddleware], function () {
