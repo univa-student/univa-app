@@ -20,13 +20,18 @@ frontend-dev:
     cd frontend && npm run dev
 
 api-dev:
-    cd api && php artisan serve
+    cd api && php artisan serve --host=0.0.0.0 --port=8000
 
 api-broadcast:
     cd api && php artisan reverb:start
+
+ngrok-frontend:
+    ngrok http 5173
 
 start:
     just frontend-dev &
     just api-dev &
     just api-broadcast &
+    sleep 3
+    just ngrok-frontend &
     wait

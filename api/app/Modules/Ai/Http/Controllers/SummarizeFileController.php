@@ -7,7 +7,7 @@ namespace App\Modules\Ai\Http\Controllers;
 use App\Core\Response\ApiResponse;
 use App\Core\Response\ResponseState;
 use App\Http\Controllers\Controller;
-use App\Models\Files\File;
+use App\Modules\Files\Models\File;
 use App\Modules\Ai\Enums\AiArtifactType;
 use App\Modules\Ai\Http\Requests\DeleteFileSummaryRequest;
 use App\Modules\Ai\Http\Requests\IndexFileSummariesRequest;

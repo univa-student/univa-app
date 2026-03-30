@@ -9,3 +9,35 @@ export interface User {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface UpdateProfilePayload {
+    firstName: string;
+    lastName?: string;
+    username: string;
+}
+
+export interface ChangePasswordPayload {
+    currentPassword: string;
+    password: string;
+    password_confirmation: string;
+}
+
+export interface AuthSession {
+    id: string;
+    ipAddress: string | null;
+    userAgent: string | null;
+    lastActiveAt: string | null;
+    current: boolean;
+}
+
+export interface RegisterFormData {
+    last_name: string;
+    first_name: string;
+    middle_name: string;
+    username: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    agree_terms: boolean;
+    marketing_opt_in: boolean;
+}

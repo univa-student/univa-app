@@ -7,6 +7,7 @@ import { LandingPage } from "@/landing/pages/landing.page.tsx";
 import { DocsPage } from "@/landing/pages/docs.page.tsx";
 import { AboutPage } from "@/landing/pages/about.page.tsx";
 import { SettingsPage } from "@/pages/settings/settings.page.tsx";
+import { ProfilePage } from "@/pages/profile/profile.page.tsx";
 import { DashboardLayout } from "@/shared/ui/layouts/app/dashboard.layout.tsx";
 import { LoginPage } from "@/pages/auth/login.page.tsx";
 import { RegisterPage } from "@/pages/auth/register.page.tsx";
@@ -19,8 +20,11 @@ import { PlaceholderPage } from "@/pages/dashboard/placeholder.page.tsx";
 import { FilesPage } from "@/pages/files/files.page";
 import { ChatPage } from "@/pages/chat/chat.page";
 import { DeadlinesPage } from "@/pages/deadlines/deadlines.page";
-import { SpacesPage } from "@/pages/spaces/spaces.page";
+import { GroupsPage } from "@/pages/groups/groups.page";
+import { GroupDetailPage } from "@/pages/groups/group-detail.page";
 import { NotificationsPage } from "@/pages/notifications/notifications.page";
+import { FriendsPage } from "@/pages/friends/friends.page.tsx";
+import { CommunityPage } from "@/pages/community/community.page.tsx";
 
 import { PrivateRoot } from "./PrivateRoot.tsx";
 import { routesLoaders } from "./loaders.ts";
@@ -195,6 +199,36 @@ export const router = createBrowserRouter([
                         ),
                     },
                     {
+                        path: "dashboard/profile",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout breadcrumbs={[
+                                        { label: "Головна", href: "/dashboard" },
+                                        { label: "Мій профіль" },
+                                    ]}>
+                                        <ProfilePage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/profile/:username",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout breadcrumbs={[
+                                        { label: "Головна", href: "/dashboard" },
+                                        { label: "Профіль студента" },
+                                    ]}>
+                                        <ProfilePage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
                         path: "dashboard/settings",
                         element: (
                             <LazyBoundary>
@@ -325,15 +359,33 @@ export const router = createBrowserRouter([
                         ),
                     },
                     {
-                        path: "dashboard/spaces",
+                        path: "dashboard/groups",
                         element: (
                             <LazyBoundary>
                                 <AuthGuard>
                                     <DashboardLayout breadcrumbs={[
                                         { label: "Головна", href: "/dashboard" },
-                                        { label: "Спейси" },
+                                        { label: "Групи" },
                                     ]}>
-                                        <SpacesPage />
+                                        <GroupsPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/groups/:groupId",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Групи", href: "/dashboard/groups" },
+                                            { label: "Робочий простір" },
+                                        ]}
+                                    >
+                                        <GroupDetailPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>
@@ -355,6 +407,23 @@ export const router = createBrowserRouter([
                         ),
                     },
                     {
+                        path: "dashboard/community",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Спільнота" },
+                                        ]}
+                                    >
+                                        <CommunityPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
                         path: "dashboard/ai",
                         element: (
                             <LazyBoundary>
@@ -366,6 +435,23 @@ export const router = createBrowserRouter([
                                         ]}
                                     >
                                         <AiHome />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+                    {
+                        path: "dashboard/friends",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "Друзі" },
+                                        ]}
+                                    >
+                                        <FriendsPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>

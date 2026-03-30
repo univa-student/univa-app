@@ -1,4 +1,3 @@
-import React from "react";
 import { useSummaries } from "@/modules/ai/api/hooks";
 import { AiPanel } from "./ai-panel";
 import {

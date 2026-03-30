@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\SettingType;
-use App\Models\Application\Settings\ApplicationSetting;
-use App\Models\Application\Settings\ApplicationSettingGroup;
-use App\Models\Application\Settings\ApplicationSettingValue;
+use App\Modules\Settings\Enums\SettingType;
+use App\Modules\Settings\Models\ApplicationSetting;
+use App\Modules\Settings\Models\ApplicationSettingGroup;
+use App\Modules\Settings\Models\ApplicationSettingValue;
 use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration

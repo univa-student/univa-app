@@ -1,7 +1,7 @@
-import { queryOptions } from "@tanstack/react-query";
-import { apiFetch } from "@/shared/api/http";
-import { ENDPOINTS } from "@/shared/api/endpoints";
-import type { Deadline } from "../model/types";
+import {queryOptions} from "@tanstack/react-query";
+import {apiFetch} from "@/shared/api/http";
+import {ENDPOINTS} from "@/shared/api/endpoints";
+import type {Deadline} from "../model/types";
 
 export const deadlineQueries = {
     all: () => ["deadlines"] as const,
@@ -17,24 +17,25 @@ export const deadlineQueries = {
                     }
                 });
             }
-            const res = await apiFetch<Deadline[]>(`${ENDPOINTS.deadlines.base}?${params.toString()}`);
-            return res;
+            return await apiFetch<Deadline[]>(`${ENDPOINTS.deadlines.base}?${params.toString()}`, {
+                cacheTtlMs: 30_000,
+            });
         },
     }),
 
     detail: (id: number) => queryOptions({
         queryKey: [...deadlineQueries.all(), "detail", id],
         queryFn: async () => {
-            const res = await apiFetch<Deadline>(ENDPOINTS.deadlines.id(id));
-            return res;
+            return await apiFetch<Deadline>(ENDPOINTS.deadlines.id(id));
         },
     }),
 
     stats: () => queryOptions({
         queryKey: [...deadlineQueries.all(), "stats"],
         queryFn: async () => {
-            const res = await apiFetch<Record<string, number>>(ENDPOINTS.deadlines.stats);
-            return res;
+            return await apiFetch<Record<string, number>>(ENDPOINTS.deadlines.stats, {
+                cacheTtlMs: 30_000,
+            });
         },
     }),
 };

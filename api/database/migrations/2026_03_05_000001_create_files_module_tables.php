@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -51,7 +52,12 @@ return new class extends Migration
             $table->index(['user_id', 'folder_id']);
             $table->index(['user_id', 'status']);
             $table->index(['user_id', 'is_pinned']);
-            $table->fullText('original_name');
+
+            if (DB::getDriverName() === 'sqlite') {
+                $table->index('original_name');
+            } else {
+                $table->fullText('original_name');
+            }
         });
 
         // ── File Permissions (ACL) ───────────────────────────────────────────────

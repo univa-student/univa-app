@@ -1,58 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     scheduleQueries,
-    subjectQueries,
     lessonQueries,
     examQueries,
     dictionaryQueries,
 } from "./queries";
 import type {
-    CreateSubjectPayload,
     CreateLessonPayload,
     CreateExceptionPayload,
     CreateExamPayload,
 } from "../model/types";
 
+// ─── Subject hooks — re-exported from modules/subjects for backward compat ────
+export {
+    useSubjects,
+    useSubjectFolder,
+    useCreateSubject,
+    useUpdateSubject,
+    useDeleteSubject,
+} from "@/modules/subjects/api/hooks";
+
 // ─── Schedule ─────────────────────────────────────────────────────────────────
 
 export function useSchedule(from: string, to: string) {
     return useQuery(scheduleQueries.built(from, to));
-}
-
-// ─── Subjects ─────────────────────────────────────────────────────────────────
-
-export function useSubjects() {
-    return useQuery(subjectQueries.list());
-}
-
-export function useSubjectFolder(id: number) {
-    return useQuery(subjectQueries.folder(id));
-}
-
-export function useCreateSubject() {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: (payload: CreateSubjectPayload) =>
-            subjectQueries.create(payload).queryFn(),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ["subjects"] }),
-    });
-}
-
-export function useUpdateSubject() {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, payload }: { id: number; payload: Partial<CreateSubjectPayload> }) =>
-            subjectQueries.update(id, payload).queryFn(),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ["subjects"] }),
-    });
-}
-
-export function useDeleteSubject() {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: (id: number) => subjectQueries.delete(id).queryFn(),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ["subjects"] }),
-    });
 }
 
 // ─── Lessons ──────────────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Deadlines\Deadline;
+use App\Modules\Deadlines\Models\Deadline;
 use Illuminate\Database\Seeder;
 
 class DeadlineSeeder extends Seeder

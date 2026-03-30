@@ -1,5 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useEffect } from "react";
 import { wsClient } from "@/shared/realtime/ws-client";
 import { authStore } from "@/modules/auth/model/auth-store";
 import { ENABLE_WS } from "@/app/config/feature-flags";
@@ -9,10 +8,6 @@ interface WsContextValue {
 }
 
 const WsContext = createContext<WsContextValue>({ isEnabled: false });
-
-export function useWs(): WsContextValue {
-    return useContext(WsContext);
-}
 
 export function WsProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {

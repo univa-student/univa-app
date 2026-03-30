@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationApi } from "./index";
 import { useEffect } from "react";
+import { WS_EVENTS } from "@/shared/realtime/events";
 import { wsClient } from "@/shared/realtime/ws-client";
 import { authStore } from "@/modules/auth/model/auth-store";
 
@@ -15,21 +16,26 @@ export function useNotifications() {
         if (!user) return;
 
         const channelName = `user.${user.id}`;
-        
+        let invalidateTimer: number | null = null;
+
         const handleNewNotification = () => {
-            // Найпростіший варіант – інвалідувати кеш, щоб відбувся перезапит
-            // Можна також робити optimistic update, вставляючи payload у кеш (див. нижче)
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS });
+            if (invalidateTimer !== null) {
+                return;
+            }
+
+            invalidateTimer = window.setTimeout(() => {
+                invalidateTimer = null;
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
+            }, 750);
         };
 
-        wsClient.listen("private", channelName, "notification.created", handleNewNotification);
+        wsClient.listen("private", channelName, WS_EVENTS.NOTIFICATION_CREATED, handleNewNotification);
 
         return () => {
-            // При анмаунті ми можемо ігнорувати leave, якщо інші хуки теж слухають цей канал, 
-            // але в Echo ліпше просто не підписуватись двічі. 
-            // wsClient залишає канал відкритим, тому просто видаляємо лісенера (якщо в нас був би .off() для Echo).
-            // В даній реалізації наша обгортка Echo не дає простого способу відписати саме одну функцію, 
-            // проте для сторінки сповіщень це працює нормально.
+            if (invalidateTimer !== null) {
+                window.clearTimeout(invalidateTimer);
+            }
+            wsClient.leave(channelName);
         };
     }, [user, queryClient]);
 
@@ -51,7 +57,7 @@ export function useMarkNotificationAsRead() {
     return useMutation({
         mutationFn: notificationApi.markAsRead,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
         },
     });
 }
@@ -61,7 +67,7 @@ export function useMarkAllNotificationsAsRead() {
     return useMutation({
         mutationFn: notificationApi.markAllAsRead,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
         },
     });
 }
@@ -71,7 +77,7 @@ export function useDeleteNotification() {
     return useMutation({
         mutationFn: notificationApi.deleteNotification,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY_NOTIFICATIONS }).then(() => {});
         },
     });
 }

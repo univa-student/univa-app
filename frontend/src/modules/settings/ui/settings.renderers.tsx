@@ -1,5 +1,4 @@
-import React, { useState } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/shadcn/ui/card"
 import { Separator } from "@/shared/shadcn/ui/separator"
 import { Button } from "@/shared/shadcn/ui/button"
@@ -10,23 +9,17 @@ import { SETTING_VALUE_ICON_MAP } from "../model/settings.icon-map"
 import type { SettingItem, SettingValue } from "@/modules/settings/api/settings.api"
 import { getSelectedValue } from "@/modules/settings/api/settings.api"
 import type { LucideIcon } from "lucide-react"
+import { AlertTriangleIcon, LoaderCircleIcon, SaveIcon } from "lucide-react"
+import React from "react";
 
-/* ════════════════════════════════════════════════════════════
-   DynamicSettingsCard
-   Renders one Card for a group of SettingItem[].
-   - "bool" items  → toggle row
-   - "enum" items  → horizontal selector grid (options from API)
-   Icons for option values come from the frontend SETTING_VALUE_ICON_MAP.
-   ════════════════════════════════════════════════════════════ */
 
 interface DynamicSettingsCardProps {
     title: string
     description?: string
     icon?: LucideIcon
     settings: SettingItem[]
-    draft: Record<string, string>         // key → current string value
+    draft: Record<string, string>
     onChange: (key: string, value: string) => void
-    /** Optional number of grid columns for enum options (default: auto by count) */
     enumColumns?: 2 | 3
 }
 
@@ -60,7 +53,6 @@ export function DynamicSettingsCard({
                         </div>
                     ))}
 
-                    {/* Bool toggles */}
                     {bools.length > 0 && enums.length > 0 && <Separator />}
                     {bools.map((s, idx) => (
                         <div key={s.key}>
@@ -80,8 +72,6 @@ export function DynamicSettingsCard({
     )
 }
 
-/* ── Bool row ─────────────────────────────────────────────── */
-
 function BoolSettingRow({ item, checked, onChange }: {
     item: SettingItem
     checked: boolean
@@ -99,8 +89,6 @@ function BoolSettingRow({ item, checked, onChange }: {
         </div>
     )
 }
-
-/* ── Enum row ─────────────────────────────────────────────── */
 
 function EnumSettingRow({ item, selected, onChange, columns }: {
     item: SettingItem
@@ -157,43 +145,81 @@ function EnumOption({ option, isActive, onClick }: {
     )
 }
 
-/* ════════════════════════════════════════════════════════════
-   TabShell — wraps tab content with animation + save button
-   ════════════════════════════════════════════════════════════ */
-
 interface TabShellProps {
     children: React.ReactNode
     showSave?: boolean
     onSave?: () => void
+    onCancel?: () => void
     isSaving?: boolean
     isDirty?: boolean
     error?: string | null
+    dirtyMessage?: string
+    canSave?: boolean
 }
 
-export function TabShell({ children, showSave = true, onSave, isSaving, isDirty, error }: TabShellProps) {
+export function TabShell({ children, showSave = true, onSave, onCancel, isSaving, isDirty, error, dirtyMessage = "Є незбережені зміни", canSave = true }: TabShellProps) {
     return (
-        <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">
-            {children}
+        <div className="relative pb-24">
+            <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">
+                {children}
+            </motion.div>
+            
             {showSave && (
-                <motion.div variants={itemAnim} className="flex items-center justify-end gap-3">
-                    {error && (
-                        <p className="text-sm text-destructive">{error}</p>
+                <AnimatePresence>
+                    {isDirty && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20 }}
+                            className="fixed bottom-20 left-0 right-0 z-50 flex justify-center px-4 h-14 w-[36rem] mx-auto"
+                        >
+                            <Card className="shadow-lg border-primary/20">
+                                <CardContent className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <AlertTriangleIcon className="size-4 text-amber-500" />
+                                        <span className="font-medium text-foreground">
+                                            {dirtyMessage}
+                                        </span>
+                                    </div>
+                                    {error && (
+                                        <div className="text-sm text-destructive font-medium border-l border-destructive/50 pl-3 ml-2">
+                                            {error}
+                                        </div>
+                                    )}
+                                    <div className="flex gap-2 ml-4">
+                                        {onCancel && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={onCancel}
+                                                disabled={isSaving}
+                                            >
+                                                Скасувати
+                                            </Button>
+                                        )}
+                                        <Button
+                                            size="sm"
+                                            onClick={onSave}
+                                            disabled={isSaving || !canSave}
+                                        >
+                                            {isSaving ? (
+                                                <LoaderCircleIcon className="mr-2 size-4 animate-spin" />
+                                            ) : (
+                                                <SaveIcon className="mr-2 size-4" />
+                                            )}
+                                            Зберегти
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     )}
-                    <Button
-                        onClick={onSave}
-                        disabled={isSaving || !isDirty}
-                    >
-                        {isSaving ? "Зберігається…" : "Зберегти зміни"}
-                    </Button>
-                </motion.div>
+                </AnimatePresence>
             )}
-        </motion.div>
+        </div>
     )
 }
 
-/* ════════════════════════════════════════════════════════════
-   SettingsLoadingShell — skeleton while API data loads
-   ════════════════════════════════════════════════════════════ */
 
 export function SettingsLoadingShell() {
     return (
@@ -217,25 +243,4 @@ export function SettingsLoadingShell() {
             ))}
         </div>
     )
-}
-
-/* ════════════════════════════════════════════════════════════
-   useSettingsDraft — unified state hook for all backend-driven tabs.
-   Holds draft[key] = string for every setting in a group.
-   ════════════════════════════════════════════════════════════ */
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useSettingsDraft(items: SettingItem[] | undefined) {
-    const initial = items
-        ? Object.fromEntries(items.map(s => [s.key, getSelectedValue(s)]))
-        : {}
-    const [draft, setDraft] = useState<Record<string, string>>(initial)
-
-    const set = (key: string, value: string) =>
-        setDraft(prev => ({ ...prev, [key]: value }))
-
-    const reset = (items: SettingItem[]) =>
-        setDraft(Object.fromEntries(items.map(s => [s.key, getSelectedValue(s)])))
-
-    return { draft, set, reset }
 }

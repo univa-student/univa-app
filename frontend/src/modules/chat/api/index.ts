@@ -8,23 +8,24 @@ import type { Message } from "../model/types";
 
 const API = "/api/v1";
 
-export function loadHistory(spaceId: number, page = 1): Promise<Message[]> {
-    return apiFetch<Message[]>(`${API}/spaces/${spaceId}/messages?page=${page}`);
+export function loadHistory(groupId: number, channelId: number): Promise<Message[]> {
+    return apiFetch<Message[]>(`${API}/groups/${groupId}/channels/${channelId}/messages`);
 }
 
 export function sendMessage(
-    spaceId: number,
+    groupId: number,
+    channelId: number,
     content: string,
     fileId?: number,
 ): Promise<Message> {
-    return apiFetch<Message>(`${API}/spaces/${spaceId}/messages`, {
+    return apiFetch<Message>(`${API}/groups/${groupId}/channels/${channelId}/messages`, {
         method: "POST",
         body: JSON.stringify({ content, file_id: fileId }),
     });
 }
 
-export function deleteMessage(spaceId: number, messageId: number): Promise<void> {
-    return apiFetch<void>(`${API}/spaces/${spaceId}/messages/${messageId}`, {
+export function deleteMessage(groupId: number, channelId: number, messageId: number): Promise<void> {
+    return apiFetch<void>(`${API}/groups/${groupId}/channels/${channelId}/messages/${messageId}`, {
         method: "DELETE",
     });
 }

@@ -3,8 +3,9 @@ import {
     ImageIcon, FileTextIcon, FileSpreadsheetIcon,
     PresentationIcon, ArchiveIcon, FileIcon,
 } from "lucide-react";
+import type { MimeGroup } from "@/modules/files/model/types";
 
-export type MimeGroup = "img" | "pdf" | "doc" | "xls" | "ppt" | "zip" | "other";
+export type { MimeGroup };
 
 export function mimeGroup(mime: string | null): MimeGroup {
     if (!mime) return "other";

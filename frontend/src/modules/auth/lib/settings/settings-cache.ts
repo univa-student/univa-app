@@ -1,4 +1,4 @@
-import type { UserSettings } from "@/entities/user/model/settings/types";
+import type { UserSettings } from "@/modules/settings/model/types";
 
 const LS_KEY = "univa:userSettings:v1";
 

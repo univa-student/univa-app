@@ -51,6 +51,10 @@ class AiArtifact extends Model
             return $this->content_text;
         }
 
+        if (is_array($this->content_json) && isset($this->content_json['overview'])) {
+            return (string) $this->content_json['overview'];
+        }
+
         if (is_array($this->content_json) && isset($this->content_json['short_summary'])) {
             return (string) $this->content_json['short_summary'];
         }

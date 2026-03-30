@@ -7,38 +7,29 @@
  */
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
-import { WS_HOST, WS_PORT, WS_KEY, WS_SCHEME } from "@/app/config/app.config";
+import { API_BASE_URL, WS_HOST, WS_KEY, WS_PORT, WS_SCHEME } from "@/app/config/app.config";
 import type { WsEventName, WsEventMap } from "./events";
 
-// Required by laravel-echo
 declare global {
     interface Window {
-        Pusher: any;
+        Pusher: typeof Pusher;
     }
 }
+
 window.Pusher = Pusher;
 
 class WsClient {
-    private echo: Echo<any> | null = null;
+    private echo: Echo<"reverb"> | null = null;
     private _isConnected = false;
 
     get isConnected(): boolean {
         return this._isConnected;
     }
 
-    /**
-     * Initializes Echo connection.
-     *
-     * For Sanctum cookie auth:
-     * - user must already be authenticated
-     * - /sanctum/csrf-cookie should be requested before login/auth flow
-     * - withCredentials must be enabled
-     *
-     * Token is optional and can be used if backend broadcasting auth
-     * is configured to accept Bearer tokens via auth:sanctum.
-     */
     connect(token?: string): void {
-        if (this.echo) return;
+        if (this.echo) {
+            return;
+        }
 
         const authHeaders: Record<string, string> = {
             "X-Requested-With": "XMLHttpRequest",
@@ -54,27 +45,47 @@ class WsClient {
             authHeaders["X-XSRF-TOKEN"] = decodeURIComponent(xsrfMatch[1]);
         }
 
+        const effectiveWsHost =
+            WS_HOST !== "localhost" && WS_HOST !== "127.0.0.1"
+                ? WS_HOST
+                : window.location.hostname;
+
+        const isTls = WS_SCHEME === "https" || window.location.protocol === "https:";
+        const authEndpoint = API_BASE_URL
+            ? `${API_BASE_URL}/broadcasting/auth`
+            : `${window.location.origin}/broadcasting/auth`;
+
         this.echo = new Echo({
             broadcaster: "reverb",
             key: WS_KEY || "univa-app-key",
-            wsHost: WS_HOST,
-            wsPort: WS_PORT,
-            wssPort: WS_PORT,
-            forceTLS: WS_SCHEME === "https",
+            wsHost: effectiveWsHost,
+            wsPort: isTls ? 443 : WS_PORT,
+            wssPort: isTls ? 443 : WS_PORT,
+            forceTLS: isTls,
             enabledTransports: ["ws", "wss"],
-
-            // Proxied by Vite to Laravel backend
-            authEndpoint: "/broadcasting/auth",
-
+            disableStats: true,
+            authEndpoint,
             auth: {
                 headers: authHeaders,
             },
-
-            // Important for Sanctum session/cookie authentication
             withCredentials: true,
         });
 
-        this._isConnected = true;
+        const pusher = this.echo.connector?.pusher;
+
+        if (pusher) {
+            pusher.connection.bind("connected", () => {
+                this._isConnected = true;
+            });
+            pusher.connection.bind("disconnected", () => {
+                this._isConnected = false;
+            });
+            pusher.connection.bind("failed", () => {
+                this._isConnected = false;
+            });
+        } else {
+            this._isConnected = true;
+        }
     }
 
     disconnect(): void {
@@ -83,23 +94,19 @@ class WsClient {
         this._isConnected = false;
     }
 
-    /**
-     * Exposes Echo instance for advanced use cases.
-     */
-    get client(): Echo<any> | null {
+    get client(): Echo<"reverb"> | null {
         return this.echo;
     }
 
-    /**
-     * Subscribe to a channel event.
-     */
     listen<E extends WsEventName>(
         channelType: "private" | "presence" | "public",
         channelName: string,
         event: E,
         handler: (payload: WsEventMap[E]) => void
     ): void {
-        if (!this.echo) return;
+        if (!this.echo) {
+            return;
+        }
 
         const channel =
             channelType === "private"
@@ -108,30 +115,33 @@ class WsClient {
                     ? this.echo.join(channelName)
                     : this.echo.channel(channelName);
 
-        channel.listen(event, handler);
+        // Laravel Echo requires a leading dot for broadcastAs() events.
+        const echoEventName = this.normalizeEventName(event);
+
+        channel.listen(echoEventName, handler);
     }
 
-    /**
-     * Stop listening to a channel completely.
-     */
     leave(channelName: string): void {
         this.echo?.leave(channelName);
     }
 
-    /**
-     * Subscribe to a global event.
-     */
-    on<E extends WsEventName>(_event: E, _handler: (payload: WsEventMap[E]) => void): void {
-        console.warn(`wsClient.on() called for ${_event} but global bindings are not implemented yet.`);
+    on<E extends WsEventName>(eventName: string, handler: (payload: WsEventMap[E]) => void): void {
+        console.warn(`wsClient.on() called for ${eventName} but global bindings are not implemented yet.`);
+        void handler;
     }
 
-    /**
-     * Unsubscribe from a global event.
-     */
-    off<E extends WsEventName>(_event: E, _handler: (payload: WsEventMap[E]) => void): void {
-        // Not implemented
+    off<E extends WsEventName>(eventName: string, handler: (payload: WsEventMap[E]) => void): void {
+        void eventName;
+        void handler;
+    }
+
+    private normalizeEventName(event: string): string {
+        if (event.startsWith(".")) {
+            return event;
+        }
+
+        return event.includes(".") ? `.${event}` : event;
     }
 }
 
-/** Singleton WebSocket client */
 export const wsClient = new WsClient();

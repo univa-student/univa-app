@@ -14,6 +14,12 @@ trait HasInsertWithId
 
         $model = new static();
         $table = $model->getTable();
+
+        if (DB::getDriverName() !== 'pgsql') {
+            DB::table($table)->insert($rows);
+            return;
+        }
+
         [$schema, $tableOnly] = self::parseTable($table);
 
         $columns = array_keys($rows[0]);
@@ -44,6 +50,12 @@ trait HasInsertWithId
 
         $model = new static();
         $table = $model->getTable();
+
+        if (DB::getDriverName() !== 'pgsql') {
+            DB::table($table)->whereIn($idColumn, $ids)->delete();
+            return;
+        }
+
         [$schema, $tableOnly] = self::parseTable($table);
 
         $placeholders = implode(', ', array_fill(0, count($ids), '?'));

@@ -1,13 +1,14 @@
 import {
-    LayoutDashboardIcon,
+    AlertCircleIcon,
+    BookCheckIcon,
+    BotIcon,
     CalendarDaysIcon,
     FolderOpenIcon,
-    MessagesSquareIcon,
-    BotIcon,
+    LayoutDashboardIcon,
     ListChecksIcon,
     Settings2Icon,
-    AlertCircleIcon,
-    type LucideIcon, BookCheckIcon,
+    UsersIcon,
+    type LucideIcon,
 } from "lucide-react"
 
 export interface NavSubItem {
@@ -42,6 +43,12 @@ export const navItems: NavItem[] = [
         items: [],
     },
     {
+        title: "Спільнота",
+        url: "/dashboard/community",
+        icon: UsersIcon,
+        items: [],
+    },
+    {
         title: "Дедлайни",
         url: "/dashboard/deadlines",
         icon: AlertCircleIcon,
@@ -51,12 +58,6 @@ export const navItems: NavItem[] = [
         title: "Файли",
         url: "/dashboard/files",
         icon: FolderOpenIcon,
-        items: [],
-    },
-    {
-        title: "Чати",
-        url: "/dashboard/chats",
-        icon: MessagesSquareIcon,
         items: [],
     },
     {

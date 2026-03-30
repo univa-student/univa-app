@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Profiles\UseCases;
+
+use App\Models\User;
+use App\Modules\Profiles\DTO\UpdateProfileData;
+use App\Modules\Profiles\Models\Profile;
+use App\Modules\Profiles\Services\ProfileService;
+
+class UpdateProfile
+{
+    public function __construct(
+        private readonly ProfileService $profiles,
+    ) {}
+
+    public function handle(User $user, UpdateProfileData $data): Profile
+    {
+        return $this->profiles->update($user, $data);
+    }
+}

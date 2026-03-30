@@ -1,9 +1,3 @@
-/**
- * app/config/feature-flags.ts
- *
- * Boolean feature flags driven by environment variables.
- * Set VITE_ENABLE_* = "true" in .env to enable.
- */
 const flag = (key: string, fallback = false): boolean => {
     const val = import.meta.env[key];
     if (val === undefined) return fallback;
@@ -11,7 +5,7 @@ const flag = (key: string, fallback = false): boolean => {
 };
 
 export const ENABLE_AI = flag("VITE_ENABLE_AI", true);
-export const ENABLE_SPACES = flag("VITE_ENABLE_SPACES", true);
+export const ENABLE_GROUPS = flag("VITE_ENABLE_GROUPS", true);
 export const ENABLE_CHAT = flag("VITE_ENABLE_CHAT", true);
 export const ENABLE_WS = flag("VITE_ENABLE_WS", true);
 export const ENABLE_REALTIME = flag("VITE_ENABLE_REALTIME", true);

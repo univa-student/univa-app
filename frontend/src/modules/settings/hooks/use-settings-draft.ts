@@ -9,7 +9,7 @@ import { fetchUserSettings } from "@/modules/auth/api/settings/fetch-user-settin
 import { mapUiSettings } from "@/modules/auth/lib/settings/map-ui-settings"
 import { applyDomSettings } from "@/modules/auth/lib/settings/apply-dom-settings"
 import { saveCachedUiSettings } from "@/modules/auth/lib/settings/settings-cache"
-import {userSettingsStore} from "@/modules/auth/model/settings-store.ts";
+import {userSettingsStore} from "@/modules/settings/model/settings-store";
 
 /**
  * useSettingsDraft

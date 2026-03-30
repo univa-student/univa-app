@@ -1,10 +1,12 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/shared/api/http";
 import { fetchCsrfToken } from "@/shared/api/csrf";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { authStore } from "@/modules/auth/model/auth-store";
 import type { User } from "@/modules/auth/model/types";
-import type { RegisterFormData } from "@/shared/shadcn/components/auth/register-form";
+import type { RegisterFormData } from "@/modules/auth/ui/register-form";
+import { confirmAuthenticatedUser } from "@/modules/auth/api/confirm-authenticated-user";
+import { userQueries } from "@/modules/auth/api/queries";
 
 function toFormData(form: RegisterFormData): FormData {
     const fd = new FormData();
@@ -30,16 +32,23 @@ function toFormData(form: RegisterFormData): FormData {
 }
 
 export function useSignUp() {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: async (form: RegisterFormData): Promise<User> => {
             await fetchCsrfToken();
 
             const fd = toFormData(form);
 
-            return apiFetch<User>(ENDPOINTS.auth.register, {
+            await apiFetch<User>(ENDPOINTS.auth.register, {
                 method: "POST",
                 body: fd,
             });
+
+            const confirmedUser = await confirmAuthenticatedUser();
+            queryClient.setQueryData(userQueries.me().queryKey, confirmedUser);
+
+            return confirmedUser;
         },
         onSuccess: (user) => {
             authStore.setUser(user);

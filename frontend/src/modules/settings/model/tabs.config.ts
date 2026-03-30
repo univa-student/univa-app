@@ -12,7 +12,7 @@ import {
     LinkIcon,
     Trash2Icon, GraduationCap,
 } from "lucide-react"
-import type { TabDef } from ".../model/settings.types"
+import type { TabDef } from "./settings.types"
 
 // Group IDs mirror ApplicationSettingGroup PHP constants
 export const SETTING_GROUP = {

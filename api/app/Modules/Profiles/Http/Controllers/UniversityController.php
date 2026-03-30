@@ -6,18 +6,23 @@ namespace App\Modules\Profiles\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
 use App\Core\Response\ResponseState;
-use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
+use App\Modules\Notification\Enums\NotificationType;
+use App\Modules\Notification\Support\Notifier;
 use App\Modules\Profiles\Enums\Course;
 use App\Modules\Profiles\Enums\RegionCode;
 use App\Modules\Profiles\Exceptions\GetUniversityException;
 use App\Modules\Profiles\Http\Requests\SelectRegionRequest;
 use App\Modules\Profiles\Http\Requests\SelectUniversityRequest;
 use App\Modules\Profiles\Http\Requests\StoreSelectUniversityRequest;
-use App\Modules\Profiles\Models\University;
+use App\Modules\Profiles\Http\Resources\ProfileResource;
+use App\Modules\Profiles\Http\Resources\UniversityResource;
+use App\Modules\Profiles\Services\ProfileService;
 use App\Modules\Profiles\Support\UniversitiesByRegion;
+use App\Modules\Profiles\UseCases\RemoveUniversity;
+use App\Modules\Profiles\UseCases\SaveUniversity;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
 use JsonException;
 use Saloon\Exceptions\Request\FatalRequestException;
 use Saloon\Exceptions\Request\RequestException;
@@ -34,6 +39,7 @@ class UniversityController extends Controller
             ],
         );
     }
+
     /**
      * @throws FatalRequestException
      * @throws RequestException
@@ -72,50 +78,49 @@ class UniversityController extends Controller
         );
     }
 
+    public function current(Request $request, ProfileService $profiles): JsonResponse
+    {
+        $university = $profiles->currentUniversity($request->user());
+
+        return ApiResponse::data(
+            $university !== null ? new UniversityResource($university) : null,
+        );
+    }
+
     /**
      * @throws GetUniversityException
      * @throws FatalRequestException
      * @throws RequestException
      * @throws JsonException
      */
-    public function store(StoreSelectUniversityRequest $request): JsonResponse
-    {
-        $dto = $request->toDto();
-
-        $data = app(UniversitiesByRegion::class)
-            ->getByUniversityId($dto->universityId);
-
-        $actualRegion = RegionCode::tryFromLabel($data->region);
-
-        if ($actualRegion === null) {
-            throw new UnivaHttpException('Не вдалося визначити регіон закладу освіти.');
-        }
-
-        if ($actualRegion->value !== $dto->regionCode) {
-            throw new UnivaHttpException('Обраний заклад не належить до вибраного регіону.');
-        }
-
-        $university = University::query()->updateOrCreate(
-            [
-                'university_id' => $dto->universityId,
-            ],
-            [
-                'user_id' => auth()->id(),
-                'region_code' => $dto->regionCode,
-                'university_name' => $data->name,
-                'location' => $data->location,
-                'university_short_name' => $data->shortName,
-                'university_type_name' => $data->typeName,
-                'faculty_name' => $dto->specialityName,
-                'group_code' => $dto->groupCode,
-                'course' => $dto->course,
-            ],
+    public function store(
+        StoreSelectUniversityRequest $request,
+        SaveUniversity $useCase,
+    ): JsonResponse {
+        $university = $useCase->handle(
+            $request->user(),
+            $request->toDto(),
         );
 
-        return ApiResponse::make(
-            state: ResponseState::OK,
-            data: $university,
+        Notifier::send($request->user()->id, NotificationType::PROFILE_UPDATED, [
+            'message' => 'Освітній профіль оновлено.',
+        ]);
+
+        return ApiResponse::ok(
+            message: 'University saved.',
+            data: new UniversityResource($university),
+        );
+    }
+
+    public function destroy(
+        Request $request,
+        RemoveUniversity $useCase,
+    ): JsonResponse {
+        $profile = $useCase->handle($request->user());
+
+        return ApiResponse::ok(
+            message: 'University removed.',
+            data: new ProfileResource($profile),
         );
     }
 }
-

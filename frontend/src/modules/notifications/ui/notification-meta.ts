@@ -1,13 +1,7 @@
-import React from "react";
 import { BellIcon, BotIcon, FileTextIcon, ImageIcon, UserIcon } from "lucide-react";
+import type { NotificationMeta } from "@/modules/notifications/model/types";
 
-export type NotificationMeta = {
-    title: string;
-    icon: React.ElementType;
-    badgeClass: string;
-    iconClass: string;
-    dotClass: string;
-};
+export type { NotificationMeta };
 
 export function getNotificationMeta(type: string): NotificationMeta {
     switch (type) {

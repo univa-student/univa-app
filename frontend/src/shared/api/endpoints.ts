@@ -23,12 +23,36 @@ export const ENDPOINTS = {
         login: `${API}/login`,
         logout: `${API}/logout`,
         me: `${API}/me/univa-user`,
+        sessions: `${API}/me/sessions`,
+        revokeSession: (sessionId: string) =>
+            `${API}/me/sessions/${encodeURIComponent(sessionId)}`,
     },
 
     me: {
         profile: `${API}/me/profile`,
         password: `${API}/me/password`,
         avatar: `${API}/me/avatar`,
+    },
+
+    friends: {
+        list: `${API}/me/friends`,
+        pending: `${API}/me/friends/pending`,
+        search: (query: string) => withQuery(`${API}/me/friends/search`, { q: query }),
+        status: (userId: number) => `${API}/me/users/${userId}/friendship`,
+        send: (userId: number) => `${API}/me/users/${userId}/friends`,
+        accept: (userId: number) => `${API}/me/friends/${userId}/accept`,
+        remove: (userId: number) => `${API}/me/friends/${userId}`,
+    },
+
+    profiles: {
+        me: `${API}/me/profile`,
+        byUsername: (username: string) =>
+            `${API}/profiles/${encodeURIComponent(username)}`,
+        update: `${API}/me/profile/details`,
+        university: `${API}/me/profile/university`,
+        universityInformation: `${API}/me/profile/university/information`,
+        selectRegion: `${API}/me/profile/university/select-region`,
+        selectUniversity: `${API}/me/profile/university/select`,
     },
 
     settings: {
@@ -122,6 +146,54 @@ export const ENDPOINTS = {
         id: (id: number) => `${API}/deadlines/${id}`,
     },
 
+    groups: {
+        list: `${API}/groups`,
+        create: `${API}/groups`,
+        join: `${API}/groups/join`,
+        show: (id: number) => `${API}/groups/${id}`,
+        update: (id: number) => `${API}/groups/${id}`,
+        delete: (id: number) => `${API}/groups/${id}`,
+        overview: (id: number) => `${API}/groups/${id}/overview`,
+        members: (id: number) => `${API}/groups/${id}/members`,
+        leave: (id: number) => `${API}/groups/${id}/leave`,
+        invites: (id: number) => `${API}/groups/${id}/invites`,
+        invite: (groupId: number, inviteId: number) => `${API}/groups/${groupId}/invites/${inviteId}`,
+        joinRequests: (id: number) => `${API}/groups/${id}/join-requests`,
+        joinRequest: (groupId: number, requestId: number) => `${API}/groups/${groupId}/join-requests/${requestId}`,
+        subjects: (id: number) => `${API}/groups/${id}/subjects`,
+        announcements: (id: number) => `${API}/groups/${id}/announcements`,
+        announcement: (groupId: number, announcementId: number) => `${API}/groups/${groupId}/announcements/${announcementId}`,
+        acknowledgeAnnouncement: (groupId: number, announcementId: number) =>
+            `${API}/groups/${groupId}/announcements/${announcementId}/acknowledge`,
+        polls: (id: number) => `${API}/groups/${id}/polls`,
+        poll: (groupId: number, pollId: number) => `${API}/groups/${groupId}/polls/${pollId}`,
+        votePoll: (groupId: number, pollId: number) => `${API}/groups/${groupId}/polls/${pollId}/vote`,
+        channels: (id: number) => `${API}/groups/${id}/channels`,
+        channelMessages: (groupId: number, channelId: number) =>
+            `${API}/groups/${groupId}/channels/${channelId}/messages`,
+        deadlines: (id: number) => `${API}/groups/${id}/deadlines`,
+        deadline: (groupId: number, deadlineId: number) => `${API}/groups/${groupId}/deadlines/${deadlineId}`,
+        deadlineProgress: (groupId: number, deadlineId: number) =>
+            `${API}/groups/${groupId}/deadlines/${deadlineId}/progress`,
+        schedule: (id: number, from: string, to: string) =>
+            withQuery(`${API}/groups/${id}/schedule`, { from, to }),
+        scheduleLessons: (id: number) => `${API}/groups/${id}/schedule/lessons`,
+        files: (id: number, folderId?: number | null, groupSubjectId?: number | null) =>
+            withQuery(`${API}/groups/${id}/files`, {
+                folder_id: folderId,
+                group_subject_id: groupSubjectId,
+            }),
+        importFiles: (id: number) => `${API}/groups/${id}/files/import`,
+        file: (groupId: number, fileId: number) => `${API}/groups/${groupId}/files/${fileId}`,
+        downloadFile: (groupId: number, fileId: number) => `${API}/groups/${groupId}/files/${fileId}/download`,
+        recentFiles: (id: number) => `${API}/groups/${id}/files/recent`,
+        folders: (id: number, parentId?: number | null, groupSubjectId?: number | null) =>
+            withQuery(`${API}/groups/${id}/folders`, {
+                parent_id: parentId,
+                group_subject_id: groupSubjectId,
+            }),
+    },
+
     // ── AI ───────────────────────────────────────────────
     summaries: {
         list: `${API}/summaries`,
@@ -129,5 +201,10 @@ export const ENDPOINTS = {
         delete: (id: number) => `${API}/summaries/${id}`,
         generate: (fileId: number) =>
             `${API}/files/${fileId}/summary`,
+    },
+
+    dailyDigests: {
+        latest: (date?: string) =>
+            withQuery(`${API}/daily-digests/latest`, { date }),
     },
 } as const;

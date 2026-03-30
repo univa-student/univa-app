@@ -37,6 +37,33 @@ final class AiResponseExtractor
     }
 
     /**
+     * @param array<int, string> $keys
+     * @return array<string, mixed>
+     *
+     * @throws AiProviderException
+     */
+    public function extractStructuredByKeys(
+        mixed $response,
+        array $keys,
+        string $provider = 'unknown',
+    ): array {
+        $normalized = $this->normalize($response);
+
+        $structured = $this->findStructuredCandidateByKeys($normalized, $keys);
+
+        if ($structured !== null) {
+            return $structured;
+        }
+
+        $text = $this->extractText($response, $provider);
+
+        return [
+            'title' => 'AI artifact',
+            'overview' => $text,
+        ];
+    }
+
+    /**
      * @throws AiProviderException
      */
     public function extractText(mixed $response, string $provider = 'unknown'): string
@@ -165,6 +192,32 @@ final class AiResponseExtractor
 
         foreach ($value as $item) {
             $found = $this->findStructuredCandidate($item);
+
+            if ($found !== null) {
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param mixed $value
+     * @param array<int, string> $keys
+     * @return array<string, mixed>|null
+     */
+    private function findStructuredCandidateByKeys(mixed $value, array $keys): ?array
+    {
+        if (!is_array($value)) {
+            return null;
+        }
+
+        if ($this->containsAnyKey($value, $keys)) {
+            return $value;
+        }
+
+        foreach ($value as $item) {
+            $found = $this->findStructuredCandidateByKeys($item, $keys);
 
             if ($found !== null) {
                 return $found;

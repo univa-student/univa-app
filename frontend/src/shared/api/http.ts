@@ -1,14 +1,14 @@
 import { API_BASE_URL } from "@/app/config/app.config";
-import { ApiError } from "@/shared/types/api";
+import { authStore } from "@/modules/auth/model/auth-store";
 import { toast } from "@/shared/lib/toast-store";
+import { ApiError } from "@/shared/types/api";
+import type { ApiFetchOptions, AlertVariant } from "@/shared/types/api";
 import { fetchCsrfToken } from "./csrf";
 
-type AlertVariant = "success" | "warning" | "destructive" | "info";
+export type { ApiFetchOptions };
 
-export interface ApiFetchOptions extends RequestInit {
-    silent401?: boolean;
-    skipCsrf?: boolean;
-}
+const RESPONSE_CACHE_PREFIX = "univa:api-cache:v1";
+const inflightGetRequests = new Map<string, Promise<unknown>>();
 
 function triggerAlert(status: number, message?: string) {
     if (!message) return;
@@ -22,77 +22,164 @@ function triggerAlert(status: number, message?: string) {
     toast({ variant, message });
 }
 
-// ─── XSRF token reader ───────────────────────────────────
 function getXsrfToken(): string | null {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-// ─── Core fetch ──────────────────────────────────────────
+function getCacheNamespace(): string {
+    const userId = authStore.getState().user?.id;
+    return userId ? `user:${userId}` : "guest";
+}
+
+function buildRequestKey(method: string, path: string): string {
+    return `${RESPONSE_CACHE_PREFIX}:${getCacheNamespace()}:${method}:${API_BASE_URL}${path}`;
+}
+
+function readCachedResponse<T>(key: string): T | null {
+    try {
+        const raw = sessionStorage.getItem(key);
+        if (!raw) return null;
+
+        const parsed = JSON.parse(raw) as { expiresAt: number; value: T };
+        if (Date.now() > parsed.expiresAt) {
+            sessionStorage.removeItem(key);
+            return null;
+        }
+
+        return parsed.value;
+    } catch {
+        return null;
+    }
+}
+
+function writeCachedResponse<T>(key: string, value: T, ttlMs: number): void {
+    if (ttlMs <= 0) return;
+
+    try {
+        sessionStorage.setItem(key, JSON.stringify({
+            expiresAt: Date.now() + ttlMs,
+            value,
+        }));
+    } catch {
+        // Ignore storage access / quota errors.
+    }
+}
+
+function clearResponseCache(): void {
+    try {
+        const keysToRemove: string[] = [];
+
+        for (let index = 0; index < sessionStorage.length; index += 1) {
+            const key = sessionStorage.key(index);
+            if (key?.startsWith(RESPONSE_CACHE_PREFIX)) {
+                keysToRemove.push(key);
+            }
+        }
+
+        keysToRemove.forEach((key) => sessionStorage.removeItem(key));
+    } catch {
+        // Ignore storage access errors.
+    }
+}
+
 export async function apiFetch<T>(
     path: string,
     init: ApiFetchOptions = {},
 ): Promise<T> {
-    const { silent401 = false, skipCsrf = false, ...requestInit } = init;
+    const { silent401 = false, skipCsrf = false, cacheTtlMs = 0, ...requestInit } = init;
 
     const method = (requestInit.method ?? "GET").toUpperCase();
+    const requestKey = buildRequestKey(method, path);
+    const isCacheableGet = method === "GET" && cacheTtlMs > 0;
 
-    // 🔥 авто-CSRF для mutation
-    if (!skipCsrf && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-        await fetchCsrfToken();
+    if (isCacheableGet) {
+        const cached = readCachedResponse<T>(requestKey);
+        if (cached !== null) {
+            return cached;
+        }
     }
 
-    const xsrf = getXsrfToken();
-    const requestBody = requestInit.body;
-    const isFormData =
-        typeof FormData !== "undefined" && requestBody instanceof FormData;
+    if (method === "GET") {
+        const inflight = inflightGetRequests.get(requestKey);
+        if (inflight) {
+            return inflight as Promise<T>;
+        }
+    }
 
-    const res = await fetch(`${API_BASE_URL}${path}`, {
-        ...requestInit,
-        credentials: "include",
-        headers: {
-            Accept: "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            ...(hasBody(requestInit) && !isFormData
-                ? { "Content-Type": "application/json" }
-                : {}),
-            ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
-            ...(requestInit.headers ?? {}),
-        },
-    });
+    const requestPromise = (async () => {
+        if (!skipCsrf && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+            await fetchCsrfToken();
+        }
 
-    // читаємо body 1 раз
-    const json = await res.json().catch(() => ({}));
+        const xsrf = getXsrfToken();
+        const requestBody = requestInit.body;
+        const isFormData =
+            typeof FormData !== "undefined" && requestBody instanceof FormData;
 
-    if (!res.ok) {
-        const shouldSilence401 = silent401 && res.status === 401;
+        const res = await fetch(`${API_BASE_URL}${path}`, {
+            ...requestInit,
+            credentials: "include",
+            headers: {
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                ...(hasBody(requestInit) && !isFormData
+                    ? { "Content-Type": "application/json" }
+                    : {}),
+                ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
+                ...(requestInit.headers ?? {}),
+            },
+        });
 
-        if (!shouldSilence401 && typeof json.message === "string") {
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            const shouldSilence401 = silent401 && res.status === 401;
+
+            if (!shouldSilence401 && typeof json.message === "string") {
+                triggerAlert(res.status, json.message);
+            }
+
+            throw new ApiError(res.status, {
+                message: json.message ?? `HTTP ${res.status}`,
+                errors: json.errors,
+            });
+        }
+
+        if (typeof json.message === "string") {
             triggerAlert(res.status, json.message);
         }
 
-        throw new ApiError(res.status, {
-            message: json.message ?? `HTTP ${res.status}`,
-            errors: json.errors,
-        });
+        const normalized = (res.status === 204
+            ? undefined
+            : json.data !== undefined && json.meta !== undefined
+                ? json
+                : json.data !== undefined ? json.data : json) as T;
+
+        if (isCacheableGet) {
+            writeCachedResponse(requestKey, normalized, cacheTtlMs);
+        }
+
+        if (method !== "GET") {
+            clearResponseCache();
+        }
+
+        return normalized;
+    })();
+
+    if (method === "GET") {
+        inflightGetRequests.set(requestKey, requestPromise);
     }
 
-    if (res.status === 204) {
-        return undefined as T;
+    try {
+        return await requestPromise;
+    } finally {
+        if (method === "GET") {
+            inflightGetRequests.delete(requestKey);
+        }
     }
-
-    if (typeof json.message === "string") {
-        triggerAlert(res.status, json.message);
-    }
-
-    if (json.data !== undefined && json.meta !== undefined) {
-        return json as T;
-    }
-
-    return (json.data !== undefined ? json.data : json) as T;
 }
 
-// ─── Helpers ─────────────────────────────────────────────
 function hasBody(init?: RequestInit): boolean {
     if (!init) return false;
     if (init.body) return true;

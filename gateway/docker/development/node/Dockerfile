@@ -3,6 +3,8 @@ FROM node:20.19-alpine3.21
 
 LABEL org.opencontainers.image.description="Vite dev server — development"
 
+RUN npm install -g npm@latest
+
 ENV PATH=/app/node_modules/.bin:$PATH
 
 WORKDIR /app

@@ -1,5 +1,5 @@
-import type { UserSettings } from "@/entities/user/model/settings/types";
-import type { UserSettingsApiResponse } from "@/entities/user/api/settings/types";
+import type { UserSettings } from "@/modules/settings/model/types";
+import type { UserSettingsApiResponse } from "@/modules/auth/api/settings/types";
 
 export const DEFAULT_UI_SETTINGS: UserSettings = {
     theme: "system",

@@ -2,7 +2,15 @@
 
 namespace App\Models;
 
+use App\Modules\Profiles\Models\Profile;
+use App\Modules\Groups\Models\Group;
+use App\Modules\Groups\Models\GroupMember;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Modules\User\Enums\FriendshipStatus;
+use App\Modules\User\Models\Friendship;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -37,5 +45,40 @@ class User extends Authenticatable
             'storage_used' => 'integer',
             'storage_limit' => 'integer',
         ];
+    }
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    public function sentFriendships(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'user_id');
+    }
+
+    public function receivedFriendships(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'friend_id');
+    }
+
+    public function groupMemberships(): HasMany
+    {
+        return $this->hasMany(GroupMember::class);
+    }
+
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_members')
+            ->withPivot([
+                'role',
+                'status',
+                'nickname_in_group',
+                'subgroup',
+                'invited_by',
+                'joined_at',
+                'left_at',
+            ])
+            ->withTimestamps();
     }
 }

@@ -1,11 +1,10 @@
 import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useSearchParams } from "react-router-dom"
 import { SettingsIcon } from "lucide-react"
 import { Badge } from "@/shared/shadcn/ui/badge"
 import { PageSidePanel } from "@/shared/ui/page-side-panel"
 import { tabs } from "@/modules/settings/model/tabs.config"
-
-/* ── Tab components ── */
 import { AccountTab } from "@/modules/settings/ui/tabs/account.tab"
 import { SecurityTab } from "@/modules/settings/ui/tabs/security.tab"
 import { NotificationsTab } from "@/modules/settings/ui/tabs/notifications.tab"
@@ -22,7 +21,6 @@ import { ProfileTab } from "@/modules/settings/ui/tabs/profile.tab"
 import usePageTitle from "@/shared/hooks/usePageTitle.ts"
 import type { TabDef } from "@/modules/settings/model/settings.types"
 
-/* ── Each tab component receives the full TabDef ── */
 type TabFC = React.FC<{ tab: TabDef }>
 
 const tabComponents: Record<string, TabFC> = {
@@ -41,18 +39,30 @@ const tabComponents: Record<string, TabFC> = {
     danger: DangerTab,
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SETTINGS PAGE — thin shell
-   ═══════════════════════════════════════════════════════════ */
 export function SettingsPage() {
     usePageTitle("Налаштування", { suffix: true })
-    const [activeTab, setActiveTab] = useState("account")
+    const [searchParams, setSearchParams] = useSearchParams()
+    const tabParam = searchParams.get("tab")
+    const [activeTab, setActiveTab] = useState(() =>
+        tabs.some((tab) => tab.id === tabParam) ? tabParam! : "account",
+    )
+    React.useEffect(() => {
+        if (tabParam && tabs.some((tab) => tab.id === tabParam) && tabParam !== activeTab) {
+            setActiveTab(tabParam)
+        }
+    }, [activeTab, tabParam])
     const currentTab = tabs.find(t => t.id === activeTab)!
     const Content = tabComponents[activeTab]
 
+    const handleTabChange = (tabId: string) => {
+        setActiveTab(tabId)
+        const next = new URLSearchParams(searchParams)
+        next.set("tab", tabId)
+        setSearchParams(next, { replace: true })
+    }
+
     return (
         <div className="flex flex-col gap-6">
-            {/* Page header */}
             <div>
                 <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                     <SettingsIcon className="size-6 text-primary" />
@@ -81,7 +91,7 @@ export function SettingsPage() {
                                             </p>
                                         )}
                                         <button
-                                            onClick={() => setActiveTab(tab.id)}
+                                            onClick={() => handleTabChange(tab.id)}
                                             className={[
                                                 "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer text-left w-full",
                                                 isActive
@@ -102,9 +112,7 @@ export function SettingsPage() {
                     </nav>
                 </PageSidePanel>
 
-                {/* Content */}
                 <div className="flex-1 min-w-0 max-w-3xl pt-2">
-                    {/* Tab context header */}
                     <div className="mb-5 pb-4 border-b">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <currentTab.icon className="size-5 text-primary" />

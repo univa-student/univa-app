@@ -35,3 +35,15 @@ export interface CreateDeadlinePayload extends Omit<Deadline, "id" | "createdAt"
     fileIds?: number[];
 }
 export type UpdateDeadlinePayload = Partial<CreateDeadlinePayload>;
+
+// ─── UI State ─────────────────────────────────────────────────────────────────
+
+export interface DeadlineFiltersState {
+    search: string;
+    subjectId?: string;
+    status?: string;
+    priority?: string;
+    type?: string;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
+}

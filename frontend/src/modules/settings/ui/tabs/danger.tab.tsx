@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Separator } from "@/shared/shadcn/ui/separator"
 import { Trash2Icon } from "lucide-react"
 import type {TabDef} from "@/modules/settings/model/settings.types.ts";
-import {containerAnim, itemAnim} from "@/modules/settings/ui/settings.animations.ts";
+import { TabShell } from "@/modules/settings/ui/settings.renderers.tsx";
+import { itemAnim } from "@/modules/settings/ui/settings.animations.ts";
 
 const dangerSection = {
     title: "Небезпечна зона",
@@ -36,7 +37,7 @@ const dangerActions = [
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function DangerTab({ tab: _tab }: { tab: TabDef }) {
     return (
-        <motion.div className="flex flex-col gap-6" variants={containerAnim} initial="hidden" animate="visible">
+        <TabShell showSave={false}>
             <motion.div variants={itemAnim}>
                 <Card className="border-destructive/30">
                     <CardHeader>
@@ -71,6 +72,6 @@ export function DangerTab({ tab: _tab }: { tab: TabDef }) {
                     </CardContent>
                 </Card>
             </motion.div>
-        </motion.div>
+        </TabShell>
     )
 }

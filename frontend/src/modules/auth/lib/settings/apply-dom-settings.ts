@@ -1,4 +1,4 @@
-import type { UserSettings } from "@/entities/user/model/settings/types";
+import type { UserSettings } from "@/modules/settings/model/types";
 
 export function applyDomSettings(settings: UserSettings) {
     const root = document.documentElement;

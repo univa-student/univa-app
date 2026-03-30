@@ -7,7 +7,6 @@ function applyTheme(dark: boolean) {
     root.setAttribute("data-theme", dark ? "dark" : "light");
 }
 
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const { theme } = useUserSettings();
 

@@ -16,9 +16,9 @@ import { useSettingsGroup } from "@/modules/settings/hooks/use-settings-group";
 import { SETTING_GROUP } from "@/modules/settings/model/tabs.config";
 import type { LessonInstance } from "@/modules/schedule/model/types";
 import type { Deadline } from "@/modules/deadlines/model/types";
-import { AddLessonModal } from "@/pages/schedule/components/AddLessonModal";
-import { AddExamModal } from "@/pages/schedule/components/AddExamModal";
-import { EditLessonModal } from "@/pages/schedule/components/EditLessonModal";
+import { AddLessonModal } from "@/modules/schedule/ui/create-lesson";
+import { AddExamModal } from "@/modules/schedule/ui/add-exam";
+import { EditLessonModal } from "@/modules/schedule/ui/edit-lesson";
 
 import {
     type ViewMode,

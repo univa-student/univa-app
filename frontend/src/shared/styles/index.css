@@ -102,12 +102,10 @@
     --u-accent-light: color-mix(in oklch, var(--primary) 12%, white);
     --u-accent-mid: color-mix(in oklch, var(--primary) 35%, white);
 
-    --u-gradient: linear-gradient(
-            135deg,
+    --u-gradient: linear-gradient(135deg,
             oklch(0.36 0.024 252),
             oklch(0.42 0.016 248),
-            oklch(0.50 0.010 244)
-    );
+            oklch(0.50 0.010 244));
 
     --u-orbit-glow: color-mix(in srgb, var(--primary) 10%, transparent);
 
@@ -180,12 +178,10 @@
     --u-accent-light: color-mix(in oklch, var(--primary) 18%, black);
     --u-accent-mid: color-mix(in oklch, var(--primary) 52%, #c8d0dc);
 
-    --u-gradient: linear-gradient(
-            135deg,
+    --u-gradient: linear-gradient(135deg,
             #6b7888,
             #5c6878,
-            #4e5a68
-    );
+            #4e5a68);
 
     --u-orbit-glow: color-mix(in srgb, var(--primary) 14%, transparent);
 
@@ -239,7 +235,9 @@
     }
 }
 
-html, body, #root {
+html,
+body,
+#root {
     height: 100%;
 }
 
@@ -253,41 +251,105 @@ html, body, #root {
 }
 
 /* Padding */
-[data-compact="1"] .p-4    { padding: 0.6rem !important; }
-[data-compact="1"] .p-5    { padding: 0.7rem !important; }
-[data-compact="1"] .p-6    { padding: 0.85rem !important; }
-[data-compact="1"] .pt-6   { padding-top: 0.6rem !important; }
-[data-compact="1"] .px-4   { padding-inline: 0.7rem !important; }
-[data-compact="1"] .py-2   { padding-block: 0.3rem !important; }
-[data-compact="1"] .py-3   { padding-block: 0.45rem !important; }
+[data-compact="1"] .p-4 {
+    padding: 0.6rem !important;
+}
+
+[data-compact="1"] .p-5 {
+    padding: 0.7rem !important;
+}
+
+[data-compact="1"] .p-6 {
+    padding: 0.85rem !important;
+}
+
+[data-compact="1"] .pt-6 {
+    padding-top: 0.6rem !important;
+}
+
+[data-compact="1"] .px-4 {
+    padding-inline: 0.7rem !important;
+}
+
+[data-compact="1"] .py-2 {
+    padding-block: 0.3rem !important;
+}
+
+[data-compact="1"] .py-3 {
+    padding-block: 0.45rem !important;
+}
 
 /* Gaps */
-[data-compact="1"] .gap-2  { gap: 0.15rem !important; }
-[data-compact="1"] .gap-3  { gap: 0.3rem !important; }
-[data-compact="1"] .gap-4  { gap: 0.45rem !important; }
-[data-compact="1"] .gap-5  { gap: 0.6rem !important; }
-[data-compact="1"] .gap-6  { gap: 0.75rem !important; }
+[data-compact="1"] .gap-2 {
+    gap: 0.15rem !important;
+}
+
+[data-compact="1"] .gap-3 {
+    gap: 0.3rem !important;
+}
+
+[data-compact="1"] .gap-4 {
+    gap: 0.45rem !important;
+}
+
+[data-compact="1"] .gap-5 {
+    gap: 0.6rem !important;
+}
+
+[data-compact="1"] .gap-6 {
+    gap: 0.75rem !important;
+}
 
 /* Margins */
-[data-compact="1"] .mb-3   { margin-bottom: 0.3rem !important; }
-[data-compact="1"] .mb-4   { margin-bottom: 0.45rem !important; }
+[data-compact="1"] .mb-3 {
+    margin-bottom: 0.3rem !important;
+}
+
+[data-compact="1"] .mb-4 {
+    margin-bottom: 0.45rem !important;
+}
 
 /* Header / shell heights */
-[data-compact="1"] .h-16   { height: 2.75rem !important; }
-[data-compact="1"] .h-12   { height: 2.2rem !important; }
+[data-compact="1"] .h-16 {
+    height: 2.75rem !important;
+}
+
+[data-compact="1"] .h-12 {
+    height: 2.2rem !important;
+}
 
 /* Typography */
-[data-compact="1"] .text-lg { font-size: 1rem !important; line-height: 1.4 !important; }
-[data-compact="1"] .text-xl { font-size: 1.1rem !important; }
-[data-compact="1"] .text-2xl { font-size: 1.2rem !important; }
+[data-compact="1"] .text-lg {
+    font-size: 1rem !important;
+    line-height: 1.4 !important;
+}
+
+[data-compact="1"] .text-xl {
+    font-size: 1.1rem !important;
+}
+
+[data-compact="1"] .text-2xl {
+    font-size: 1.2rem !important;
+}
 
 /* Avatars / icons */
-[data-compact="1"] .size-20 { width: 3.25rem !important; height: 3.25rem !important; }
-[data-compact="1"] .size-10 { width: 2.2rem !important; height: 2.2rem !important; }
-[data-compact="1"] .size-9  { width: 1.9rem !important; height: 1.9rem !important; }
+[data-compact="1"] .size-20 {
+    width: 3.25rem !important;
+    height: 3.25rem !important;
+}
+
+[data-compact="1"] .size-10 {
+    width: 2.2rem !important;
+    height: 2.2rem !important;
+}
+
+[data-compact="1"] .size-9 {
+    width: 1.9rem !important;
+    height: 1.9rem !important;
+}
 
 /* Shadcn card inner spacing */
-[data-compact="1"] .card > .p-6:first-child,
+[data-compact="1"] .card>.p-6:first-child,
 [data-compact="1"] [class~="CardContent"],
 [data-compact="1"] [class~="card-content"] {
     padding: 0.9rem !important;
@@ -314,12 +376,12 @@ html, body, #root {
 [data-animations="0"] *,
 [data-animations="0"] *::before,
 [data-animations="0"] *::after {
-    animation-duration:        0.001ms !important;
-    animation-delay:           0s      !important;
-    animation-iteration-count: 1       !important;
-    transition-duration:       0.001ms !important;
-    transition-delay:          0s      !important;
-    scroll-behavior:           auto    !important;
+    animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
 }
 
 /* Framer-motion renders opacity via inline style.
@@ -344,22 +406,16 @@ html, body, #root {
 .island-canvas {
     position: relative;
     background:
-            radial-gradient(
-                    1400px 800px at -10% -20%,
-                    rgba(90, 110, 180, 0.35),
-                    transparent 60%
-            ),
-            radial-gradient(
-                    1200px 700px at 120% 110%,
-                    rgba(90, 110, 180, 0.30),
-                    transparent 65%
-            ),
-            radial-gradient(
-                    900px 600px at 50% 120%,
-                    rgba(90, 110, 180, 0.22),
-                    transparent 70%
-            ),
-            var(--island-canvas);
+        radial-gradient(1400px 800px at -10% -20%,
+            rgba(90, 110, 180, 0.35),
+            transparent 60%),
+        radial-gradient(1200px 700px at 120% 110%,
+            rgba(90, 110, 180, 0.30),
+            transparent 65%),
+        radial-gradient(900px 600px at 50% 120%,
+            rgba(90, 110, 180, 0.22),
+            transparent 70%),
+        var(--island-canvas);
     height: 100dvh;
     display: flex;
     overflow: hidden;
@@ -367,25 +423,19 @@ html, body, #root {
 
 .dark .island-canvas {
     background:
-            radial-gradient(
-                    1200px 700px at -10% -20%,
-                    rgba(120, 150, 255, 0.18),
-                    transparent 60%
-            ),
+        radial-gradient(1200px 700px at -10% -20%,
+            rgba(120, 150, 255, 0.18),
+            transparent 60%),
 
-            radial-gradient(
-                    1000px 600px at 110% 110%,
-                    rgba(120, 150, 255, 0.15),
-                    transparent 65%
-            ),
+        radial-gradient(1000px 600px at 110% 110%,
+            rgba(120, 150, 255, 0.15),
+            transparent 65%),
 
-            radial-gradient(
-                    900px 500px at 50% 120%,
-                    rgba(120, 150, 255, 0.12),
-                    transparent 70%
-            ),
+        radial-gradient(900px 500px at 50% 120%,
+            rgba(120, 150, 255, 0.12),
+            transparent 70%),
 
-            var(--island-canvas);
+        var(--island-canvas);
 }
 
 .island-canvas::before {
@@ -395,8 +445,8 @@ html, body, #root {
     z-index: 0;
 
     background-image:
-            linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
+        linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
 
     background-size: 32px 32px;
 
@@ -405,8 +455,8 @@ html, body, #root {
 
 .dark .island-canvas::before {
     background-image:
-            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 }
 
 .island {
@@ -415,9 +465,9 @@ html, body, #root {
     border-radius: var(--island-radius);
 
     box-shadow:
-            0 2px 6px rgba(0,0,0,0.05),
-            0 8px 24px rgba(0,0,0,0.06),
-            0 0 0 1px rgba(0,0,0,0.04);
+        0 2px 6px rgba(0, 0, 0, 0.05),
+        0 8px 24px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -439,7 +489,7 @@ html, body, #root {
     padding: var(--island-gap);
 }
 
-.app-frame > * {
+.app-frame>* {
     position: relative;
     z-index: 1;
 }
@@ -449,7 +499,6 @@ html, body, #root {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 5px;
     gap: 16px;
     min-width: 0;
 }
@@ -478,21 +527,6 @@ html, body, #root {
     flex-shrink: 0;
 }
 
-.app-top-bar-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: none;
-}
-
-.app-top-bar-icon:hover {
-    background: color-mix(in oklch, var(--primary) 8%, transparent);
-    color: var(--foreground);
-}
 
 .app-rail {
     grid-area: left;
@@ -561,11 +595,19 @@ html, body, #root {
     scrollbar-width: none;
     -ms-overflow-style: none;
     transition: width 0.2s ease, opacity 0.2s ease;
+    margin: 5px 0;
 }
-.app-side-panel::-webkit-scrollbar { display: none; }
+
+.app-side-panel::-webkit-scrollbar {
+    display: none;
+}
 
 #app-side-panel:empty {
     display: none;
+}
+
+.app-frame:has(#app-side-panel:empty) .sidebar-toggle-btn {
+    display: none !important;
 }
 
 .island-content {
@@ -579,6 +621,7 @@ html, body, #root {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    margin: 5px 0;
 }
 
 .island-header {
@@ -595,6 +638,7 @@ html, body, #root {
     padding-inline: 1rem;
     flex-shrink: 0;
     backdrop-filter: blur(6px);
+    margin: 5px 0;
 }
 
 /* (duplicate removed) */
@@ -661,7 +705,59 @@ html, body, #root {
 [data-compact="1"] .app-bottom-bar-text {
     font-size: 10px !important;
 }
+
 .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+@media (max-width: 768px) {
+    .app-frame {
+        grid-template-areas:
+            "top"
+            "center";
+        grid-template-rows: 48px 1fr;
+        grid-template-columns: 1fr;
+        padding: var(--island-gap);
+    }
+
+    .app-rail,
+    .app-right-rail,
+    .app-bottom-bar {
+        display: none !important;
+    }
+
+    .app-center {
+        padding: 0;
+    }
+
+    .island-content {
+        margin: 0;
+    }
+    .app-side-panel {
+        position: fixed;
+        background: var(--island-canvas);
+        border-right: var(--island-border);
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 60;
+        width: 280px !important;
+        height: 100dvh;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        pointer-events: none;
+    }
+    .app-side-panel.is-open {
+        transform: translateX(0);
+        pointer-events: auto;
+        box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    }
+}
+@media (min-width: 769px) {
+    .app-side-panel:not(.is-open) {
+        display: none !important;
+    }
 }

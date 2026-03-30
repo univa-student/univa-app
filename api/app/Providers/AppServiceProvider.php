@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Models\Files\File;
-use App\Models\Files\Folder;
-use App\Models\Schedule\ExamEvent;
-use App\Models\Schedule\ScheduleLesson;
-use App\Models\Schedule\Subject;
+use App\Modules\Files\Models\File;
+use App\Modules\Files\Models\Folder;
+use App\Modules\Groups\Models\Group;
+use App\Modules\Groups\Policies\GroupPolicy;
+use App\Modules\Schedule\Models\ExamEvent;
+use App\Modules\Schedule\Models\ScheduleLesson;
+use App\Modules\Subjects\Models\Subject;
 use App\Modules\Ai\Context\Builders\FileSummaryContextBuilder;
 use App\Modules\Ai\Events\AiRunCompleted;
 use App\Modules\Ai\Events\AiRunFailed;
@@ -22,13 +24,13 @@ use App\Modules\Ai\Support\AiAttachmentFactory;
 use App\Modules\Ai\Support\AiModelResolver;
 use App\Modules\Ai\Support\AiResponseExtractor;
 use App\Modules\Ai\Support\AiRunRecorder;
-use App\Policies\Files\FilePolicy;
-use App\Policies\Files\FolderPolicy;
-use App\Policies\Schedule\ExamEventPolicy;
-use App\Policies\Schedule\ScheduleLessonPolicy;
-use App\Policies\Schedule\SubjectPolicy;
-use App\Services\Files\LocalStorageAdapter;
-use App\Services\Files\StorageServiceInterface;
+use App\Modules\Files\Policies\FilePolicy;
+use App\Modules\Files\Policies\FolderPolicy;
+use App\Modules\Schedule\Policies\ExamEventPolicy;
+use App\Modules\Schedule\Policies\ScheduleLessonPolicy;
+use App\Modules\Subjects\Policies\SubjectPolicy;
+use App\Modules\Files\Services\LocalStorageAdapter;
+use App\Modules\Files\Services\StorageServiceInterface;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -40,15 +42,58 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->setupSingletons();
+    }
+
+    public function boot(): void
+    {
+        $this->rateLimitSet();
+        $this->registerPolicies();
+        $this->registerEvents();
+    }
+
+    private function registerPolicies(): void
+    {
+        Gate::policy(Subject::class, SubjectPolicy::class);
+        Gate::policy(ScheduleLesson::class, ScheduleLessonPolicy::class);
+        Gate::policy(ExamEvent::class, ExamEventPolicy::class);
+
+        Gate::policy(File::class, FilePolicy::class);
+        Gate::policy(Folder::class, FolderPolicy::class);
+
+        Gate::policy(Group::class, GroupPolicy::class);
+
+        Gate::policy(AiContextSession::class, AiContextSessionPolicy::class);
+    }
+
+    private function registerEvents(): void
+    {
+        Event::listen(AiRunRequested::class, UpdateAiRunStatus::class);
+        Event::listen(AiRunCompleted::class, UpdateAiRunStatus::class);
+        Event::listen(AiRunCompleted::class, LogAiUsage::class);
+        Event::listen(AiRunFailed::class, UpdateAiRunStatus::class);
+    }
+
+    private function rateLimitSet(): void
+    {
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('ai', function (Request $request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+    }
+
+    private function setupSingletons(): void
+    {
         $this->app->singleton(StorageServiceInterface::class, LocalStorageAdapter::class);
 
-        // AI Support
         $this->app->singleton(AiModelResolver::class);
         $this->app->singleton(AiAttachmentFactory::class);
         $this->app->singleton(AiResponseExtractor::class);
         $this->app->singleton(AiRunRecorder::class);
 
-        // AI Builders / Formatters
         $this->app->singleton(FileSummaryContextBuilder::class, function ($app) {
             return new FileSummaryContextBuilder(
                 $app->make(File::class),
@@ -60,34 +105,5 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(AiResponseExtractor::class),
             );
         });
-    }
-
-    public function boot(): void
-    {
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
-
-        RateLimiter::for('ai', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
-
-        // Schedule module policies
-        Gate::policy(Subject::class, SubjectPolicy::class);
-        Gate::policy(ScheduleLesson::class, ScheduleLessonPolicy::class);
-        Gate::policy(ExamEvent::class, ExamEventPolicy::class);
-
-        // Files module policies
-        Gate::policy(File::class, FilePolicy::class);
-        Gate::policy(Folder::class, FolderPolicy::class);
-
-        // AI module policies
-        Gate::policy(AiContextSession::class, AiContextSessionPolicy::class);
-
-        // AI events
-        Event::listen(AiRunRequested::class, UpdateAiRunStatus::class);
-        Event::listen(AiRunCompleted::class, UpdateAiRunStatus::class);
-        Event::listen(AiRunCompleted::class, LogAiUsage::class);
-        Event::listen(AiRunFailed::class, UpdateAiRunStatus::class);
     }
 }

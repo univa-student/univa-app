@@ -6,7 +6,7 @@ import { fetchUserSettings } from "@/modules/auth/api/settings/fetch-user-settin
 import { mapUiSettings } from "@/modules/auth/lib/settings/map-ui-settings";
 import { applyDomSettings } from "@/modules/auth/lib/settings/apply-dom-settings";
 import { loadCachedUiSettings, saveCachedUiSettings } from "@/modules/auth/lib/settings/settings-cache";
-import { userSettingsStore } from "@/modules/auth/model/settings-store";
+import { userSettingsStore } from "@/modules/settings/model/settings-store";
 
 type Props = {
     children: ReactNode;
@@ -17,7 +17,7 @@ export function SettingsProvider({ children }: Props) {
         const cached = loadCachedUiSettings();
         if (cached) {
             applyDomSettings(cached);
-            userSettingsStore.setAll({ ui: cached, items: null });
+            userSettingsStore.setAll({ ui: cached, items: [] });
         }
     }, []);
 

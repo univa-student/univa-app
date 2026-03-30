@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\Profiles\Models;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Profile extends Model
 {
@@ -13,16 +15,25 @@ class Profile extends Model
     protected $fillable = [
         'user_id',
         'profile_image',
+        'bio',
+        'phone',
+        'telegram',
+        'city',
+        'birth_date',
         'university_id',
     ];
 
-    public function university(): HasOne
+    protected $casts = [
+        'birth_date' => 'date',
+    ];
+
+    public function university(): BelongsTo
     {
-        return $this->hasOne(University::class, 'id', 'university_id');
+        return $this->belongsTo(University::class);
     }
 
-    public function user(): HasOne
+    public function user(): BelongsTo
     {
-        return $this->hasOne(User::class, 'id', 'user_id');
+        return $this->belongsTo(User::class);
     }
 }

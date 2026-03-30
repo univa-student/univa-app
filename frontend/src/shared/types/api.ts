@@ -39,3 +39,13 @@ export class ApiError extends Error {
         return this.body.errors?.[field]?.[0];
     }
 }
+
+// ─── HTTP types ────────────────────────────────────────────────────────────────
+
+export type AlertVariant = "success" | "warning" | "destructive" | "info";
+
+export interface ApiFetchOptions extends RequestInit {
+    silent401?: boolean;
+    skipCsrf?: boolean;
+    cacheTtlMs?: number;
+}

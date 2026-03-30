@@ -12,6 +12,7 @@ class Notifier
     /**
      * Зручний статичний метод для відправки сповіщення.
      * Приклад виклику: Notifier::send($userId, 'lesson_started', ['lesson_id' => 123]);
+     * @throws \Exception
      */
     public static function send(int $userId, string|NotificationType $type, array $payload = []): void
     {

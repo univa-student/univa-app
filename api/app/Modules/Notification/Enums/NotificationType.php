@@ -8,6 +8,9 @@ enum NotificationType: string
     case PASSWORD_CHANGED = 'password_changed';
     case AVATAR_UPDATED = 'avatar_updated';
     
+    case FRIEND_REQUEST = 'friend_request';
+    case FRIEND_ACCEPTED = 'friend_accepted';
+    
     case FILE_UPLOADED = 'file_uploaded';
     
     case AI_SUMMARY_CREATED = 'ai_summary_created';
