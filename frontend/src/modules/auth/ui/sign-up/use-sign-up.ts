@@ -4,7 +4,7 @@ import { fetchCsrfToken } from "@/shared/api/csrf";
 import { ENDPOINTS } from "@/shared/api/endpoints";
 import { authStore } from "@/modules/auth/model/auth-store";
 import type { User } from "@/modules/auth/model/types";
-import type { RegisterFormData } from "@/shared/shadcn/components/auth/register-form";
+import type { RegisterFormData } from "@/modules/auth/ui/register-form";
 import { confirmAuthenticatedUser } from "@/modules/auth/api/confirm-authenticated-user";
 import { userQueries } from "@/modules/auth/api/queries";
 

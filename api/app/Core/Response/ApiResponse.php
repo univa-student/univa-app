@@ -2,8 +2,6 @@
 
 namespace App\Core\Response;
 
-namespace App\Core\Response;
-
 use Illuminate\Http\JsonResponse;
 
 class ApiResponse
