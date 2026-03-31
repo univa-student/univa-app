@@ -58,6 +58,14 @@ class ApplicationSetting extends Model
     public const SCHEDULER_LESSON_REMINDER_SETTING_KEY = 'scheduler_lesson_reminder';
     public const SCHEDULER_WEEK_PARITY_ANCHOR_SETTING_ID = 16;
     public const SCHEDULER_WEEK_PARITY_ANCHOR_SETTING_KEY = 'scheduler_week_parity_anchor';
+    public const AI_PROVIDER_SETTING_ID = 17;
+    public const AI_PROVIDER_SETTING_KEY = 'ai_provider';
+    public const AI_GEMINI_API_KEY_SETTING_ID = 18;
+    public const AI_GEMINI_API_KEY_SETTING_KEY = 'ai_gemini_api_key';
+    public const AI_OPENAI_API_KEY_SETTING_ID = 19;
+    public const AI_OPENAI_API_KEY_SETTING_KEY = 'ai_openai_api_key';
+    public const AI_ANTHROPIC_API_KEY_SETTING_ID = 20;
+    public const AI_ANTHROPIC_API_KEY_SETTING_KEY = 'ai_anthropic_api_key';
 
     public function group(): BelongsTo
     {

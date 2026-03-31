@@ -271,7 +271,7 @@ function AppTopBar() {
                     <TooltipTrigger asChild>
                         <Link
                             to="/dashboard"
-                            className="hidden md:flex flex items-center justify-center size-8 rounded-md hover:bg-accent/40 transition-colors"
+                            className="hidden md:flex items-center justify-center size-8 rounded-md hover:bg-accent/40 transition-colors"
                         >
                             <img src={logoSrc} alt="Univa" className="size-6 object-contain" />
                         </Link>

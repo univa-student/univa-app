@@ -113,8 +113,18 @@ export function useSettingsDraft(groupId: number) {
                         const newVal = original.current[item.key]
                         if (newVal === undefined) return item
                         const match = item.values.find(v => v.value === newVal)
-                        if (!match) return item
-                        return { ...item, selectedValueId: match.id }
+                        if (match) {
+                            return {
+                                ...item,
+                                selectedValueId: match.id,
+                                rawValue: null,
+                            }
+                        }
+                        return {
+                            ...item,
+                            selectedValueId: null,
+                            rawValue: newVal,
+                        }
                     })
                 }
             )

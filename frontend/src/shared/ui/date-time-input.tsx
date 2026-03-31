@@ -10,7 +10,7 @@ import {
     startOfWeek,
     subMonths,
 } from "date-fns"
-import { useEffect, useMemo, useState, type ComponentPropsWithoutRef } from "react"
+import { forwardRef, useEffect, useMemo, useState, type ComponentPropsWithoutRef } from "react"
 import {
     CalendarDaysIcon,
     ChevronLeftIcon,
@@ -190,15 +190,16 @@ function buildCalendarDays(cursor: Date): Date[] {
     })
 }
 
-function PickerButton({
-    children,
-    disabled,
-}: {
-    children: React.ReactNode
-    disabled?: boolean
-}) {
+const PickerButton = forwardRef<
+    HTMLButtonElement,
+    {
+        children: React.ReactNode
+        disabled?: boolean
+    }
+>(function PickerButton({ children, disabled }, ref) {
     return (
         <Button
+            ref={ref}
             type="button"
             variant="ghost"
             size="icon-sm"
@@ -208,7 +209,7 @@ function PickerButton({
             {children}
         </Button>
     )
-}
+})
 
 export function DateInput({
     value,
@@ -225,7 +226,7 @@ export function DateInput({
     const [open, setOpen] = useState(false)
     const [displayValue, setDisplayValue] = useState(() => formatDateValue(value))
     const [monthCursor, setMonthCursor] = useState(() => parseIsoDate(value) ?? new Date())
-    const selectedDate = parseIsoDate(value)
+    const selectedDate = useMemo(() => parseIsoDate(value), [value])
 
     useEffect(() => {
         setDisplayValue(formatDateValue(value))
@@ -290,11 +291,9 @@ export function DateInput({
 
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
-                    <span>
-                        <PickerButton disabled={disabled}>
-                            <CalendarDaysIcon className="size-4" />
-                        </PickerButton>
-                    </span>
+                    <PickerButton disabled={disabled}>
+                        <CalendarDaysIcon className="size-4" />
+                    </PickerButton>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-[19rem] p-3">
                     <div className="flex items-center justify-between">
@@ -481,11 +480,9 @@ export function TimeInput({
 
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
-                    <span>
-                        <PickerButton disabled={disabled}>
-                            <Clock3Icon className="size-4" />
-                        </PickerButton>
-                    </span>
+                    <PickerButton disabled={disabled}>
+                        <Clock3Icon className="size-4" />
+                    </PickerButton>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-[19rem] p-3">
                     <div className="flex items-center justify-between">
@@ -595,6 +592,7 @@ export function DateTimeInput({
 
     useEffect(() => {
         const nextLocalValue = toLocalDateTimeValue(value, valueType)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDateValue(nextLocalValue.slice(0, 10))
         setTimeValue(nextLocalValue.slice(11, 16))
     }, [value, valueType])

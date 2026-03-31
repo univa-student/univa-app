@@ -9,24 +9,29 @@ class SelectedSettingResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $setting = $this->setting;
+        $value = $this->value;
+        $rawValue = $this->raw_value;
+
         return [
             'id' => $this->id,
 
             'setting' => [
-                'id' => $this->setting->id,
-                'key' => $this->setting->key,
-                'type' => $this->setting->type,
-                'label' => $this->setting->label,
-                'description' => $this->setting->description,
-                'defaultValueId' => $this->setting->default_setting_value_id,
+                'id' => $setting->id,
+                'key' => $setting->key,
+                'type' => $setting->type,
+                'label' => $setting->label,
+                'description' => $setting->description,
+                'defaultValueId' => $setting->default_setting_value_id,
             ],
 
             'value' => [
-                'id' => $this->value->id,
-                'value' => $this->value->value,
-                'label' => $this->value->label,
-                'meta' => $this->value->meta,
+                'id' => $value?->id,
+                'value' => $value?->value ?? $rawValue,
+                'label' => $value?->label,
+                'meta' => $value?->meta,
             ],
+            'rawValue' => $rawValue,
         ];
     }
 }

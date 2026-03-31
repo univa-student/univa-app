@@ -25,7 +25,7 @@ export interface SettingItem {
 // ─── User settings API response ───────────────────────────────────────────────
 
 export type UserSettingItem = {
-    id: number;
+    id: number | null;
     setting: {
         id: number;
         key: string;
@@ -35,11 +35,12 @@ export type UserSettingItem = {
         defaultValueId?: number | null;
     };
     value: {
-        id: number;
-        value: string;
-        label?: string;
+        id: number | null;
+        value: string | null;
+        label?: string | null;
         meta?: unknown;
     };
+    rawValue?: string | null;
 };
 
 export type UserSettingsApiResponse = UserSettingItem[];

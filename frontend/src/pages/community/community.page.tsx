@@ -1,7 +1,48 @@
 import { Link } from "react-router-dom";
-import { UsersIcon, MessagesSquareIcon, HeartHandshakeIcon, ChevronRightIcon } from "lucide-react";
+import {
+    ChevronRightIcon,
+    HeartHandshakeIcon,
+    MessagesSquareIcon,
+    UsersIcon,
+} from "lucide-react";
 import { useAppFrame } from "@/shared/ui/layouts/app/app-frame";
 import { useEffect } from "react";
+
+const HUBS = [
+    {
+        to: "/dashboard/friends",
+        label: "Друзі",
+        description: "Список друзів, вхідні запити та пошук нових контактів.",
+        icon: HeartHandshakeIcon,
+        color: "#3b82f6",
+        bg: "bg-blue-500/8",
+        iconBg: "bg-blue-500/10",
+        iconFg: "text-blue-500",
+        hoverBorder: "hover:border-blue-500/25",
+    },
+    {
+        to: "/dashboard/groups",
+        label: "Групи",
+        description: "Навчальні групи, спільні простори для предметів, розкладу і файлів.",
+        icon: UsersIcon,
+        color: "#10b981",
+        bg: "bg-emerald-500/8",
+        iconBg: "bg-emerald-500/10",
+        iconFg: "text-emerald-500",
+        hoverBorder: "hover:border-emerald-500/25",
+    },
+    {
+        to: "/dashboard/chats",
+        label: "Чати",
+        description: "Особисті повідомлення та групові обговорення.",
+        icon: MessagesSquareIcon,
+        color: "#8b5cf6",
+        bg: "bg-violet-500/8",
+        iconBg: "bg-violet-500/10",
+        iconFg: "text-violet-500",
+        hoverBorder: "hover:border-violet-500/25",
+    },
+] as const;
 
 export function CommunityPage() {
     const { setPageTitle } = useAppFrame();
@@ -11,75 +52,38 @@ export function CommunityPage() {
     }, [setPageTitle]);
 
     return (
-        <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto pb-10">
-            <div className="flex flex-col gap-2 px-2 pt-4">
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">Спільнота</h1>
-                <p className="text-muted-foreground text-sm leading-relaxed max-w-xl">
-                    Це ваш єдиний простір для комунікації. Швидкий доступ до керування друзями, пошуку нових контактів, списку навчальних груп та особистих чи групових чатів.
+        <div className="mx-auto w-full max-w-3xl px-4 py-8">
+            {/* Header */}
+            <div className="mb-8">
+                <h1 className="text-xl font-bold tracking-tight">Спільнота</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    Друзі, групи та чати в одному місці.
                 </p>
             </div>
 
-            {/* The 3 Main blocks */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
-
-                {/* Friends Card */}
-                <Link to="/dashboard/friends" className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl">
-                    <div className="relative h-full overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-blue-500/30">
-                        <div className="absolute top-0 right-0 p-6 opacity-0 translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-                            <div className="flex size-8 rounded-full bg-blue-500/10 items-center justify-center">
-                                <ChevronRightIcon className="size-4 text-blue-500" />
-                            </div>
+            {/* Hub cards */}
+            <div className="flex flex-col gap-3">
+                {HUBS.map(({ to, label, description, icon: Icon, iconBg, iconFg, hoverBorder }) => (
+                    <Link
+                        key={to}
+                        to={to}
+                        className={`group flex items-center gap-4 rounded-2xl border border-border/40 bg-card px-5 py-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${hoverBorder}`}
+                    >
+                        <div
+                            className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${iconBg} ${iconFg} transition-transform group-hover:scale-105`}
+                        >
+                            <Icon className="size-5" />
                         </div>
 
-                        <div className="size-14 rounded-xl bg-blue-500/10 flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110">
-                            <HeartHandshakeIcon className="size-7 text-blue-500" />
-                        </div>
-                        <h3 className="text-lg font-bold mb-2 tracking-tight">Друзі</h3>
-                        <p className="text-muted-foreground leading-snug text-[13px]">
-                            Керуйте списком друзів та переглядайте вхідні запити.
-                        </p>
-                    </div>
-                </Link>
-
-                {/* Groups Card */}
-                <Link to="/dashboard/groups" className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl">
-                    <div className="relative h-full overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-emerald-500/30">
-                        <div className="absolute top-0 right-0 p-6 opacity-0 translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-                            <div className="flex size-8 rounded-full bg-emerald-500/10 items-center justify-center">
-                                <ChevronRightIcon className="size-4 text-emerald-500" />
-                            </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold">{label}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
                         </div>
 
-                        <div className="size-14 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110">
-                            <UsersIcon className="size-7 text-emerald-500" />
-                        </div>
-                        <h3 className="text-lg font-bold mb-2 tracking-tight">Групи</h3>
-                        <p className="text-muted-foreground leading-snug text-[13px]">
-                            Ваші навчальні групи та спільні робочі простори.
-                        </p>
-                    </div>
-                </Link>
-
-                {/* Chats Card */}
-                <Link to="/dashboard/chats" className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl">
-                    <div className="relative h-full overflow-hidden rounded-2xl border border-border/60 bg-card p-6 transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-violet-500/30">
-                        <div className="absolute top-0 right-0 p-6 opacity-0 translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-                            <div className="flex size-8 rounded-full bg-violet-500/10 items-center justify-center">
-                                <ChevronRightIcon className="size-4 text-violet-500" />
-                            </div>
-                        </div>
-
-                        <div className="size-14 rounded-xl bg-violet-500/10 flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110">
-                            <MessagesSquareIcon className="size-7 text-violet-500" />
-                        </div>
-                        <h3 className="text-lg font-bold mb-2 tracking-tight">Чати</h3>
-                        <p className="text-muted-foreground leading-snug text-[13px]">
-                            Особисті повідомлення, стрічка подій та обговорення.
-                        </p>
-                    </div>
-                </Link>
+                        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
+                    </Link>
+                ))}
             </div>
-
         </div>
     );
 }
