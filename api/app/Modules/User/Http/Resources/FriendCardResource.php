@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\User\Http\Resources;
 
+use App\Modules\Profiles\Services\ProfilePrivacyService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,10 @@ class FriendCardResource extends JsonResource
     public function toArray(Request $request): array
     {
         $profile = $this->resource->profile;
+        $canViewProfile = app(ProfilePrivacyService::class)->canViewProfile(
+            owner: $this->resource,
+            viewer: $request->user(),
+        );
 
         return [
             'id' => $this->resource->id,
@@ -24,11 +29,11 @@ class FriendCardResource extends JsonResource
                 : null,
             'friendship_status' => $this->resource->friendship_status,
             'profile' => [
-                'city' => $profile?->city,
-                'telegram' => $profile?->telegram !== null
+                'city' => $canViewProfile ? $profile?->city : null,
+                'telegram' => $canViewProfile && $profile?->telegram !== null
                     ? '@'.ltrim($profile->telegram, '@')
                     : null,
-                'phone' => $profile?->phone,
+                'phone' => $canViewProfile ? $profile?->phone : null,
             ],
         ];
     }

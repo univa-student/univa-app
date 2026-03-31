@@ -46,6 +46,45 @@ class SettingsService
         return $valueId !== null ? (int) $valueId : null;
     }
 
+    public function getEffectiveValueByKey(int $userId, string $key): ?string
+    {
+        $setting = ApplicationSetting::query()
+            ->with('defaultValue:id,value')
+            ->select(['id', 'default_setting_value_id'])
+            ->where('key', $key)
+            ->first();
+
+        if (! $setting) {
+            return null;
+        }
+
+        $userSetting = ApplicationUserSetting::query()
+            ->select(['application_setting_value_id', 'raw_value'])
+            ->where('user_id', $userId)
+            ->where('application_setting_id', $setting->id)
+            ->first();
+
+        if ($userSetting?->raw_value !== null) {
+            return (string) $userSetting->raw_value;
+        }
+
+        $valueId = $userSetting?->application_setting_value_id ?? $setting->default_setting_value_id;
+
+        if ($valueId === null) {
+            return null;
+        }
+
+        if ((int) $valueId === (int) $setting->default_setting_value_id && $setting->defaultValue !== null) {
+            return (string) $setting->defaultValue->value;
+        }
+
+        $value = ApplicationSettingValue::query()
+            ->whereKey($valueId)
+            ->value('value');
+
+        return $value !== null ? (string) $value : null;
+    }
+
     /**
      * @throws UnivaHttpException
      */

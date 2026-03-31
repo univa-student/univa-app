@@ -33,5 +33,5 @@ start:
     just api-dev &
     just api-broadcast &
     sleep 3
-    just ngrok-frontend &
-    wait
+#    just ngrok-frontend &
+#    wait

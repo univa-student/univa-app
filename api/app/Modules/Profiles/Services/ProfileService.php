@@ -4,24 +4,42 @@ declare(strict_types=1);
 
 namespace App\Modules\Profiles\Services;
 
+use App\Core\UnivaHttpException;
 use App\Models\User;
 use App\Modules\Profiles\DTO\UpdateProfileData;
 use App\Modules\Profiles\Models\Profile;
 use App\Modules\Profiles\Models\University;
 
-class ProfileService
+readonly class ProfileService
 {
+    public function __construct(
+        private ProfilePrivacyService $profilePrivacyService,
+    ) {}
+
     public function getForUser(User $user): Profile
     {
-        return $this->load($this->ensureForUser($user));
+        return $this->decorate(
+            profile: $this->load($this->ensureForUser($user)),
+            owner: $user,
+            viewer: $user,
+        );
     }
 
-    public function publicForUser(User $user): Profile
+    /**
+     * @throws UnivaHttpException
+     */
+    public function publicForUser(User $user, ?User $viewer = null): Profile
     {
+        $this->profilePrivacyService->ensureCanViewProfile($user, $viewer);
+
         $profile = $user->profile()->with('university')->first();
 
         if ($profile !== null) {
-            return $this->load($profile);
+            return $this->decorate(
+                profile: $this->load($profile),
+                owner: $user,
+                viewer: $viewer,
+            );
         }
 
         $profile = new Profile([
@@ -32,7 +50,11 @@ class ProfileService
         $profile->setRelation('user', $user);
         $profile->setRelation('university', null);
 
-        return $profile;
+        return $this->decorate(
+            profile: $profile,
+            owner: $user,
+            viewer: $viewer,
+        );
     }
 
     public function currentUniversity(User $user): ?University
@@ -70,7 +92,11 @@ class ProfileService
 
         $profile->save();
 
-        return $this->load($profile);
+        return $this->decorate(
+            profile: $this->load($profile),
+            owner: $user,
+            viewer: $user,
+        );
     }
 
     public function attachUniversity(User $user, University $university): Profile
@@ -80,7 +106,11 @@ class ProfileService
         $profile->university()->associate($university);
         $profile->save();
 
-        return $this->load($profile);
+        return $this->decorate(
+            profile: $this->load($profile),
+            owner: $user,
+            viewer: $user,
+        );
     }
 
     public function detachUniversity(User $user): Profile
@@ -96,12 +126,26 @@ class ProfileService
             $university->delete();
         }
 
-        return $this->load($profile->fresh());
+        return $this->decorate(
+            profile: $this->load($profile->fresh()),
+            owner: $user,
+            viewer: $user,
+        );
     }
 
     private function load(Profile $profile): Profile
     {
         return $profile->loadMissing(['user', 'university']);
+    }
+
+    private function decorate(Profile $profile, User $owner, ?User $viewer): Profile
+    {
+        $profile->setAttribute(
+            'online_status',
+            $this->profilePrivacyService->resolveOnlineStatus($owner, $viewer),
+        );
+
+        return $profile;
     }
 
     private function normalizeTelegram(?string $telegram): ?string

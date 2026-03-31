@@ -31,6 +31,7 @@ class ProfileResource extends JsonResource
             'telegram' => $this->telegram !== null ? '@'.ltrim($this->telegram, '@') : null,
             'city' => $this->city,
             'birth_date' => $this->birth_date?->toDateString(),
+            'online_status' => $this->online_status,
             'user' => UserResource::make($this->whenLoaded('user')),
             'university' => UniversityResource::make($this->whenLoaded('university')),
             'completion' => [

@@ -11,6 +11,7 @@ class ApplicationSettingGroup extends Model
 {
     use HasInsertWithId, SoftDeletes;
 
+    public const SECURITY_SETTINGS_GROUP_ID = 1003;
     protected $fillable = [
         'code',
         'name',

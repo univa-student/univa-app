@@ -22,6 +22,8 @@ use App\Modules\Groups\Http\Controllers\GroupPollController;
 use App\Modules\Groups\Http\Controllers\GroupScheduleController;
 use App\Modules\Groups\Http\Controllers\GroupSubjectController;
 use App\Modules\Notification\Http\Controllers\NotificationController;
+use App\Modules\Organizer\Http\Controllers\NoteController;
+use App\Modules\Organizer\Http\Controllers\TaskController;
 use App\Modules\Profiles\Http\Controllers\ProfileController;
 use App\Modules\Profiles\Http\Controllers\UniversityController;
 use App\Modules\Schedule\Http\Controllers\DictionaryController;
@@ -128,6 +130,10 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
     // Deadlines
     Route::get('deadlines/stats', [DeadlineController::class, 'stats']);
     Route::apiResource('deadlines', DeadlineController::class);
+    Route::apiResource('tasks', TaskController::class);
+    Route::apiResource('notes', NoteController::class);
+    Route::patch('notes/{note}/pin', [NoteController::class, 'pin']);
+    Route::patch('notes/{note}/archive', [NoteController::class, 'archive']);
 
     // Built schedule (lessons + exams merged)
     Route::get('/schedule', [ScheduleController::class, 'index']);

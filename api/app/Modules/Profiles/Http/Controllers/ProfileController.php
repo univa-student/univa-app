@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Profiles\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Notification\Enums\NotificationType;
@@ -27,7 +28,11 @@ class ProfileController extends Controller
 
     public function showUser(User $user, ProfileService $profiles): JsonResponse
     {
-        $profile = $profiles->publicForUser($user);
+        try {
+            $profile = $profiles->publicForUser($user, request()->user());
+        } catch (UnivaHttpException $e) {
+            return $e->render();
+        }
 
         return ApiResponse::data(new ProfileResource($profile));
     }

@@ -26,6 +26,10 @@ use App\Modules\Ai\Support\AiResponseExtractor;
 use App\Modules\Ai\Support\AiRunRecorder;
 use App\Modules\Files\Policies\FilePolicy;
 use App\Modules\Files\Policies\FolderPolicy;
+use App\Modules\Organizer\Models\Note;
+use App\Modules\Organizer\Models\Task;
+use App\Modules\Organizer\Policies\NotePolicy;
+use App\Modules\Organizer\Policies\TaskPolicy;
 use App\Modules\Schedule\Policies\ExamEventPolicy;
 use App\Modules\Schedule\Policies\ScheduleLessonPolicy;
 use App\Modules\Subjects\Policies\SubjectPolicy;
@@ -62,6 +66,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Folder::class, FolderPolicy::class);
 
         Gate::policy(Group::class, GroupPolicy::class);
+        Gate::policy(Task::class, TaskPolicy::class);
+        Gate::policy(Note::class, NotePolicy::class);
 
         Gate::policy(AiContextSession::class, AiContextSessionPolicy::class);
     }

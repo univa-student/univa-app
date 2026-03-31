@@ -14,9 +14,10 @@ import { RegisterPage } from "@/pages/auth/register.page.tsx";
 import { AuthGuard } from "@/app/router/guards/auth-guard.tsx";
 import { SubjectsPage } from "@/pages/subjects/subjects.page";
 import { SubjectDetailPage } from "@/pages/subjects/subject-detail.page";
+import { OrganizerPage } from "@/pages/dashboard/organizer/organizer.page.tsx";
+import { OrganizerNotesPage } from "@/pages/dashboard/organizer/notes.page.tsx";
 import { TodoPage } from "@/pages/dashboard/organizer/todo.page.tsx";
 import { SchedulePage } from "@/pages/schedule/schedule.page.tsx";
-import { PlaceholderPage } from "@/pages/dashboard/placeholder.page.tsx";
 import { FilesPage } from "@/pages/files/files.page";
 import { ChatPage } from "@/pages/chat/chat.page";
 import { DeadlinesPage } from "@/pages/deadlines/deadlines.page";
@@ -503,7 +504,7 @@ export const router = createBrowserRouter([
                                         { label: "Головна", href: "/dashboard" },
                                         { label: "Органайзер" },
                                     ]}>
-                                        <PlaceholderPage title="Органайзер" />
+                                        <OrganizerPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>
@@ -519,7 +520,7 @@ export const router = createBrowserRouter([
                                         { label: "Органайзер" },
                                         { label: "Нотатки" },
                                     ]}>
-                                        <PlaceholderPage title="Нотатки" />
+                                        <OrganizerNotesPage />
                                     </DashboardLayout>
                                 </AuthGuard>
                             </LazyBoundary>

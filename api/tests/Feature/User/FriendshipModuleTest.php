@@ -6,6 +6,9 @@ namespace Tests\Feature\User;
 
 use App\Models\User;
 use App\Modules\Profiles\Models\Profile;
+use App\Modules\Settings\Models\ApplicationSetting;
+use App\Modules\Settings\Models\ApplicationSettingValue;
+use App\Modules\Settings\Models\ApplicationUserSetting;
 use App\Modules\User\Enums\FriendshipStatus;
 use App\Modules\User\Events\FriendshipUpdated;
 use App\Modules\User\Models\Friendship;
@@ -136,6 +139,49 @@ class FriendshipModuleTest extends TestCase
             ->assertJsonPath('data.0.user.profile.city', 'Lviv')
             ->assertJsonPath('data.0.user.profile.telegram', '@taras_pending')
             ->assertJsonPath('data.0.user.profile.phone', '+380504445566');
+    }
+
+    public function test_it_hides_profile_preview_for_private_profiles_in_search(): void
+    {
+        $viewer = User::factory()->create([
+            'username' => 'viewer.user',
+        ]);
+        $target = User::factory()->create([
+            'first_name' => 'Olha',
+            'username' => 'olha.private',
+        ]);
+
+        Profile::query()->create([
+            'user_id' => $target->id,
+            'profile_image' => null,
+            'university_id' => null,
+            'city' => 'Kyiv',
+            'telegram' => 'olha_private',
+            'phone' => '+380501234567',
+        ]);
+
+        $setting = ApplicationSetting::query()
+            ->where('key', ApplicationSetting::PRIVACY_PROFILE_SETTING_KEY)
+            ->firstOrFail();
+
+        $valueId = ApplicationSettingValue::query()
+            ->where('application_setting_id', $setting->id)
+            ->where('value', ApplicationSettingValue::SETTING_PRIVACY_PROFILE_PRIVATE_VALUE)
+            ->value('id');
+
+        ApplicationUserSetting::query()->create([
+            'user_id' => $target->id,
+            'application_setting_id' => $setting->id,
+            'application_setting_value_id' => $valueId,
+        ]);
+
+        $this->actingAs($viewer)
+            ->getJson('/api/v1/me/friends/search?q=olha')
+            ->assertOk()
+            ->assertJsonPath('data.0.username', 'olha.private')
+            ->assertJsonPath('data.0.profile.city', null)
+            ->assertJsonPath('data.0.profile.telegram', null)
+            ->assertJsonPath('data.0.profile.phone', null);
     }
 
     public function test_it_broadcasts_friendship_updates_for_send_accept_remove_and_auto_accept(): void

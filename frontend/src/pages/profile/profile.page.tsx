@@ -1,6 +1,7 @@
 import React, { type ComponentType } from "react"
 import { Link, useParams } from "react-router-dom"
 import {
+    ActivityIcon,
     ArrowLeftIcon,
     BookOpenIcon,
     Building2Icon,
@@ -21,13 +22,14 @@ import {
 } from "@/modules/profiles/api/hooks"
 import { useFriendsRealtime } from "@/modules/user/api/hooks"
 import { FriendshipButton } from "@/modules/user/ui/friendship-button"
+import { useAuthUser } from "@/modules/auth/model/useAuthUser.ts"
 import usePageTitle from "@/shared/hooks/usePageTitle"
 import { cn } from "@/shared/shadcn/lib/utils.ts"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/ui/avatar"
 import { Badge } from "@/shared/shadcn/ui/badge"
 import { Button } from "@/shared/shadcn/ui/button"
 import { Skeleton } from "@/shared/shadcn/ui/skeleton"
-import {useAuthUser} from "@/modules/auth/model/useAuthUser.ts";
+import { ApiError } from "@/shared/types/api"
 
 function getInitials(name: string) {
     return (
@@ -59,6 +61,16 @@ function normalizeTelegramHandle(value: string | null) {
     }
 
     return value.replace(/^@/, "")
+}
+
+function resolveOnlineStatus(profile: unknown): boolean | null {
+    if (!profile || typeof profile !== "object") {
+        return null
+    }
+
+    const candidate = profile as { onlineStatus?: boolean | null; online_status?: boolean | null }
+
+    return candidate.onlineStatus ?? candidate.online_status ?? null
 }
 
 function SectionCard({
@@ -149,10 +161,12 @@ export function ProfilePage() {
     useFriendsRealtime(isForeignProfile)
 
     const profile = isForeignProfile ? foreignProfileQuery.data : ownProfileQuery.data
+    const profileError = isForeignProfile ? foreignProfileQuery.error : ownProfileQuery.error
     const isLoading = isForeignProfile
         ? foreignProfileQuery.isLoading
         : ownProfileQuery.isLoading
     const isError = isForeignProfile ? foreignProfileQuery.isError : ownProfileQuery.isError
+    const isForbiddenProfile = profileError instanceof ApiError && profileError.isForbidden
 
     if (isLoading) {
         return <ProfilePageSkeleton />
@@ -162,9 +176,13 @@ export function ProfilePage() {
         return (
             <div className="mx-auto flex min-h-[60vh] w-full max-w-3xl items-center justify-center py-10">
                 <div className="w-full rounded-[2rem] border border-dashed border-border/70 bg-card/70 p-8 text-center shadow-sm">
-                    <h1 className="text-2xl font-semibold tracking-tight">Профіль не знайдено</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        {isForbiddenProfile ? "Профіль закритий" : "Профіль не знайдено"}
+                    </h1>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        Можливо, користувач змінив username або такого профілю ще не існує.
+                        {isForbiddenProfile
+                            ? (profileError.body.message || "Власник обмежив доступ до цього профілю.")
+                            : "Можливо, користувач змінив username або такого профілю ще не існує."}
                     </p>
                     <div className="mt-5 flex justify-center">
                         <Button asChild variant="outline" className="rounded-xl">
@@ -194,6 +212,7 @@ export function ProfilePage() {
     const phone = profile.phone ?? "—"
     const email = profileUser?.email ?? "—"
     const university = profile.university
+    const onlineStatus = resolveOnlineStatus(profile)
 
     return (
         <div className="mx-auto w-full max-w-5xl space-y-6 py-8">
@@ -225,6 +244,16 @@ export function ProfilePage() {
                                         {profileUser?.username ? (
                                             <Badge variant="outline" className="rounded-full px-3 py-1 text-[11px]">
                                                 @{profileUser.username}
+                                            </Badge>
+                                        ) : null}
+
+                                        {onlineStatus !== null ? (
+                                            <Badge
+                                                variant={onlineStatus ? "default" : "outline"}
+                                                className="rounded-full px-3 py-1 text-[11px]"
+                                            >
+                                                <ActivityIcon className="mr-1 size-3.5" />
+                                                {onlineStatus ? "Онлайн" : "Не в мережі"}
                                             </Badge>
                                         ) : null}
                                     </div>

@@ -12,6 +12,28 @@ use Illuminate\Support\Str;
 
 class FriendshipService
 {
+    public function areFriends(User $firstUser, User $secondUser): bool
+    {
+        if ((int) $firstUser->id === (int) $secondUser->id) {
+            return true;
+        }
+
+        return Friendship::query()
+            ->where(function ($query) use ($firstUser, $secondUser) {
+                $query
+                    ->where('status', FriendshipStatus::ACCEPTED)
+                    ->where('user_id', $firstUser->id)
+                    ->where('friend_id', $secondUser->id);
+            })
+            ->orWhere(function ($query) use ($firstUser, $secondUser) {
+                $query
+                    ->where('status', FriendshipStatus::ACCEPTED)
+                    ->where('user_id', $secondUser->id)
+                    ->where('friend_id', $firstUser->id);
+            })
+            ->exists();
+    }
+
     public function getFriends(User $user): Collection
     {
         $friendships = Friendship::with(['sender.profile', 'receiver.profile'])

@@ -31,6 +31,7 @@ import {
     useUniversityDetails,
     useUpdateStudentProfile,
 } from "@/modules/profiles/api/hooks"
+import type { StudentProfile } from "@/modules/profiles/model/types"
 import type { TabDef } from "@/modules/settings/model/settings.types.ts"
 import {
     itemAnim,
@@ -39,6 +40,40 @@ import { TabShell } from "@/modules/settings/ui/settings.renderers.tsx"
 
 const selectClassName = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
 const textAreaClassName = "flex min-h-[112px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+const emptyProfileForm = {
+    bio: "",
+    phone: "",
+    telegram: "",
+    city: "",
+    birthDate: "",
+}
+const emptyEducationForm = {
+    regionCode: "",
+    universityId: "",
+    specialityName: "",
+    groupCode: "",
+    course: "",
+}
+
+function mapProfileToForm(profile: StudentProfile) {
+    return {
+        bio: profile.bio ?? "",
+        phone: profile.phone ?? "",
+        telegram: profile.telegram ?? "",
+        city: profile.city ?? "",
+        birthDate: profile.birthDate ?? "",
+    }
+}
+
+function mapProfileToEducationForm(profile: StudentProfile) {
+    return {
+        regionCode: profile.university?.regionCode ?? "",
+        universityId: profile.university?.externalId ?? "",
+        specialityName: profile.university?.facultyName ?? "",
+        groupCode: profile.university?.groupCode ?? "",
+        course: profile.university?.course?.toString() ?? "",
+    }
+}
 
 function extractErrorMessage(error: unknown, fallback: string) {
     return ((error as Error & { body?: { message?: string } })?.body?.message ?? fallback)
@@ -54,6 +89,7 @@ export function ProfileTab(_: { tab: TabDef }) {
     const removeUniversity = useRemoveStudentUniversity()
     const uploadAvatar = useUploadAvatar()
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const hasSeededProfile = useRef(false)
 
     const initials = [user?.firstName?.[0], user?.lastName?.[0]]
         .filter(Boolean)
@@ -62,21 +98,10 @@ export function ProfileTab(_: { tab: TabDef }) {
 
     const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ")
 
-    const [form, setForm] = useState({
-        bio: "",
-        phone: "",
-        telegram: "",
-        city: "",
-        birthDate: "",
-    })
-    const [educationForm, setEducationForm] = useState({
-        regionCode: "",
-        universityId: "",
-        specialityName: "",
-        groupCode: "",
-        course: "",
-    })
+    const [form, setForm] = useState(emptyProfileForm)
+    const [educationForm, setEducationForm] = useState(emptyEducationForm)
     const [universityQuery, setUniversityQuery] = useState("")
+    const [initialUniversityQuery, setInitialUniversityQuery] = useState("")
 
     // Track initial values to detect changes
     const [initialForm, setInitialForm] = useState(form)
@@ -87,29 +112,19 @@ export function ProfileTab(_: { tab: TabDef }) {
     const [showEducationSuccess, setShowEducationSuccess] = useState(false)
 
     useEffect(() => {
-        if (!profile) return
+        if (!profile || hasSeededProfile.current) return
 
-        const newForm = {
-            bio: profile.bio ?? "",
-            phone: profile.phone ?? "",
-            telegram: profile.telegram ?? "",
-            city: profile.city ?? "",
-            birthDate: profile.birthDate ?? "",
-        }
+        const nextForm = mapProfileToForm(profile)
+        const nextEducationForm = mapProfileToEducationForm(profile)
+        const nextUniversityQuery = profile.university?.name ?? ""
 
-        const newEducationForm = {
-            regionCode: profile.university?.regionCode ?? "",
-            universityId: profile.university?.externalId ?? "",
-            specialityName: profile.university?.facultyName ?? "",
-            groupCode: profile.university?.groupCode ?? "",
-            course: profile.university?.course?.toString() ?? "",
-        }
-
-        setForm(newForm)
-        setInitialForm(newForm)
-        setEducationForm(newEducationForm)
-        setInitialEducationForm(newEducationForm)
-        setUniversityQuery(profile.university?.name ?? "")
+        setForm(nextForm)
+        setInitialForm(nextForm)
+        setEducationForm(nextEducationForm)
+        setInitialEducationForm(nextEducationForm)
+        setUniversityQuery(nextUniversityQuery)
+        setInitialUniversityQuery(nextUniversityQuery)
+        hasSeededProfile.current = true
     }, [profile])
 
     const { data: universities, isFetching: isUniversitiesLoading } = useUniversitiesByRegion(
@@ -137,14 +152,22 @@ export function ProfileTab(_: { tab: TabDef }) {
     ].filter(Boolean)))
 
     const update = (id: keyof typeof form, value: string) => {
+        updateProfile.reset()
+        setShowProfileSuccess(false)
         setForm((prev) => ({ ...prev, [id]: value }))
     }
 
     const updateEducation = (id: keyof typeof educationForm, value: string) => {
+        saveUniversity.reset()
+        removeUniversity.reset()
+        setShowEducationSuccess(false)
         setEducationForm((prev) => ({ ...prev, [id]: value }))
     }
 
     const handleRegionChange = (value: string) => {
+        saveUniversity.reset()
+        removeUniversity.reset()
+        setShowEducationSuccess(false)
         setEducationForm((prev) => ({
             ...prev,
             regionCode: value,
@@ -155,6 +178,9 @@ export function ProfileTab(_: { tab: TabDef }) {
     }
 
     const handleUniversityChange = (value: string) => {
+        saveUniversity.reset()
+        removeUniversity.reset()
+        setShowEducationSuccess(false)
         setEducationForm((prev) => ({
             ...prev,
             universityId: value,
@@ -175,16 +201,33 @@ export function ProfileTab(_: { tab: TabDef }) {
                 telegram: form.telegram || null,
                 city: form.city || null,
                 birthDate: form.birthDate || null,
+            }, {
+                onSuccess: (nextProfile) => {
+                    const nextForm = mapProfileToForm(nextProfile)
+                    setForm(nextForm)
+                    setInitialForm(nextForm)
+                    setShowProfileSuccess(true)
+                },
             })
         }
 
         if (hasEducationChanges && educationForm.regionCode && educationForm.universityId && educationForm.course) {
+            const nextEducationForm = {
+                ...educationForm,
+            }
             saveUniversity.mutate({
                 universityId: educationForm.universityId,
                 regionCode: educationForm.regionCode,
                 specialityName: educationForm.specialityName || null,
                 groupCode: educationForm.groupCode || null,
                 course: Number(educationForm.course),
+            }, {
+                onSuccess: () => {
+                    setEducationForm(nextEducationForm)
+                    setInitialEducationForm(nextEducationForm)
+                    setInitialUniversityQuery(universityQuery)
+                    setShowEducationSuccess(true)
+                },
             })
         }
     }
@@ -201,39 +244,19 @@ export function ProfileTab(_: { tab: TabDef }) {
         event.target.value = ""
     }
 
-    // Handle success states with auto-hide
     useEffect(() => {
-        if (updateProfile.isSuccess) {
-            setInitialForm(form)
-            setShowProfileSuccess(true)
-            const timer = setTimeout(() => setShowProfileSuccess(false), 3000)
-            return () => clearTimeout(timer)
-        }
-    }, [updateProfile.isSuccess, form])
+        if (!showProfileSuccess) return
+
+        const timer = setTimeout(() => setShowProfileSuccess(false), 3000)
+        return () => clearTimeout(timer)
+    }, [showProfileSuccess])
 
     useEffect(() => {
-        if (saveUniversity.isSuccess) {
-            setInitialEducationForm(educationForm)
-            setShowEducationSuccess(true)
-            const timer = setTimeout(() => setShowEducationSuccess(false), 3000)
-            return () => clearTimeout(timer)
-        }
-    }, [saveUniversity.isSuccess, educationForm])
+        if (!showEducationSuccess) return
 
-    useEffect(() => {
-        if (removeUniversity.isSuccess) {
-            const emptyEducation = {
-                regionCode: "",
-                universityId: "",
-                specialityName: "",
-                groupCode: "",
-                course: "",
-            }
-            setEducationForm(emptyEducation)
-            setInitialEducationForm(emptyEducation)
-            setUniversityQuery("")
-        }
-    }, [removeUniversity.isSuccess])
+        const timer = setTimeout(() => setShowEducationSuccess(false), 3000)
+        return () => clearTimeout(timer)
+    }, [showEducationSuccess])
 
     const profileError = updateProfile.isError
         ? extractErrorMessage(updateProfile.error, "Не вдалося зберегти зміни профілю.")
@@ -272,6 +295,12 @@ export function ProfileTab(_: { tab: TabDef }) {
             onCancel={() => {
                 setForm(initialForm)
                 setEducationForm(initialEducationForm)
+                setUniversityQuery(initialUniversityQuery)
+                setShowProfileSuccess(false)
+                setShowEducationSuccess(false)
+                updateProfile.reset()
+                saveUniversity.reset()
+                removeUniversity.reset()
             }}
             canSave={(!(!hasProfileChanges && hasEducationChanges && !canSaveEducation))}
         >
@@ -518,7 +547,12 @@ export function ProfileTab(_: { tab: TabDef }) {
                                     type="text"
                                     placeholder={educationForm.regionCode ? "Почніть вводити назву університету" : "Спочатку оберіть регіон"}
                                     value={universityQuery}
-                                    onChange={(event) => setUniversityQuery(event.target.value)}
+                                    onChange={(event) => {
+                                        saveUniversity.reset()
+                                        removeUniversity.reset()
+                                        setShowEducationSuccess(false)
+                                        setUniversityQuery(event.target.value)
+                                    }}
                                     disabled={!educationForm.regionCode}
                                 />
                             </div>
@@ -680,7 +714,15 @@ export function ProfileTab(_: { tab: TabDef }) {
                                         type="button"
                                         variant="outline"
                                         className="w-full border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                        onClick={() => removeUniversity.mutate()}
+                                        onClick={() => removeUniversity.mutate(undefined, {
+                                            onSuccess: () => {
+                                                setEducationForm(emptyEducationForm)
+                                                setInitialEducationForm(emptyEducationForm)
+                                                setUniversityQuery("")
+                                                setInitialUniversityQuery("")
+                                                setShowEducationSuccess(false)
+                                            },
+                                        })}
                                         disabled={isAnySaving}
                                     >
                                         {removeUniversity.isPending

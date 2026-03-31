@@ -31,6 +31,8 @@ export interface StudentProfile {
     telegram: string | null;
     city: string | null;
     birthDate: string | null;
+    onlineStatus?: boolean | null;
+    online_status?: boolean | null;
     user: ProfileUser | null;
     university: StudentUniversity | null;
     completion: {

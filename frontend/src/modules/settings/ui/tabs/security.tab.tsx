@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import type { LucideIcon } from "lucide-react";
+import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import type { LucideIcon } from "lucide-react"
 import {
     ActivityIcon,
     AlertCircleIcon,
@@ -13,30 +13,46 @@ import {
     MonitorIcon,
     ShieldIcon,
     SmartphoneIcon,
-} from "lucide-react";
-import { useChangePassword, useRevokeSession, useSessions } from "@/modules/auth/api/hooks";
-import type { AuthSession } from "@/modules/auth/model/types";
-import type { TabDef } from "@/modules/settings/model/settings.types";
-import { TabShell } from "@/modules/settings/ui/settings.renderers";
-import { itemAnim } from "@/modules/settings/ui/settings.animations";
-import { Alert, AlertDescription } from "@/shared/shadcn/ui/alert";
-import { Badge } from "@/shared/shadcn/ui/badge";
-import { Button } from "@/shared/shadcn/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/shadcn/ui/card";
-import { Input } from "@/shared/shadcn/ui/input";
-import { Separator } from "@/shared/shadcn/ui/separator";
+} from "lucide-react"
+import { useChangePassword, useRevokeSession, useSessions } from "@/modules/auth/api/hooks"
+import type { AuthSession } from "@/modules/auth/model/types"
+import { useSettingsDraft } from "@/modules/settings/hooks/use-settings-draft"
+import { useSettingsGroup } from "@/modules/settings/hooks/use-settings-group"
+import type { TabDef } from "@/modules/settings/model/settings.types"
+import {
+    DynamicSettingsCard,
+    SettingsLoadingShell,
+    TabShell,
+} from "@/modules/settings/ui/settings.renderers"
+import { itemAnim } from "@/modules/settings/ui/settings.animations"
+import { Alert, AlertDescription } from "@/shared/shadcn/ui/alert"
+import { Badge } from "@/shared/shadcn/ui/badge"
+import { Button } from "@/shared/shadcn/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/shadcn/ui/card"
+import { Input } from "@/shared/shadcn/ui/input"
+import { Separator } from "@/shared/shadcn/ui/separator"
 
-const passwordSection = { title: "Пароль", icon: KeyIcon };
+const passwordSection = { title: "Пароль", icon: KeyIcon }
+const profileVisibilitySection = {
+    title: "Видимість профілю",
+    icon: EyeIcon,
+    description: "Хто може переглядати ваш профіль",
+}
+const onlineStatusSection = {
+    title: "Показувати статус онлайн",
+    icon: ActivityIcon,
+    description: "Дозволити іншим бачити, коли ви онлайн",
+}
 const twoFASection = {
     title: "Двофакторна автентифікація",
     icon: ShieldIcon,
     description: "Додатковий рівень захисту для вашого акаунту",
-};
+}
 const sessionsSection = {
     title: "Поточні сесії",
     icon: ActivityIcon,
     description: "Пристрої, що мають доступ до вашого акаунту прямо зараз",
-};
+}
 
 function PasswordInput({
     value,
@@ -44,12 +60,12 @@ function PasswordInput({
     placeholder,
     id,
 }: {
-    value: string;
-    onChange: (value: string) => void;
-    placeholder?: string;
-    id?: string;
+    value: string
+    onChange: (value: string) => void
+    placeholder?: string
+    id?: string
 }) {
-    const [show, setShow] = useState(false);
+    const [show, setShow] = useState(false)
 
     return (
         <div className="relative">
@@ -70,127 +86,143 @@ function PasswordInput({
                 {show ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
             </button>
         </div>
-    );
+    )
 }
 
 function getSessionIcon(userAgent: string | null): LucideIcon {
-    const normalized = userAgent?.toLowerCase() ?? "";
+    const normalized = userAgent?.toLowerCase() ?? ""
 
     return /(iphone|ipad|android|mobile)/.test(normalized)
         ? SmartphoneIcon
-        : MonitorIcon;
+        : MonitorIcon
 }
 
 function getDeviceLabel(userAgent: string | null): string {
-    const normalized = userAgent?.toLowerCase() ?? "";
+    const normalized = userAgent?.toLowerCase() ?? ""
 
-    if (normalized.includes("iphone")) return "iPhone";
-    if (normalized.includes("ipad")) return "iPad";
-    if (normalized.includes("android")) return "Android";
-    if (normalized.includes("windows")) return "Windows";
-    if (normalized.includes("macintosh") || normalized.includes("mac os x")) return "Mac";
-    if (normalized.includes("linux")) return "Linux";
+    if (normalized.includes("iphone")) return "iPhone"
+    if (normalized.includes("ipad")) return "iPad"
+    if (normalized.includes("android")) return "Android"
+    if (normalized.includes("windows")) return "Windows"
+    if (normalized.includes("macintosh") || normalized.includes("mac os x")) return "Mac"
+    if (normalized.includes("linux")) return "Linux"
 
-    return "Невідомий пристрій";
+    return "Невідомий пристрій"
 }
 
 function getPlatformLabel(userAgent: string | null): string {
-    const normalized = userAgent?.toLowerCase() ?? "";
+    const normalized = userAgent?.toLowerCase() ?? ""
 
-    if (normalized.includes("iphone") || normalized.includes("ipad")) return "iOS";
-    if (normalized.includes("android")) return "Android";
-    if (normalized.includes("windows")) return "Windows";
-    if (normalized.includes("macintosh") || normalized.includes("mac os x")) return "macOS";
-    if (normalized.includes("linux")) return "Linux";
+    if (normalized.includes("iphone") || normalized.includes("ipad")) return "iOS"
+    if (normalized.includes("android")) return "Android"
+    if (normalized.includes("windows")) return "Windows"
+    if (normalized.includes("macintosh") || normalized.includes("mac os x")) return "macOS"
+    if (normalized.includes("linux")) return "Linux"
 
-    return "Невідома платформа";
+    return "Невідома платформа"
 }
 
 function getBrowserLabel(userAgent: string | null): string {
-    const normalized = userAgent?.toLowerCase() ?? "";
+    const normalized = userAgent?.toLowerCase() ?? ""
 
-    if (normalized.includes("edg/")) return "Microsoft Edge";
-    if (normalized.includes("opr/") || normalized.includes("opera")) return "Opera";
-    if (normalized.includes("chrome/") && !normalized.includes("edg/")) return "Google Chrome";
-    if (normalized.includes("firefox/")) return "Mozilla Firefox";
-    if (normalized.includes("safari/") && !normalized.includes("chrome/")) return "Safari";
+    if (normalized.includes("edg/")) return "Microsoft Edge"
+    if (normalized.includes("opr/") || normalized.includes("opera")) return "Opera"
+    if (normalized.includes("chrome/") && !normalized.includes("edg/")) return "Google Chrome"
+    if (normalized.includes("firefox/")) return "Mozilla Firefox"
+    if (normalized.includes("safari/") && !normalized.includes("chrome/")) return "Safari"
 
-    return "Невідомий браузер";
+    return "Невідомий браузер"
 }
 
 function formatLastActiveAt(value: string | null): string {
     if (!value) {
-        return "Немає даних про активність";
+        return "Немає даних про активність"
     }
 
-    const date = new Date(value);
+    const date = new Date(value)
 
     if (Number.isNaN(date.getTime())) {
-        return "Немає даних про активність";
+        return "Немає даних про активність"
     }
 
     return new Intl.DateTimeFormat("uk-UA", {
         dateStyle: "medium",
         timeStyle: "short",
-    }).format(date);
+    }).format(date)
 }
 
 function buildSessionMeta(session: AuthSession) {
-    const ipLabel = session.ipAddress ? `IP: ${session.ipAddress}` : null;
-    const activityLabel = `Активність: ${formatLastActiveAt(session.lastActiveAt)}`;
+    const ipLabel = session.ipAddress ? `IP: ${session.ipAddress}` : null
+    const activityLabel = `Активність: ${formatLastActiveAt(session.lastActiveAt)}`
 
     return {
         icon: getSessionIcon(session.userAgent),
         title: getDeviceLabel(session.userAgent),
         description: `${getBrowserLabel(session.userAgent)} • ${getPlatformLabel(session.userAgent)}`,
         details: [ipLabel, activityLabel].filter(Boolean).join(" • "),
-    };
+    }
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {
     if (error && typeof error === "object" && "body" in error) {
-        const body = (error as { body?: { message?: string } }).body;
+        const body = (error as { body?: { message?: string } }).body
         if (body?.message) {
-            return body.message;
+            return body.message
         }
     }
 
     if (error instanceof Error && error.message) {
-        return error.message;
+        return error.message
     }
 
-    return fallback;
+    return fallback
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function SecurityTab(_: { tab: TabDef }) {
-    const changePassword = useChangePassword();
-    const sessionsQuery = useSessions();
-    const revokeSession = useRevokeSession();
+export function SecurityTab({ tab }: { tab: TabDef }) {
+    const settingsQuery = useSettingsGroup(tab.groupId!)
+    const {
+        draft,
+        set,
+        isDirty,
+        isSaving,
+        error: settingsSaveError,
+        onSave,
+        seed,
+    } = useSettingsDraft(tab.groupId!)
 
-    const [currentPass, setCurrentPass] = useState("");
-    const [newPass, setNewPass] = useState("");
-    const [confirmPass, setConfirmPass] = useState("");
-    const [clientError, setClientError] = useState<string | null>(null);
-    const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+    const changePassword = useChangePassword()
+    const sessionsQuery = useSessions()
+    const revokeSession = useRevokeSession()
+
+    const [currentPass, setCurrentPass] = useState("")
+    const [newPass, setNewPass] = useState("")
+    const [confirmPass, setConfirmPass] = useState("")
+    const [clientError, setClientError] = useState<string | null>(null)
+    const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (settingsQuery.data) {
+            seed(settingsQuery.data)
+        }
+    }, [seed, settingsQuery.data])
 
     const handleChangePassword = () => {
-        setClientError(null);
-        changePassword.reset();
+        setClientError(null)
+        changePassword.reset()
 
         if (!currentPass || !newPass || !confirmPass) {
-            setClientError("Заповніть усі поля паролю.");
-            return;
+            setClientError("Заповніть усі поля паролю.")
+            return
         }
 
         if (newPass.length < 8) {
-            setClientError("Новий пароль має бути не менше 8 символів.");
-            return;
+            setClientError("Новий пароль має бути не менше 8 символів.")
+            return
         }
 
         if (newPass !== confirmPass) {
-            setClientError("Паролі не збігаються.");
-            return;
+            setClientError("Паролі не збігаються.")
+            return
         }
 
         changePassword.mutate(
@@ -201,48 +233,92 @@ export function SecurityTab(_: { tab: TabDef }) {
             },
             {
                 onSuccess: () => {
-                    setCurrentPass("");
-                    setNewPass("");
-                    setConfirmPass("");
+                    setCurrentPass("")
+                    setNewPass("")
+                    setConfirmPass("")
                 },
             },
-        );
-    };
+        )
+    }
 
     const handleRevokeSession = (sessionId: string) => {
-        setPendingSessionId(sessionId);
+        setPendingSessionId(sessionId)
 
         revokeSession.mutate(sessionId, {
             onSettled: () => {
-                setPendingSessionId(null);
+                setPendingSessionId(null)
             },
-        });
-    };
+        })
+    }
+
+    const settings = settingsQuery.data ?? []
+    const profileVisibilitySetting = settings.find((setting) => setting.key === "privacy_profile")
+    const onlineStatusSetting = settings.find((setting) => setting.key === "online_status")
 
     const sessions = [...(sessionsQuery.data ?? [])].sort((left, right) => {
-        const currentPriority = Number(right.current) - Number(left.current);
+        const currentPriority = Number(right.current) - Number(left.current)
         if (currentPriority !== 0) {
-            return currentPriority;
+            return currentPriority
         }
 
-        const leftTime = left.lastActiveAt ? new Date(left.lastActiveAt).getTime() : 0;
-        const rightTime = right.lastActiveAt ? new Date(right.lastActiveAt).getTime() : 0;
+        const leftTime = left.lastActiveAt ? new Date(left.lastActiveAt).getTime() : 0
+        const rightTime = right.lastActiveAt ? new Date(right.lastActiveAt).getTime() : 0
 
-        return rightTime - leftTime;
-    });
+        return rightTime - leftTime
+    })
 
-    const isPasswordLoading = changePassword.isPending;
-    const isPasswordSuccess = changePassword.isSuccess;
+    const isPasswordLoading = changePassword.isPending
+    const isPasswordSuccess = changePassword.isSuccess
     const passwordError = clientError
         ?? (changePassword.isError
             ? getErrorMessage(changePassword.error, "Не вдалося змінити пароль.")
-            : null);
+            : null)
+    const settingsError = settingsQuery.isError
+        ? getErrorMessage(settingsQuery.error, "Не вдалося завантажити налаштування безпеки.")
+        : null
     const sessionsError = sessionsQuery.isError
         ? getErrorMessage(sessionsQuery.error, "Не вдалося завантажити активні сесії.")
-        : null;
+        : null
 
     return (
-        <TabShell showSave={false}>
+        <TabShell showSave onSave={onSave} isSaving={isSaving} isDirty={isDirty} error={settingsSaveError}>
+            {settingsQuery.isLoading && (
+                <motion.div variants={itemAnim}>
+                    <SettingsLoadingShell />
+                </motion.div>
+            )}
+
+            {settingsError && (
+                <motion.div variants={itemAnim}>
+                    <Alert variant="destructive">
+                        <AlertCircleIcon className="size-4" />
+                        <AlertDescription>{settingsError}</AlertDescription>
+                    </Alert>
+                </motion.div>
+            )}
+
+            {profileVisibilitySetting && (
+                <DynamicSettingsCard
+                    title={profileVisibilitySection.title}
+                    description={profileVisibilitySection.description}
+                    icon={profileVisibilitySection.icon}
+                    settings={[profileVisibilitySetting]}
+                    draft={draft}
+                    onChange={set}
+                />
+            )}
+
+            {onlineStatusSetting && (
+                <DynamicSettingsCard
+                    title={onlineStatusSection.title}
+                    description={onlineStatusSection.description}
+                    icon={onlineStatusSection.icon}
+                    settings={[onlineStatusSetting]}
+                    draft={draft}
+                    onChange={set}
+                />
+            )}
+
             <motion.div variants={itemAnim}>
                 <Card>
                     <CardHeader>
@@ -372,9 +448,9 @@ export function SecurityTab(_: { tab: TabDef }) {
                         )}
 
                         {!sessionsQuery.isLoading && !sessionsError && sessions.map((session, index) => {
-                            const meta = buildSessionMeta(session);
-                            const SessionIcon = meta.icon;
-                            const isRevoking = revokeSession.isPending && pendingSessionId === session.id;
+                            const meta = buildSessionMeta(session)
+                            const SessionIcon = meta.icon
+                            const isRevoking = revokeSession.isPending && pendingSessionId === session.id
 
                             return (
                                 <div key={session.id}>
@@ -413,11 +489,11 @@ export function SecurityTab(_: { tab: TabDef }) {
                                         )}
                                     </div>
                                 </div>
-                            );
+                            )
                         })}
                     </CardContent>
                 </Card>
             </motion.div>
         </TabShell>
-    );
+    )
 }

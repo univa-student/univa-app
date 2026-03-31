@@ -146,6 +146,19 @@ export const ENDPOINTS = {
         id: (id: number) => `${API}/deadlines/${id}`,
     },
 
+    organizer: {
+        tasks: {
+            base: `${API}/tasks`,
+            id: (id: number) => `${API}/tasks/${id}`,
+        },
+        notes: {
+            base: `${API}/notes`,
+            id: (id: number) => `${API}/notes/${id}`,
+            pin: (id: number) => `${API}/notes/${id}/pin`,
+            archive: (id: number) => `${API}/notes/${id}/archive`,
+        },
+    },
+
     groups: {
         list: `${API}/groups`,
         create: `${API}/groups`,

@@ -8,8 +8,16 @@ use App\Models\User;
 use App\Modules\Profiles\DTO\UniversityDetailsData;
 use App\Modules\Profiles\Enums\RegionCode;
 use App\Modules\Profiles\Support\UniversitiesByRegion;
+use App\Modules\Settings\Models\ApplicationSetting;
+use App\Modules\Settings\Models\ApplicationSettingValue;
+use App\Modules\Settings\Models\ApplicationUserSetting;
+use App\Modules\User\Enums\FriendshipStatus;
+use App\Modules\User\Models\Friendship;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Mockery;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class ProfileModuleTest extends TestCase
@@ -82,6 +90,69 @@ class ProfileModuleTest extends TestCase
             ->assertJsonPath('data.bio', 'Люблю системний дизайн і математику.')
             ->assertJsonPath('data.telegram', '@student_target')
             ->assertJsonPath('data.city', 'Lviv');
+    }
+
+    public function test_it_blocks_private_profile_for_other_users(): void
+    {
+        $viewer = User::factory()->create();
+        $target = User::factory()->create([
+            'username' => 'private.student',
+        ]);
+
+        $this->setProfileVisibility($target, ApplicationSettingValue::SETTING_PRIVACY_PROFILE_PRIVATE_VALUE);
+
+        $this->actingAs($viewer)
+            ->getJson('/api/v1/profiles/private.student')
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Цей профіль приватний.');
+    }
+
+    public function test_it_allows_friends_only_profile_for_friends_and_blocks_strangers(): void
+    {
+        $friend = User::factory()->create();
+        $stranger = User::factory()->create();
+        $target = User::factory()->create([
+            'username' => 'friends.only',
+        ]);
+
+        Friendship::query()->create([
+            'user_id' => $target->id,
+            'friend_id' => $friend->id,
+            'status' => FriendshipStatus::ACCEPTED,
+        ]);
+
+        $this->setProfileVisibility($target, ApplicationSettingValue::SETTING_PRIVACY_PROFILE_FRIENDS);
+
+        $this->actingAs($friend)
+            ->getJson('/api/v1/profiles/friends.only')
+            ->assertOk();
+
+        $this->actingAs($stranger)
+            ->getJson('/api/v1/profiles/friends.only')
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Цей профіль доступний лише друзям.');
+    }
+
+    public function test_it_returns_online_status_only_when_viewer_is_allowed_to_see_it(): void
+    {
+        $viewer = User::factory()->create();
+        $target = User::factory()->create([
+            'username' => 'online.student',
+        ]);
+
+        $this->createActiveSessionForUser($target);
+
+        $this->actingAs($viewer)
+            ->getJson('/api/v1/profiles/online.student')
+            ->assertOk()
+            ->assertJsonPath('data.onlineStatus', true);
+
+        $this->setOnlineStatusVisibility($target, false);
+
+        $this->actingAs($viewer)
+            ->getJson('/api/v1/profiles/online.student')
+            ->assertOk()
+            ->assertJsonPath('data.onlineStatus', null);
     }
 
     public function test_it_saves_selected_university_for_current_profile(): void
@@ -181,6 +252,71 @@ class ProfileModuleTest extends TestCase
 
         $this->assertDatabaseMissing('universities', [
             'user_id' => (string) $user->id,
+        ]);
+    }
+
+    private function setProfileVisibility(User $user, string $value): void
+    {
+        $this->setSettingValue($user, ApplicationSetting::PRIVACY_PROFILE_SETTING_KEY, $value);
+    }
+
+    private function setOnlineStatusVisibility(User $user, bool $isVisible): void
+    {
+        $this->setSettingValue(
+            $user,
+            ApplicationSetting::PRIVACY_ONLINE_STATUS_SETTING_KEY,
+            $isVisible
+                ? (string) ApplicationSettingValue::SETTING_ENABLED_VALUE
+                : (string) ApplicationSettingValue::SETTING_DISABLED_VALUE,
+        );
+    }
+
+    private function setSettingValue(User $user, string $key, string $value): void
+    {
+        $setting = ApplicationSetting::query()
+            ->where('key', $key)
+            ->firstOrFail();
+
+        $settingValueId = ApplicationSettingValue::query()
+            ->where('application_setting_id', $setting->id)
+            ->where('value', $value)
+            ->value('id');
+
+        ApplicationUserSetting::query()->updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'application_setting_id' => $setting->id,
+            ],
+            [
+                'application_setting_value_id' => $settingValueId,
+            ],
+        );
+    }
+
+    private function createActiveSessionForUser(User $user): void
+    {
+        if ((string) config('session.driver', 'database') === 'file') {
+            $sessionPath = (string) config('session.files', storage_path('framework/sessions'));
+            File::ensureDirectoryExists($sessionPath);
+            File::put(
+                $sessionPath.DIRECTORY_SEPARATOR.'session-online-student',
+                serialize([
+                    Auth::guard('web')->getName() => (string) $user->id,
+                ]),
+            );
+
+            touch($sessionPath.DIRECTORY_SEPARATOR.'session-online-student', now()->getTimestamp());
+
+            return;
+        }
+
+        DB::table('sessions')->insert([
+            'id' => 'session-online-student',
+            'user_id' => $user->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'PHPUnit',
+            'payload' => 'test',
+            'last_activity' => now()->getTimestamp(),
         ]);
     }
 }
