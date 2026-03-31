@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback } from "react"
-import { Link } from "react-router-dom"
+import { Children, isValidElement, useState, useEffect, useCallback, useMemo, type ReactNode } from "react"
+import { Link, useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import ReactMarkdown from "react-markdown"
 import type { Components } from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeHighlight from "rehype-highlight"
 import usePageTitle from "@/shared/hooks/usePageTitle.ts"
-import { GOOGLE_FONTS_URL } from "@/app/config/app.config.ts"
 import logoConfig from "@/app/config/logo.config.ts"
 import { Button } from "@/shared/shadcn/ui/button.tsx"
 import {
@@ -24,11 +23,19 @@ import {
 
 type DocId = string
 
+type TocHeading = {
+    id: string
+    label: string
+    level: 2 | 3
+}
+
+const DEFAULT_DOC_ID = "quickstart"
+
 const sidebarSections = [
     {
         title: "Початок роботи",
         icon: RocketIcon,
-        color: "#10b981",
+        colorClass: "text-emerald-500",
         items: [
             { id: "quickstart", label: "Швидкий старт" },
             { id: "installation", label: "Встановлення" },
@@ -38,7 +45,7 @@ const sidebarSections = [
     {
         title: "API",
         icon: CodeIcon,
-        color: "#3b82f6",
+        colorClass: "text-sky-500",
         items: [
             { id: "api-auth", label: "Автентифікація" },
             { id: "api-users", label: "Користувачі" },
@@ -49,7 +56,7 @@ const sidebarSections = [
     {
         title: "Інтеграції",
         icon: PlugIcon,
-        color: "#f59e0b",
+        colorClass: "text-amber-500",
         items: [
             { id: "google-calendar", label: "Google Calendar" },
             { id: "telegram", label: "Telegram Bot" },
@@ -59,7 +66,7 @@ const sidebarSections = [
     {
         title: "FAQ",
         icon: HelpCircleIcon,
-        color: "#a78bfa",
+        colorClass: "text-violet-500",
         items: [
             { id: "faq-general", label: "Загальне" },
             { id: "faq-billing", label: "Оплата" },
@@ -67,6 +74,55 @@ const sidebarSections = [
         ],
     },
 ]
+
+const allDocs = sidebarSections.flatMap((section) => section.items)
+
+function isKnownDoc(id: string | null): id is DocId {
+    return Boolean(id && allDocs.some((item) => item.id === id))
+}
+
+function slugify(value: string) {
+    return value
+        .toLowerCase()
+        .trim()
+        .normalize("NFKD")
+        .replace(/[^\p{L}\p{N}\s-]/gu, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+}
+
+function getNodeText(children: ReactNode): string {
+    return Children.toArray(children)
+        .map((child) => {
+            if (typeof child === "string" || typeof child === "number") {
+                return String(child)
+            }
+
+            if (isValidElement(child)) {
+                return getNodeText((child.props as { children?: ReactNode }).children)
+            }
+
+            return ""
+        })
+        .join("")
+}
+
+function extractHeadings(content: string): TocHeading[] {
+    return content
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith("## ") || line.startsWith("### "))
+        .map((line) => {
+            const isThirdLevel = line.startsWith("### ")
+            const label = line.replace(/^###?\s/, "").trim()
+
+            return {
+                id: slugify(label),
+                label,
+                level: isThirdLevel ? 3 : 2,
+            }
+        })
+}
 
 function getSectionForDoc(id: DocId) {
     return sidebarSections.find((section) => section.items.some((item) => item.id === id))
@@ -81,21 +137,30 @@ function getDocLabel(id: DocId) {
     return id
 }
 
+function getDocLead(id: DocId) {
+    const section = getSectionForDoc(id)
+
+    if (!section) {
+        return "Структурована документація по платформі та її ключових можливостях."
+    }
+
+    return {
+        "Початок роботи":
+            "Базові сценарії старту, налаштування середовища та перший вхід у продукт.",
+        API: "Ендпоінти, контракти, структура запитів та робота з даними.",
+        "Інтеграції":
+            "Підключення зовнішніх сервісів, webhooks та інтеграційних сценаріїв.",
+        FAQ: "Короткі відповіді на найпоширеніші питання та типові проблеми.",
+    }[section.title] as string
+}
+
 function buildComponents(): Components {
     return {
         h1: ({ children }) => (
             <h1
-                style={{
-                    fontSize: 28,
-                    fontWeight: 800,
-                    letterSpacing: "-0.03em",
-                    color: "#f1f5f9",
-                    marginTop: 40,
-                    marginBottom: 16,
-                    fontFamily: "'Sora', sans-serif",
-                    borderBottom: "1px solid rgba(255,255,255,0.06)",
-                    paddingBottom: 12,
-                }}
+                id={slugify(getNodeText(children))}
+                data-doc-heading="true"
+                className="mt-8 mb-5 border-b border-slate-200 pb-4 text-4xl font-semibold tracking-tight text-slate-950"
             >
                 {children}
             </h1>
@@ -103,15 +168,9 @@ function buildComponents(): Components {
 
         h2: ({ children }) => (
             <h2
-                style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    letterSpacing: "-0.02em",
-                    color: "#e2e8f0",
-                    marginTop: 36,
-                    marginBottom: 12,
-                    fontFamily: "'Sora', sans-serif",
-                }}
+                id={slugify(getNodeText(children))}
+                data-doc-heading="true"
+                className="mt-10 mb-4 scroll-mt-28 text-2xl font-semibold tracking-tight text-slate-950"
             >
                 {children}
             </h2>
@@ -119,71 +178,22 @@ function buildComponents(): Components {
 
         h3: ({ children }) => (
             <h3
-                style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#cbd5e1",
-                    marginTop: 24,
-                    marginBottom: 8,
-                    fontFamily: "'Sora', sans-serif",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                }}
+                id={slugify(getNodeText(children))}
+                data-doc-heading="true"
+                className="mt-8 mb-3 scroll-mt-28 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"
             >
                 {children}
             </h3>
         ),
 
-        p: ({ children }) => (
-            <p
-                style={{
-                    fontSize: 14.5,
-                    lineHeight: 1.85,
-                    color: "#94a3b8",
-                    marginBottom: 14,
-                    fontFamily: "'DM Sans', sans-serif",
-                }}
-            >
-                {children}
-            </p>
-        ),
+        p: ({ children }) => <p className="mb-4 text-[15px] leading-8 text-slate-700">{children}</p>,
 
-        ul: ({ children }) => (
-            <ul style={{ paddingLeft: 0, marginBottom: 16, listStyle: "none" }}>
-                {children}
-            </ul>
-        ),
+        ul: ({ children }) => <ul className="mb-5 space-y-2">{children}</ul>,
 
-        ol: ({ children }) => (
-            <ol style={{ paddingLeft: 20, marginBottom: 16, color: "#94a3b8" }}>
-                {children}
-            </ol>
-        ),
+        ol: ({ children }) => <ol className="mb-5 list-decimal space-y-2 pl-5 text-slate-700">{children}</ol>,
 
         li: ({ children }) => (
-            <li
-                style={{
-                    fontSize: 14.5,
-                    lineHeight: 1.75,
-                    color: "#94a3b8",
-                    marginBottom: 6,
-                    paddingLeft: 20,
-                    position: "relative",
-                    fontFamily: "'DM Sans', sans-serif",
-                }}
-            >
-                <span
-                    style={{
-                        position: "absolute",
-                        left: 0,
-                        top: 8,
-                        width: 5,
-                        height: 5,
-                        borderRadius: "50%",
-                        background: "rgba(139,92,246,0.7)",
-                        display: "inline-block",
-                    }}
-                />
+            <li className="relative pl-5 text-[15px] leading-8 text-slate-700 before:absolute before:left-0 before:top-3 before:h-2 before:w-2 before:rounded-full before:bg-amber-400">
                 {children}
             </li>
         ),
@@ -197,16 +207,7 @@ function buildComponents(): Components {
                 return (
                     <code
                         {...props}
-                        className={className}
-                        style={{
-                            background: "rgba(139,92,246,0.15)",
-                            color: "#c4b5fd",
-                            padding: "2px 7px",
-                            borderRadius: 5,
-                            fontSize: 12.5,
-                            fontFamily: "'JetBrains Mono', monospace",
-                            border: "1px solid rgba(139,92,246,0.2)",
-                        }}
+                        className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 font-mono text-[12px] text-amber-900"
                     >
                         {children}
                     </code>
@@ -214,77 +215,27 @@ function buildComponents(): Components {
             }
 
             return (
-                <div
-                    style={{
-                        marginTop: 20,
-                        marginBottom: 20,
-                        borderRadius: 12,
-                        background: "#0d0d14",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                        overflow: "hidden",
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                    }}
-                >
-                    <div
-                        style={{
-                            padding: "9px 14px",
-                            borderBottom: "1px solid rgba(255,255,255,0.05)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                            background: "rgba(255,255,255,0.02)",
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: 4,
-                                background: "#ef4444",
-                                opacity: 0.8,
-                            }}
-                        />
-                        <div
-                            style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: 4,
-                                background: "#f59e0b",
-                                opacity: 0.8,
-                            }}
-                        />
-                        <div
-                            style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: 4,
-                                background: "#22c55e",
-                                opacity: 0.8,
-                            }}
-                        />
-                        <span
-                            style={{
-                                marginLeft: 8,
-                                fontSize: 10,
-                                color: "rgba(255,255,255,0.25)",
-                                fontFamily: "'JetBrains Mono', monospace",
-                                letterSpacing: "0.08em",
-                            }}
-                        >
+                <div className="my-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                            <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                        </div>
+
+                        <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">
                             {language || "code"}
                         </span>
                     </div>
 
-                    <pre style={{ margin: 0, padding: 0, overflow: "auto" }}>
+                    <pre className="overflow-x-auto p-4">
                         <code
                             {...props}
                             className={className}
                             style={{
-                                display: "block",
-                                padding: "18px 22px",
-                                fontSize: 12.5,
-                                lineHeight: 1.7,
-                                fontFamily: "'JetBrains Mono', monospace",
+                                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace",
+                                fontSize: "13px",
+                                lineHeight: "1.75",
                                 color: "#e2e8f0",
                             }}
                         >
@@ -300,136 +251,62 @@ function buildComponents(): Components {
             <a
                 {...props}
                 href={href}
-                style={{
-                    color: "#818cf8",
-                    textDecoration: "none",
-                    borderBottom: "1px solid rgba(129,140,248,0.3)",
-                    transition: "border-color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "#818cf8"
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(129,140,248,0.3)"
-                }}
+                className="font-medium text-sky-700 underline decoration-sky-200 underline-offset-4 transition-colors hover:text-sky-900 hover:decoration-sky-400"
             >
                 {children}
             </a>
         ),
 
         blockquote: ({ children }) => (
-            <blockquote
-                style={{
-                    borderLeft: "3px solid rgba(139,92,246,0.6)",
-                    paddingLeft: 16,
-                    marginLeft: 0,
-                    color: "#64748b",
-                    fontStyle: "italic",
-                }}
-            >
+            <blockquote className="my-6 rounded-r-2xl border-l-4 border-amber-400 bg-amber-50/70 px-5 py-4 text-slate-700">
                 {children}
             </blockquote>
         ),
 
         table: ({ children }) => (
-            <div style={{ overflowX: "auto", marginBottom: 20 }}>
-                <table
-                    style={{
-                        width: "100%",
-                        borderCollapse: "collapse",
-                        fontSize: 13.5,
-                    }}
-                >
-                    {children}
-                </table>
+            <div className="my-6 overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="w-full min-w-[520px] border-collapse bg-white">{children}</table>
             </div>
         ),
 
         th: ({ children }) => (
-            <th
-                style={{
-                    padding: "10px 14px",
-                    textAlign: "left",
-                    background: "rgba(255,255,255,0.04)",
-                    color: "#94a3b8",
-                    fontWeight: 600,
-                    fontSize: 11,
-                    letterSpacing: "0.05em",
-                    textTransform: "uppercase",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
-                    fontFamily: "'Sora', sans-serif",
-                }}
-            >
+            <th className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 {children}
             </th>
         ),
 
         td: ({ children }) => (
-            <td
-                style={{
-                    padding: "10px 14px",
-                    color: "#64748b",
-                    borderBottom: "1px solid rgba(255,255,255,0.04)",
-                    fontFamily: "'DM Sans', sans-serif",
-                }}
-            >
-                {children}
-            </td>
+            <td className="border-b border-slate-100 px-4 py-3 text-sm text-slate-700">{children}</td>
         ),
 
-        hr: () => (
-            <hr
-                style={{
-                    border: "none",
-                    borderTop: "1px solid rgba(255,255,255,0.06)",
-                    margin: "32px 0",
-                }}
-            />
-        ),
+        hr: () => <hr className="my-10 border-slate-200" />,
     }
 }
 
 function DocSkeleton() {
     return (
-        <div style={{ animation: "pulse 1.5s ease-in-out infinite" }}>
-            <style>{`@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.9} }`}</style>
-            {[280, 120, 200, 160, 240].map((width, index) => (
-                <div
-                    key={index}
-                    style={{
-                        height: index === 0 ? 36 : 14,
-                        width,
-                        background: "rgba(255,255,255,0.06)",
-                        borderRadius: 6,
-                        marginBottom: index === 0 ? 28 : 12,
-                    }}
-                />
-            ))}
+        <div className="animate-pulse py-4">
+            <div className="mb-6 h-10 w-2/3 rounded-xl bg-slate-200" />
+            <div className="mb-3 h-4 w-1/3 rounded-full bg-slate-200" />
+            <div className="mb-3 h-4 w-full rounded-full bg-slate-200" />
+            <div className="mb-3 h-4 w-4/5 rounded-full bg-slate-200" />
+            <div className="h-4 w-3/5 rounded-full bg-slate-200" />
         </div>
     )
 }
 
 function DocError({ docId }: { docId: DocId }) {
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "80px 0",
-                textAlign: "center",
-                gap: 12,
-            }}
-        >
-            <FileTextIcon size={40} style={{ color: "rgba(255,255,255,0.1)" }} />
-            <p style={{ color: "#475569", fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>
-                Файл <code style={{ color: "#64748b" }}>/docs/{docId}.md</code> не знайдено
+        <div className="flex min-h-[280px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">
+                <FileTextIcon size={26} />
+            </div>
+
+            <h3 className="mb-2 text-xl font-semibold text-slate-900">Документ не знайдено</h3>
+            <p className="mb-2 text-sm text-slate-600">
+                Не вдалося завантажити <code>/docs/{docId}.md</code>
             </p>
-            <p style={{ color: "#334155", fontSize: 12 }}>
-                Переконайтесь, що файл розміщено у папці{" "}
-                <code style={{ color: "#475569" }}>public/docs/</code>
-            </p>
+            <p className="text-sm text-slate-500">Перевір, чи файл існує в public/docs/.</p>
         </div>
     )
 }
@@ -437,20 +314,51 @@ function DocError({ docId }: { docId: DocId }) {
 export function DocsPage() {
     usePageTitle("Документація — Univa")
 
-    const [activeDoc, setActiveDoc] = useState<DocId>("quickstart")
+    const [searchParams, setSearchParams] = useSearchParams()
+    const requestedDoc = searchParams.get("doc")
+    const initialDoc = isKnownDoc(requestedDoc) ? requestedDoc : DEFAULT_DOC_ID
+
+    const [activeDoc, setActiveDoc] = useState<DocId>(initialDoc)
     const [content, setContent] = useState("")
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
     const [search, setSearch] = useState("")
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    const [activeHeading, setActiveHeading] = useState("")
+    const [isMobileSidebar, setIsMobileSidebar] = useState(
+        typeof window !== "undefined" ? window.innerWidth < 1024 : false,
+    )
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        const handleResize = () => {
+            setIsMobileSidebar(window.innerWidth < 1024)
+        }
+
+        handleResize()
+        window.addEventListener("resize", handleResize)
+
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
+
+    useEffect(() => {
+        if (!isMobileSidebar) {
+            setSidebarOpen(false)
+        }
+    }, [isMobileSidebar])
+
+    useEffect(() => {
+        if (activeDoc !== initialDoc) {
+            setActiveDoc(initialDoc)
+        }
+    }, [activeDoc, initialDoc])
+
+    useEffect(() => {
+        let cancelled = false
+
         setLoading(true)
-         
         setError(false)
-         
         setContent("")
+        setActiveHeading("")
 
         fetch(`/docs/${activeDoc}.md`)
             .then((response) => {
@@ -461,440 +369,358 @@ export function DocsPage() {
                 return response.text()
             })
             .then((text) => {
+                if (cancelled) return
+
                 setContent(text)
                 setLoading(false)
             })
             .catch(() => {
+                if (cancelled) return
+
                 setError(true)
                 setLoading(false)
             })
+
+        return () => {
+            cancelled = true
+        }
     }, [activeDoc])
 
-    const navigate = useCallback((id: DocId) => {
-        setActiveDoc(id)
-        setSidebarOpen(false)
-        window.scrollTo({ top: 0, behavior: "smooth" })
-    }, [])
+    useEffect(() => {
+        if (loading || error || !content) return
 
-    const filtered = sidebarSections
-        .map((section) => ({
-            ...section,
-            items: section.items.filter((item) =>
-                item.label.toLowerCase().includes(search.toLowerCase()),
-            ),
-        }))
-        .filter((section) => section.items.length > 0)
+        const headingElements = Array.from(
+            document.querySelectorAll<HTMLElement>("[data-doc-heading='true']"),
+        )
+
+        if (!headingElements.length) return
+
+        setActiveHeading(headingElements[0].id)
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visible = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+
+                if (visible[0]?.target instanceof HTMLElement) {
+                    setActiveHeading(visible[0].target.id)
+                }
+            },
+            {
+                rootMargin: "-15% 0px -70% 0px",
+                threshold: [0, 1],
+            },
+        )
+
+        headingElements.forEach((element) => observer.observe(element))
+
+        return () => observer.disconnect()
+    }, [content, loading, error])
+
+    const navigate = useCallback(
+        (id: DocId) => {
+            setActiveDoc(id)
+            setSidebarOpen(false)
+            setActiveHeading("")
+
+            const nextParams = new URLSearchParams(searchParams)
+
+            if (id === DEFAULT_DOC_ID) {
+                nextParams.delete("doc")
+            } else {
+                nextParams.set("doc", id)
+            }
+
+            setSearchParams(nextParams)
+            window.scrollTo({ top: 0, behavior: "smooth" })
+        },
+        [searchParams, setSearchParams],
+    )
+
+    const filtered = useMemo(() => {
+        const normalizedSearch = search.trim().toLowerCase()
+
+        if (!normalizedSearch) {
+            return sidebarSections
+        }
+
+        return sidebarSections
+            .map((section) => {
+                const matchesSection = section.title.toLowerCase().includes(normalizedSearch)
+                const items = matchesSection
+                    ? section.items
+                    : section.items.filter((item) =>
+                        `${item.label} ${item.id}`.toLowerCase().includes(normalizedSearch),
+                    )
+
+                return {
+                    ...section,
+                    items,
+                }
+            })
+            .filter((section) => section.items.length > 0)
+    }, [search])
 
     const activeSection = getSectionForDoc(activeDoc)
-    const markdownComponents = buildComponents()
-
-    const isMobileSidebar =
-        typeof window !== "undefined" && window.innerWidth < 768
+    const markdownComponents = useMemo(() => buildComponents(), [])
+    const headings = useMemo(() => extractHeadings(content), [content])
 
     return (
-        <div
-            style={{
-                background: "#080810",
-                minHeight: "100vh",
-                color: "#f1f5f9",
-                fontFamily: "'DM Sans', sans-serif",
-            }}
-        >
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.12),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(14,165,233,0.09),_transparent_20%),linear-gradient(to_bottom,_#f8fafc,_#f8fafc)] text-slate-900">
             <style>{`
-                @import url('${GOOGLE_FONTS_URL}');
-                @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-                * { box-sizing: border-box; }
-                ::-webkit-scrollbar { width: 4px; }
-                ::-webkit-scrollbar-track { background: transparent; }
-                ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-                ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
                 .hljs { background: transparent !important; padding: 0 !important; }
-                .hljs-keyword { color: #c084fc !important; }
-                .hljs-string  { color: #86efac !important; }
-                .hljs-comment { color: #475569 !important; font-style: italic; }
-                .hljs-number  { color: #67e8f9 !important; }
-                .hljs-built_in { color: #f9a8d4 !important; }
-                .hljs-variable { color: #93c5fd !important; }
-                .hljs-attr    { color: #fca5a5 !important; }
-                .hljs-title   { color: #a5f3fc !important; }
-
-                .doc-nav-item { transition: all 0.15s ease; }
-                .doc-nav-item:hover { background: rgba(255,255,255,0.04) !important; }
-
-                @media (max-width: 768px) {
-                    .docs-sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
-                    .docs-sidebar.open { transform: translateX(0); }
-                }
+                .hljs-keyword, .hljs-selector-tag, .hljs-literal { color: #c084fc !important; }
+                .hljs-string, .hljs-doctag { color: #86efac !important; }
+                .hljs-comment { color: #64748b !important; font-style: italic; }
+                .hljs-number, .hljs-attr, .hljs-attribute { color: #7dd3fc !important; }
+                .hljs-title, .hljs-section, .hljs-built_in { color: #fcd34d !important; }
             `}</style>
 
-            <nav
-                style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 100,
-                    background: "rgba(8,8,16,0.92)",
-                    backdropFilter: "blur(20px)",
-                    borderBottom: "1px solid rgba(255,255,255,0.06)",
-                }}
-            >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "0 24px",
-                        height: 56,
-                        maxWidth: 1400,
-                        margin: "0 auto",
-                    }}
-                >
-                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur">
+                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+                    <div className="flex min-w-0 items-center gap-3">
                         <button
-                            className="md:hidden"
+                            type="button"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm lg:hidden"
                             onClick={() => setSidebarOpen((prev) => !prev)}
-                            style={{
-                                background: "none",
-                                border: "none",
-                                color: "#64748b",
-                                cursor: "pointer",
-                                padding: 4,
-                            }}
+                            aria-label="Відкрити меню"
                         >
                             {sidebarOpen ? <XIcon size={18} /> : <MenuIcon size={18} />}
                         </button>
 
-                        <Link
-                            to="/"
-                            style={{
-                                textDecoration: "none",
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Link to="/" className="flex shrink-0 items-center">
                             <img
-                                src={logoConfig["full-logo-white-no-bg"]}
+                                src={logoConfig["full-logo-black-no-bg"]}
                                 alt="Univa"
-                                style={{ height: 26 }}
+                                className="h-7 object-contain"
                             />
                         </Link>
 
-                        <div
-                            style={{
-                                width: 1,
-                                height: 18,
-                                background: "rgba(255,255,255,0.1)",
-                            }}
-                        />
+                        <div className="hidden h-5 w-px bg-slate-200 sm:block" />
 
-                        <span
-                            style={{
-                                fontSize: 11,
-                                fontWeight: 700,
-                                color: "rgba(255,255,255,0.3)",
-                                letterSpacing: "0.1em",
-                                textTransform: "uppercase",
-                                fontFamily: "'Sora', sans-serif",
-                            }}
-                        >
-                            Docs
-                        </span>
+                        <div className="min-w-0">
+                            <div className="truncate text-sm font-semibold text-slate-900">
+                                {activeSection?.title ?? "Документація"}
+                            </div>
+                            <div className="truncate text-xs text-slate-500">{getDocLabel(activeDoc)}</div>
+                        </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            asChild
-                            style={{
-                                fontSize: 12,
-                                color: "rgba(255,255,255,0.4)",
-                                gap: 4,
-                            }}
-                        >
-                            <Link to="/">
-                                На головну <ExternalLinkIcon size={11} />
-                            </Link>
-                        </Button>
-                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+                    >
+                        <Link to="/">
+                            На головну <ExternalLinkIcon size={13} />
+                        </Link>
+                    </Button>
                 </div>
-            </nav>
+            </header>
 
-            <div
-                style={{
-                    display: "flex",
-                    maxWidth: 1400,
-                    margin: "0 auto",
-                    position: "relative",
-                }}
-            >
-                {sidebarOpen && (
+            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+                {sidebarOpen && isMobileSidebar && (
                     <div
+                        className="fixed inset-0 z-30 bg-slate-900/30 backdrop-blur-[2px] lg:hidden"
                         onClick={() => setSidebarOpen(false)}
-                        style={{
-                            position: "fixed",
-                            inset: 0,
-                            zIndex: 39,
-                            background: "rgba(0,0,0,0.6)",
-                            backdropFilter: "blur(4px)",
-                        }}
                     />
                 )}
 
-                <aside
-                    className={`docs-sidebar ${sidebarOpen ? "open" : ""}`}
-                    style={{
-                        width: 260,
-                        flexShrink: 0,
-                        borderRight: "1px solid rgba(255,255,255,0.05)",
-                        padding: "20px 0 40px",
-                        position: isMobileSidebar ? "fixed" : "sticky",
-                        top: 56,
-                        left: isMobileSidebar ? 0 : undefined,
-                        height: "calc(100vh - 56px)",
-                        overflowY: "auto",
-                        zIndex: isMobileSidebar ? 40 : undefined,
-                        background: isMobileSidebar ? "#0c0c18" : undefined,
-                        borderRightColor: isMobileSidebar
-                            ? "rgba(255,255,255,0.08)"
-                            : "rgba(255,255,255,0.05)",
-                    }}
-                >
-                    <div style={{ padding: "0 16px 20px" }}>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 8,
-                                padding: "8px 12px",
-                                borderRadius: 8,
-                                background: "rgba(255,255,255,0.04)",
-                                border: "1px solid rgba(255,255,255,0.07)",
-                            }}
-                        >
-                            <SearchIcon
-                                size={13}
-                                style={{
-                                    color: "rgba(255,255,255,0.25)",
-                                    flexShrink: 0,
-                                }}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Пошук..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                style={{
-                                    background: "none",
-                                    border: "none",
-                                    outline: "none",
-                                    fontSize: 12.5,
-                                    color: "#94a3b8",
-                                    width: "100%",
-                                    fontFamily: "'DM Sans', sans-serif",
-                                }}
-                            />
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_220px]">
+                    <aside
+                        className={[
+                            "z-40 rounded-3xl border border-slate-200 bg-white shadow-sm",
+                            "lg:sticky lg:top-24 lg:block lg:h-[calc(100vh-7rem)] lg:overflow-y-auto",
+                            isMobileSidebar
+                                ? `fixed left-4 top-24 h-[calc(100vh-7rem)] w-[min(86vw,320px)] overflow-y-auto transition-transform duration-200 ${
+                                    sidebarOpen ? "translate-x-0" : "-translate-x-[120%]"
+                                }`
+                                : "",
+                        ].join(" ")}
+                    >
+                        <div className="border-b border-slate-100 p-5">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                Навігація
+                            </div>
+                            <h2 className="text-xl font-semibold tracking-tight text-slate-950">
+                                Документація
+                            </h2>
                         </div>
-                    </div>
 
-                    {filtered.map((section) => (
-                        <div key={section.title} style={{ marginBottom: 6 }}>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 7,
-                                    padding: "8px 16px 4px",
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    color: "rgba(255,255,255,0.2)",
-                                    letterSpacing: "0.1em",
-                                    textTransform: "uppercase",
-                                    fontFamily: "'Sora', sans-serif",
-                                }}
-                            >
-                                <section.icon
-                                    size={11}
-                                    style={{ color: section.color, opacity: 0.8 }}
+                        <div className="p-4">
+                            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3">
+                                <SearchIcon size={15} className="shrink-0 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Пошук по розділах..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full border-none bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
                                 />
-                                {section.title}
                             </div>
 
-                            {section.items.map((item) => {
-                                const isActive = activeDoc === item.id
-
-                                return (
-                                    <button
-                                        key={item.id}
-                                        className="doc-nav-item"
-                                        onClick={() => navigate(item.id)}
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            width: "100%",
-                                            padding: "7px 16px 7px 32px",
-                                            fontSize: 13,
-                                            cursor: "pointer",
-                                            textAlign: "left",
-                                            fontWeight: isActive ? 600 : 400,
-                                            color: isActive ? "#e2e8f0" : "#475569",
-                                            background: isActive
-                                                ? "rgba(139,92,246,0.1)"
-                                                : "transparent",
-                                            border: "none",
-                                            borderLeft: `2px solid ${
-                                                isActive
-                                                    ? "rgba(139,92,246,0.8)"
-                                                    : "transparent"
-                                            }`,
-                                            fontFamily: "'DM Sans', sans-serif",
-                                            letterSpacing: "-0.01em",
-                                            transition: "all 0.15s",
-                                        }}
-                                    >
-                                        {item.label}
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    ))}
-                </aside>
-
-                <main
-                    style={{
-                        flex: 1,
-                        minWidth: 0,
-                        padding: "48px 56px 80px",
-                        maxWidth: 820,
-                    }}
-                >
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeDoc}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -6 }}
-                            transition={{ duration: 0.22, ease: "easeOut" }}
-                        >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                    marginBottom: 28,
-                                    fontSize: 11,
-                                    color: "rgba(255,255,255,0.2)",
-                                    fontFamily: "'DM Sans', sans-serif",
-                                    letterSpacing: "0.02em",
-                                }}
-                            >
-                                <span>Docs</span>
-                                <ChevronRightIcon size={11} />
-                                {activeSection && (
-                                    <>
-                                        <span
-                                            style={{
-                                                color: activeSection.color,
-                                                opacity: 0.7,
-                                            }}
-                                        >
-                                            {activeSection.title}
-                                        </span>
-                                        <ChevronRightIcon size={11} />
-                                    </>
-                                )}
-                                <span style={{ color: "rgba(255,255,255,0.4)" }}>
-                                    {getDocLabel(activeDoc)}
-                                </span>
-                            </div>
-
-                            {loading ? (
-                                <DocSkeleton />
-                            ) : error ? (
-                                <DocError docId={activeDoc} />
+                            {filtered.length === 0 ? (
+                                <div className="px-2 py-2 text-sm text-slate-500">Нічого не знайдено.</div>
                             ) : (
-                                <ReactMarkdown
-                                    remarkPlugins={[remarkGfm]}
-                                    rehypePlugins={[rehypeHighlight]}
-                                    components={markdownComponents}
-                                >
-                                    {content}
-                                </ReactMarkdown>
-                            )}
+                                <div className="space-y-3">
+                                    {filtered.map((section) => (
+                                        <div key={section.title} className="rounded-2xl p-1">
+                                            <div className="mb-1 flex items-center gap-2 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                                                <section.icon size={13} className={section.colorClass} />
+                                                {section.title}
+                                            </div>
 
-                            {!loading && !error && (
-                                <NavFooter activeDoc={activeDoc} onNavigate={navigate} />
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
-                </main>
+                                            <div className="space-y-1">
+                                                {section.items.map((item) => {
+                                                    const isActive = activeDoc === item.id
 
-                <aside
-                    style={{
-                        width: 200,
-                        flexShrink: 0,
-                        padding: "52px 24px",
-                        position: "sticky",
-                        top: 56,
-                        height: "calc(100vh - 56px)",
-                        overflowY: "auto",
-                    }}
-                    className="hidden xl:block"
-                >
-                    <TocPanel content={content} />
-                </aside>
+                                                    return (
+                                                        <button
+                                                            key={item.id}
+                                                            type="button"
+                                                            onClick={() => navigate(item.id)}
+                                                            className={[
+                                                                "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition",
+                                                                isActive
+                                                                    ? "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
+                                                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                                                            ].join(" ")}
+                                                        >
+                                                            <span>{item.label}</span>
+                                                            <span
+                                                                className={[
+                                                                    "h-2 w-2 rounded-full transition",
+                                                                    isActive ? "bg-amber-400" : "bg-transparent",
+                                                                ].join(" ")}
+                                                            />
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </aside>
+
+                    <main className="min-w-0">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeDoc}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.22, ease: "easeOut" }}
+                            >
+                                <section className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+                                    <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
+                                        <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                            <span>Docs</span>
+                                            <ChevronRightIcon size={12} />
+                                            {activeSection && (
+                                                <>
+                                                    <span className="font-medium text-slate-700">
+                                                        {activeSection.title}
+                                                    </span>
+                                                    <ChevronRightIcon size={12} />
+                                                </>
+                                            )}
+                                            <span>{getDocLabel(activeDoc)}</span>
+                                        </div>
+
+                                        <h1 className="max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+                                            {getDocLabel(activeDoc)}
+                                        </h1>
+
+                                        <p className="mt-4 max-w-2xl text-[15px] leading-8 text-slate-600">
+                                            {getDocLead(activeDoc)}
+                                        </p>
+
+                                        <div className="mt-5 flex flex-wrap gap-2">
+                                            <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+                                                Розділ: {activeSection?.title ?? "Docs"}
+                                            </div>
+                                            <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+                                                Секцій: {headings.length || 0}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 sm:px-8">
+                                        {loading ? (
+                                            <DocSkeleton />
+                                        ) : error ? (
+                                            <DocError docId={activeDoc} />
+                                        ) : (
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkGfm]}
+                                                rehypePlugins={[rehypeHighlight]}
+                                                components={markdownComponents}
+                                            >
+                                                {content}
+                                            </ReactMarkdown>
+                                        )}
+
+                                        {!loading && !error && (
+                                            <NavFooter activeDoc={activeDoc} onNavigate={navigate} />
+                                        )}
+                                    </div>
+                                </section>
+                            </motion.div>
+                        </AnimatePresence>
+                    </main>
+
+                    <aside className="hidden xl:block">
+                        <TocPanel headings={headings} activeHeading={activeHeading} />
+                    </aside>
+                </div>
             </div>
         </div>
     )
 }
 
-function TocPanel({ content }: { content: string }) {
-    const headings = content
-        .split("\n")
-        .filter((line: string) => line.startsWith("## "))
-        .map((line: string) => line.replace("## ", "").trim())
-
+function TocPanel({
+                      headings,
+                      activeHeading,
+                  }: {
+    headings: TocHeading[]
+    activeHeading: string
+}) {
     if (!headings.length) return null
 
     return (
-        <>
-            <p
-                style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: "rgba(255,255,255,0.2)",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    marginBottom: 12,
-                    fontFamily: "'Sora', sans-serif",
-                }}
-            >
+        <div className="sticky top-24 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
                 На цій сторінці
-            </p>
+            </div>
 
-            {headings.map((heading: string, index: number) => (
-                <p
-                    key={index}
-                    style={{
-                        fontSize: 12,
-                        color: "#334155",
-                        marginBottom: 8,
-                        lineHeight: 1.4,
-                        fontFamily: "'DM Sans', sans-serif",
-                        cursor: "pointer",
-                        transition: "color 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.color = "#94a3b8"
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.color = "#334155"
-                    }}
-                >
-                    {heading}
-                </p>
-            ))}
-        </>
+            <div className="space-y-1">
+                {headings.map((heading) => (
+                    <button
+                        key={heading.id}
+                        type="button"
+                        onClick={() => {
+                            const element = document.getElementById(heading.id)
+                            if (element) {
+                                element.scrollIntoView({ behavior: "smooth", block: "start" })
+                            }
+                        }}
+                        className={[
+                            "block w-full rounded-xl px-3 py-2 text-left text-sm transition",
+                            heading.level === 3 ? "pl-6 text-xs" : "",
+                            activeHeading === heading.id
+                                ? "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900",
+                        ].join(" ")}
+                    >
+                        {heading.label}
+                    </button>
+                ))}
+            </div>
+        </div>
     )
 }
 
@@ -913,96 +739,35 @@ function NavFooter({
     if (!prev && !next) return null
 
     return (
-        <div
-            style={{
-                marginTop: 56,
-                paddingTop: 24,
-                borderTop: "1px solid rgba(255,255,255,0.06)",
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 16,
-            }}
-        >
+        <div className="mt-10 grid gap-3 border-t border-slate-200 pt-6 sm:grid-cols-2">
             {prev ? (
                 <button
+                    type="button"
                     onClick={() => onNavigate(prev.id)}
-                    style={{
-                        flex: 1,
-                        padding: "16px 20px",
-                        borderRadius: 10,
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        color: "#64748b",
-                        fontSize: 12,
-                        fontFamily: "'DM Sans', sans-serif",
-                        transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(255,255,255,0.06)"
-                        e.currentTarget.style.color = "#94a3b8"
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "rgba(255,255,255,0.03)"
-                        e.currentTarget.style.color = "#64748b"
-                    }}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-left transition hover:bg-white hover:shadow-sm"
                 >
-                    <div
-                        style={{
-                            fontSize: 10,
-                            marginBottom: 4,
-                            opacity: 0.5,
-                            letterSpacing: "0.05em",
-                        }}
-                    >
-                        ← ПОПЕРЕДНЯ
+                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                        ← Попередня
                     </div>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{prev.label}</div>
+                    <div className="text-sm font-medium text-slate-900">{prev.label}</div>
                 </button>
             ) : (
-                <div style={{ flex: 1 }} />
+                <div />
             )}
 
             {next ? (
                 <button
+                    type="button"
                     onClick={() => onNavigate(next.id)}
-                    style={{
-                        flex: 1,
-                        padding: "16px 20px",
-                        borderRadius: 10,
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        cursor: "pointer",
-                        textAlign: "right",
-                        color: "#64748b",
-                        fontSize: 12,
-                        fontFamily: "'DM Sans', sans-serif",
-                        transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(255,255,255,0.06)"
-                        e.currentTarget.style.color = "#94a3b8"
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "rgba(255,255,255,0.03)"
-                        e.currentTarget.style.color = "#64748b"
-                    }}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-right transition hover:bg-white hover:shadow-sm"
                 >
-                    <div
-                        style={{
-                            fontSize: 10,
-                            marginBottom: 4,
-                            opacity: 0.5,
-                            letterSpacing: "0.05em",
-                        }}
-                    >
-                        НАСТУПНА →
+                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                        Наступна →
                     </div>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{next.label}</div>
+                    <div className="text-sm font-medium text-slate-900">{next.label}</div>
                 </button>
             ) : (
-                <div style={{ flex: 1 }} />
+                <div />
             )}
         </div>
     )
