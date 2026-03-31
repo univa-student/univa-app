@@ -40,6 +40,7 @@ import {
     DialogTitle,
 } from "@/shared/shadcn/ui/dialog";
 import { Input } from "@/shared/shadcn/ui/input";
+import { DateInput, TimeInput } from "@/shared/ui/date-time-input";
 
 import { GroupSelect } from "../shared/group-select";
 import { EmptyState, Field, SectionHeader } from "../shared/ui";
@@ -784,24 +785,22 @@ export function GroupScheduleSection({
                         </Field>
 
                         <Field label="Початок">
-                            <Input
-                                type="time"
+                            <TimeInput
                                 value={form.startsAt}
-                                onChange={(e) =>
-                                    setForm((c) => ({ ...c, startsAt: e.target.value }))
+                                onChange={(value) =>
+                                    setForm((c) => ({ ...c, startsAt: value }))
                                 }
-                                className="h-10 rounded-xl"
+                                inputClassName="h-10 rounded-xl"
                             />
                         </Field>
 
                         <Field label="Кінець">
-                            <Input
-                                type="time"
+                            <TimeInput
                                 value={form.endsAt}
-                                onChange={(e) =>
-                                    setForm((c) => ({ ...c, endsAt: e.target.value }))
+                                onChange={(value) =>
+                                    setForm((c) => ({ ...c, endsAt: value }))
                                 }
-                                className="h-10 rounded-xl"
+                                inputClassName="h-10 rounded-xl"
                             />
                         </Field>
 
@@ -849,24 +848,22 @@ export function GroupScheduleSection({
                         </Field>
 
                         <Field label="Активно з">
-                            <Input
-                                type="date"
+                            <DateInput
                                 value={form.activeFrom}
-                                onChange={(e) =>
-                                    setForm((c) => ({ ...c, activeFrom: e.target.value }))
+                                onChange={(value) =>
+                                    setForm((c) => ({ ...c, activeFrom: value }))
                                 }
-                                className="h-10 rounded-xl"
+                                inputClassName="h-10 rounded-xl"
                             />
                         </Field>
 
                         <Field label="Активно до">
-                            <Input
-                                type="date"
+                            <DateInput
                                 value={form.activeTo}
-                                onChange={(e) =>
-                                    setForm((c) => ({ ...c, activeTo: e.target.value }))
+                                onChange={(value) =>
+                                    setForm((c) => ({ ...c, activeTo: value }))
                                 }
-                                className="h-10 rounded-xl"
+                                inputClassName="h-10 rounded-xl"
                             />
                         </Field>
 

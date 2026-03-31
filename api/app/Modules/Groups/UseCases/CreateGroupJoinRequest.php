@@ -14,7 +14,7 @@ class CreateGroupJoinRequest
     public function handle(User $user, Group $group, array $data): GroupJoinRequest
     {
         if ($group->join_policy === 'invite_only') {
-            throw new UnivaHttpException('This group accepts members by invite only.', ResponseState::Forbidden, 403);
+            throw new UnivaHttpException('Ця група приймає учасників лише за запрошенням.', ResponseState::Forbidden, 403);
         }
 
         return GroupJoinRequest::query()->updateOrCreate(

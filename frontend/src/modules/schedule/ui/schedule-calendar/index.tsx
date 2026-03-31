@@ -134,12 +134,28 @@ export function ScheduleCalendar() {
 
     const nowMin = now.getHours() * 60 + now.getMinutes();
 
-    const { nextLesson, minutesUntilNext } = useMemo(() => {
+    const { activeLesson, nextLesson, minutesUntilNext, minutesUntilCurrentEnds } = useMemo(() => {
+        let active: LessonInstance | null = null;
         let next: LessonInstance | null = null;
         for (const inst of todayInstances) {
+            const startMin = toMin(inst.startsAt);
+            const endMin = inst.endsAt ? toMin(inst.endsAt) : startMin + 90;
+
+            if (startMin <= nowMin && nowMin < endMin) {
+                active = inst;
+                break;
+            }
+
             if (toMin(inst.startsAt) > nowMin && !next) next = inst;
         }
-        return { nextLesson: next, minutesUntilNext: next ? toMin(next.startsAt) - nowMin : 0 };
+        return {
+            activeLesson: active,
+            nextLesson: next,
+            minutesUntilNext: next ? toMin(next.startsAt) - nowMin : 0,
+            minutesUntilCurrentEnds: active
+                ? (active.endsAt ? toMin(active.endsAt) : toMin(active.startsAt) + 90) - nowMin
+                : 0,
+        };
     }, [todayInstances, nowMin]);
 
     const reminderKeySet = useRef<Set<string>>(new Set());
@@ -264,10 +280,23 @@ export function ScheduleCalendar() {
                 </div>
             </div>
 
-            {/* ── Status strip ── */}
             {!isLoading && todayInstances.length > 0 && (
                 <div className="flex items-center gap-3 pb-3 flex-wrap">
-                    {nextLesson ? (
+                    {activeLesson ? (
+                        <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-1.5">
+                            <TimerIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="text-xs text-muted-foreground">
+                                Зараз триває{" "}
+                                <span className="font-bold text-primary">{activeLesson.subject?.name}</span>
+                                {" "}ще{" "}
+                                <span className="font-bold text-primary">
+                                    {minutesUntilCurrentEnds >= 60
+                                        ? `${Math.floor(minutesUntilCurrentEnds / 60)}г ${minutesUntilCurrentEnds % 60 > 0 ? `${minutesUntilCurrentEnds % 60}хв` : ""}`
+                                        : `${minutesUntilCurrentEnds} хв`}
+                                </span>
+                            </span>
+                        </div>
+                    ) : nextLesson ? (
                         <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-1.5">
                             <TimerIcon className="w-3.5 h-3.5 text-primary shrink-0" />
                             <span className="text-xs text-muted-foreground">
@@ -374,8 +403,10 @@ export function ScheduleCalendar() {
                     activeDayStr={activeDayStr}
                     instances={activeDayInstances}
                     deadlines={deadlinesByDate[activeDayStr] ?? []}
+                    activeLesson={activeLesson}
                     nextLesson={nextLesson}
                     minutesUntilNext={minutesUntilNext}
+                    minutesUntilCurrentEnds={minutesUntilCurrentEnds}
                     onLessonClick={setEditingLessonId}
                 />
             ) : (

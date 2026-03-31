@@ -3,6 +3,8 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Files\Models\Folder;
 use App\Modules\Groups\Http\Requests\StoreGroupSubjectRequest;
@@ -56,7 +58,7 @@ class GroupSubjectController extends Controller
             ]
         );
 
-        return ApiResponse::created('Group subject created.', new GroupSubjectResource($subject));
+        return ApiResponse::created('Предмет групи створено.', new GroupSubjectResource($subject));
     }
 
     public function update(
@@ -66,11 +68,13 @@ class GroupSubjectController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_subjects');
-        abort_unless($subject->group_id === $group->id, 404);
+        if ($subject->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $subject->update($request->validated());
 
-        return ApiResponse::ok('Group subject updated.', new GroupSubjectResource($subject));
+        return ApiResponse::ok('Предмет групи оновлено.', new GroupSubjectResource($subject));
     }
 
     public function destroy(
@@ -80,10 +84,12 @@ class GroupSubjectController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_subjects');
-        abort_unless($subject->group_id === $group->id, 404);
+        if ($subject->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $subject->delete();
 
-        return ApiResponse::ok('Group subject deleted.');
+        return ApiResponse::ok('Предмет групи видалено.');
     }
 }

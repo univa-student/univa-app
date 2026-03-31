@@ -48,7 +48,7 @@ class ProfileController extends Controller
         ]);
 
         return ApiResponse::ok(
-            message: 'Profile updated.',
+            message: 'Профіль оновлено.',
             data: new ProfileResource($profile),
         );
     }

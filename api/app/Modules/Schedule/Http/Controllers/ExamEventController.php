@@ -43,7 +43,7 @@ class ExamEventController extends Controller
             'exam_id' => $exam->id
         ]);
 
-        return ApiResponse::created('Exam created.', $exam);
+        return ApiResponse::created('Екзамен створено.', $exam);
     }
 
     public function update(UpdateExamEventRequest $request, ExamEvent $exam): JsonResponse
@@ -61,7 +61,7 @@ class ExamEventController extends Controller
             'exam_id' => $updated->id
         ]);
 
-        return ApiResponse::ok('Exam updated.', $updated);
+        return ApiResponse::ok('Екзамен оновлено.', $updated);
     }
 
     public function destroy(ExamEvent $exam): JsonResponse
@@ -70,6 +70,6 @@ class ExamEventController extends Controller
 
         $this->service->delete($exam);
 
-        return ApiResponse::ok('Exam deleted.');
+        return ApiResponse::ok('Екзамен видалено.');
     }
 }

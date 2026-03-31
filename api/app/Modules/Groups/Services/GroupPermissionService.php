@@ -28,7 +28,7 @@ class GroupPermissionService
         $membership = $this->membership($user, $group);
 
         if ($membership === null || $membership->status !== GroupMemberStatus::Active) {
-            throw new UnivaHttpException('You do not have access to this group.', ResponseState::Forbidden, 403);
+            throw new UnivaHttpException('У вас немає доступу до цієї групи.', ResponseState::Forbidden, 403);
         }
 
         return $membership;
@@ -50,7 +50,7 @@ class GroupPermissionService
     public function authorize(User|int $user, Group $group, string $ability): void
     {
         if (! $this->can($user, $group, $ability)) {
-            throw new UnivaHttpException('You do not have permission to perform this action.', ResponseState::Forbidden, 403);
+            throw new UnivaHttpException('У вас немає дозволу на виконання цієї дії.', ResponseState::Forbidden, 403);
         }
     }
 }

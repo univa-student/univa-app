@@ -55,7 +55,7 @@ class FolderController extends Controller
             $data['subject_id'] ?? null,
         );
 
-        return ApiResponse::created('Folder created.', $folder);
+        return ApiResponse::created('Папку створено.', $folder);
     }
 
     /**
@@ -75,7 +75,7 @@ class FolderController extends Controller
             $folder = $this->service->move($folder, $data['parent_id']);
         }
 
-        return ApiResponse::ok('Folder updated.', $folder);
+        return ApiResponse::ok('Папку оновлено.', $folder);
     }
 
     /**
@@ -87,6 +87,6 @@ class FolderController extends Controller
 
         $this->service->delete($folder);
 
-        return ApiResponse::ok('Folder deleted.');
+        return ApiResponse::ok('Папку видалено.');
     }
 }

@@ -20,6 +20,7 @@ import {
     DialogTitle,
 } from "@/shared/shadcn/ui/dialog";
 import { Input } from "@/shared/shadcn/ui/input";
+import { DateTimeInput } from "@/shared/ui/date-time-input";
 
 import { GroupSelect } from "../shared/group-select";
 import { EmptyState, Field, SectionHeader, groupTextAreaClassName } from "../shared/ui";
@@ -286,16 +287,16 @@ export function GroupDeadlinesSection({
                         </div>
 
                         <Field label="Термін">
-                            <Input
-                                type="datetime-local"
+                            <DateTimeInput
                                 value={form.dueAt}
-                                onChange={(event) =>
+                                onChange={(value) =>
                                     setForm((current) => ({
                                         ...current,
-                                        dueAt: event.target.value,
+                                        dueAt: value,
                                     }))
                                 }
-                                className="h-10 rounded-xl"
+                                dateInputClassName="h-10 rounded-xl"
+                                timeInputClassName="h-10 rounded-xl"
                             />
                         </Field>
 

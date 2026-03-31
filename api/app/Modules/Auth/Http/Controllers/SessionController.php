@@ -37,7 +37,7 @@ class SessionController extends Controller
         if ($currentSessionId !== '' && hash_equals($currentSessionId, $sessionId)) {
             return ApiResponse::error(
                 state: ResponseState::Unprocessable,
-                message: __('You cannot terminate the current session here.'),
+                message: 'Тут не можна завершити поточну сесію.',
             );
         }
 
@@ -49,12 +49,12 @@ class SessionController extends Controller
         if ($deleted === 0) {
             return ApiResponse::error(
                 state: ResponseState::NotFound,
-                message: __('Session not found.'),
+                message: 'Сесію не знайдено.',
             );
         }
 
         return ApiResponse::ok(
-            message: __('Session terminated.'),
+            message: 'Сесію завершено.',
         );
     }
 

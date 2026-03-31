@@ -52,7 +52,7 @@ class NoteController extends Controller
 
         $note = $action->handle($note, $request->validated());
 
-        return ApiResponse::ok('Note updated successfully.', new NoteResource($note));
+        return ApiResponse::ok('Нотатку успішно оновлено.', new NoteResource($note));
     }
 
     public function pin(PinNoteRequest $request, Note $note, SetNotePinnedState $action): JsonResponse
@@ -61,7 +61,7 @@ class NoteController extends Controller
 
         $note = $action->handle($note, $request->boolean('is_pinned'));
 
-        return ApiResponse::ok('Note pin state updated successfully.', new NoteResource($note));
+        return ApiResponse::ok('Стан закріплення нотатки успішно оновлено.', new NoteResource($note));
     }
 
     public function archive(ArchiveNoteRequest $request, Note $note, SetNoteArchivedState $action): JsonResponse
@@ -70,7 +70,7 @@ class NoteController extends Controller
 
         $note = $action->handle($note, $request->boolean('archived'));
 
-        return ApiResponse::ok('Note archive state updated successfully.', new NoteResource($note));
+        return ApiResponse::ok('Стан архівації нотатки успішно оновлено.', new NoteResource($note));
     }
 
     public function destroy(Note $note): JsonResponse
@@ -79,6 +79,6 @@ class NoteController extends Controller
 
         $note->delete();
 
-        return ApiResponse::ok('Note deleted successfully.');
+        return ApiResponse::ok('Нотатку успішно видалено.');
     }
 }

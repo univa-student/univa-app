@@ -3,6 +3,7 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
 use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Groups\Http\Requests\JoinGroupInviteRequest;
@@ -51,7 +52,7 @@ class GroupInviteController extends Controller
 
         $invite->load('creator');
 
-        return ApiResponse::created('Invite created.', new GroupInviteResource($invite));
+        return ApiResponse::created('Запрошення створено.', new GroupInviteResource($invite));
     }
 
     /**
@@ -64,11 +65,13 @@ class GroupInviteController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'invite');
-        abort_unless($invite->group_id === $group->id, 404);
+        if ($invite->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $invite->update(['status' => 'revoked']);
 
-        return ApiResponse::ok('Invite revoked.');
+        return ApiResponse::ok('Запрошення відкликано.');
     }
 
     /**
@@ -78,6 +81,6 @@ class GroupInviteController extends Controller
     {
         $membership = $useCase->handle($request->user(), $request->string('identifier')->toString());
 
-        return ApiResponse::ok('Joined group.', new GroupMemberResource($membership));
+        return ApiResponse::ok('До групи приєднанося.', new GroupMemberResource($membership));
     }
 }

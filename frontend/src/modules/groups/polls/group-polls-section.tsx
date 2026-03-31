@@ -15,6 +15,7 @@ import {
     DialogTitle,
 } from "@/shared/shadcn/ui/dialog";
 import { Input } from "@/shared/shadcn/ui/input";
+import { DateTimeInput } from "@/shared/ui/date-time-input";
 
 import {
     EmptyState,
@@ -268,16 +269,16 @@ export function GroupPollsSection({
                         </Field>
 
                         <Field label="Закрити о">
-                            <Input
-                                type="datetime-local"
+                            <DateTimeInput
                                 value={form.closesAt}
-                                onChange={(event) =>
+                                onChange={(value) =>
                                     setForm((current) => ({
                                         ...current,
-                                        closesAt: event.target.value,
+                                        closesAt: value,
                                     }))
                                 }
-                                className="h-10 rounded-xl"
+                                dateInputClassName="h-10 rounded-xl"
+                                timeInputClassName="h-10 rounded-xl"
                             />
                         </Field>
 

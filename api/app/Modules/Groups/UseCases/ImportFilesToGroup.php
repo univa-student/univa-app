@@ -33,8 +33,8 @@ class ImportFilesToGroup
 
                 if ($groupSubject === null || $groupSubject->group_id !== $group->id) {
                     throw new UnivaHttpException(
-                        'The selected group subject does not belong to this group.',
-                        ResponseState::Error,
+                        'Вибраний предмет групи не належить до цієї групи.',
+                        ResponseState::Unprocessable,
                         422,
                     );
                 }
@@ -61,8 +61,8 @@ class ImportFilesToGroup
 
             if ($files->count() !== count(array_unique($fileIds))) {
                 throw new UnivaHttpException(
-                    'Some files are unavailable for group import.',
-                    ResponseState::Error,
+                    'Деякі файли недоступні для імпорту в групу.',
+                    ResponseState::Unprocessable,
                     422,
                 );
             }

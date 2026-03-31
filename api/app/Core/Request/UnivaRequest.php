@@ -13,11 +13,10 @@ class UnivaRequest extends FormRequest
     protected function failedValidation(Validator $validator): void
     {
         $errorsBag = $validator->errors()->toArray();
-
-        $firstMessage = 'Виникла помилка. Будь-ласка, зверніться до служби підтримки';
+        $firstMessage = 'Сталася помилка валідації. Перевірте введені дані.';
 
         foreach ($errorsBag as $fieldErrors) {
-            if (!empty($fieldErrors)) {
+            if (! empty($fieldErrors)) {
                 $firstMessage = $fieldErrors[0];
                 break;
             }
@@ -27,7 +26,7 @@ class UnivaRequest extends FormRequest
             ApiResponse::error(
                 state: ResponseState::Unprocessable,
                 message: $firstMessage,
-                errors: $errorsBag
+                errors: $errorsBag,
             )
         );
     }

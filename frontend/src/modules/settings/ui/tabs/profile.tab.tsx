@@ -37,6 +37,7 @@ import {
     itemAnim,
 } from "@/modules/settings/ui/settings.animations.ts"
 import { TabShell } from "@/modules/settings/ui/settings.renderers.tsx"
+import { DateInput } from "@/shared/ui/date-time-input"
 
 const selectClassName = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
 const textAreaClassName = "flex min-h-[112px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -463,10 +464,9 @@ export function ProfileTab(_: { tab: TabDef }) {
 
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium">Дата народження</label>
-                                <Input
-                                    type="date"
+                                <DateInput
                                     value={form.birthDate}
-                                    onChange={(event) => update("birthDate", event.target.value)}
+                                    onChange={(value) => update("birthDate", value)}
                                 />
                             </div>
                         </CardContent>

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Ai\Http\Requests;
 
 use App\Core\Request\UnivaRequest;
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Modules\Ai\Enums\AiArtifactType;
 use App\Modules\Ai\Models\AiArtifact;
 use Illuminate\Validation\Rule;
@@ -16,7 +18,7 @@ class ShowFileSummaryRequest extends UnivaRequest
         $user = $this->user();
         $artifact = $this->resolveArtifact();
 
-        if ($user === null || !$artifact instanceof AiArtifact) {
+        if ($user === null || ! $artifact instanceof AiArtifact) {
             return false;
         }
 
@@ -50,8 +52,8 @@ class ShowFileSummaryRequest extends UnivaRequest
     {
         $artifact = $this->resolveArtifact();
 
-        if (!$artifact instanceof AiArtifact) {
-            abort(404);
+        if (! $artifact instanceof AiArtifact) {
+            throw new UnivaHttpException('Конспект не знайдено.', ResponseState::NotFound);
         }
 
         return $artifact;

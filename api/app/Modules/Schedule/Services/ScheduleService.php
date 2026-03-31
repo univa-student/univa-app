@@ -43,7 +43,7 @@ class ScheduleService
                 $q->whereNull('active_to')
                   ->orWhere('active_to', '>=', $from->toDateString());
             })
-            
+
             ->with([
                 //'subject' => fn ($q) => $q->withCount('files'),
                 'lessonType',
@@ -100,7 +100,10 @@ class ScheduleService
     {
         $this->assertNoConflict($userId, $data);
 
-        return ScheduleLesson::create(array_merge($data, ['user_id' => $userId]));
+        return ScheduleLesson::query()
+            ->create(
+                array_merge($data, ['user_id' => $userId])
+            );
     }
 
     /** @throws UnivaHttpException */
@@ -110,8 +113,8 @@ class ScheduleService
         $this->assertNoConflict($lesson->user_id, $merged, $lesson->id);
 
         $lesson->update($data);
+
         return $lesson->fresh([
-            'subject' => fn ($q) => $q->withCount('files'),
             'lessonType', 'deliveryMode', 'recurrenceRule',
         ]);
     }
@@ -127,7 +130,7 @@ class ScheduleService
 
         if ($existing) {
             throw new UnivaHttpException(
-                'An exception for this date already exists.',
+                'Виняток для цієї дати вже існує.',
                 ResponseState::Unprocessable
             );
         }
@@ -222,10 +225,8 @@ class ScheduleService
         $query = ScheduleLesson::query()
             ->where('user_id', $userId)
             ->where('weekday', $data['weekday'])
-            // time overlap: starts_at < other.ends_at AND ends_at > other.starts_at
             ->where('starts_at', '<', $data['ends_at'])
             ->where('ends_at', '>', $data['starts_at'])
-            // active period overlap
             ->where('active_from', '<=', $data['active_to'] ?? '9999-12-31')
             ->where(function ($q) use ($data) {
                 $q->whereNull('active_to')
@@ -238,7 +239,7 @@ class ScheduleService
 
         if ($query->exists()) {
             throw new UnivaHttpException(
-                'This lesson overlaps with another lesson on the same day.',
+                'Це заняття перетинається з іншим заняттям у той самий день.',
                 ResponseState::Unprocessable
             );
         }

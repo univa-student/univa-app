@@ -110,7 +110,7 @@ class GroupScheduleService
             ->exists();
 
         if ($existing) {
-            throw new UnivaHttpException('An exception for this date already exists.', ResponseState::Unprocessable);
+            throw new UnivaHttpException('Виняток для цієї дати вже існує.', ResponseState::Unprocessable);
         }
 
         return GroupScheduleLessonException::query()->create(array_merge(
@@ -196,7 +196,7 @@ class GroupScheduleService
         }
 
         if ($query->exists()) {
-            throw new UnivaHttpException('This lesson overlaps with another lesson on the same day.', ResponseState::Unprocessable);
+            throw new UnivaHttpException('Це заняття перетинається з іншим заняттям у той самий день.', ResponseState::Unprocessable);
         }
     }
 

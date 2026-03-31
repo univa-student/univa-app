@@ -20,6 +20,7 @@ import {
     DialogTitle,
 } from "@/shared/shadcn/ui/dialog";
 import { Input } from "@/shared/shadcn/ui/input";
+import { DateTimeInput } from "@/shared/ui/date-time-input";
 
 import { EmptyState, Field, RoleBadge, SectionHeader } from "../shared/ui";
 import { formatDateTime } from "../shared/utils";
@@ -304,16 +305,16 @@ export function GroupMembersSection({
                         </Field>
 
                         <Field label="Дійсний до">
-                            <Input
-                                type="datetime-local"
+                            <DateTimeInput
                                 value={inviteForm.expiresAt}
-                                onChange={(event) =>
+                                onChange={(value) =>
                                     setInviteForm((current) => ({
                                         ...current,
-                                        expiresAt: event.target.value,
+                                        expiresAt: value,
                                     }))
                                 }
-                                className="h-10 rounded-xl"
+                                dateInputClassName="h-10 rounded-xl"
+                                timeInputClassName="h-10 rounded-xl"
                             />
                         </Field>
 

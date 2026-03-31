@@ -19,14 +19,16 @@ interface Props {
     activeDayStr: string;
     instances: LessonInstance[];
     deadlines: Deadline[];
+    activeLesson: LessonInstance | null;
     nextLesson: LessonInstance | null;
     minutesUntilNext: number;
+    minutesUntilCurrentEnds: number;
     onLessonClick?: (lessonId: number) => void;
 }
 
 export function ScheduleRightSidebar({
                                          now, todayStr, activeDayStr, instances, deadlines,
-                                         nextLesson, minutesUntilNext, onLessonClick,
+                                         activeLesson, nextLesson, minutesUntilNext, minutesUntilCurrentEnds, onLessonClick,
                                      }: Props) {
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const isToday = activeDayStr === todayStr;
@@ -41,7 +43,20 @@ export function ScheduleRightSidebar({
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 capitalize">
                     {format(date, "EEEE, d MMMM", { locale: uk })}
                 </p>
-                {isToday && nextLesson && (
+                {isToday && activeLesson && (
+                    <div className="mt-2 flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/15 px-2.5 py-2">
+                        <TimerIcon className="size-3.5 text-primary shrink-0" />
+                        <div className="min-w-0">
+                            <p className="text-[10px] text-muted-foreground">Поточна пара</p>
+                            <p className="text-[11px] font-semibold text-primary truncate">
+                                {activeLesson.subject?.name ?? "Предмет"} • ще {minutesUntilCurrentEnds >= 60
+                                    ? `${Math.floor(minutesUntilCurrentEnds / 60)}г ${minutesUntilCurrentEnds % 60 > 0 ? `${minutesUntilCurrentEnds % 60}хв` : ""}`
+                                    : `${minutesUntilCurrentEnds} хв`}
+                            </p>
+                        </div>
+                    </div>
+                )}
+                {isToday && !activeLesson && nextLesson && (
                     <div className="mt-2 flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/15 px-2.5 py-2">
                         <TimerIcon className="size-3.5 text-primary shrink-0" />
                         <div className="min-w-0">
@@ -54,7 +69,7 @@ export function ScheduleRightSidebar({
                         </div>
                     </div>
                 )}
-                {isToday && !nextLesson && instances.length > 0 && (
+                {isToday && !activeLesson && !nextLesson && instances.length > 0 && (
                     <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                         <ClockIcon className="size-3 shrink-0" />
                         Пари завершено

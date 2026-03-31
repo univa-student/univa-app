@@ -61,13 +61,15 @@ class GroupPollController extends Controller
 
         $poll->load(['creator', 'options.votes']);
 
-        return ApiResponse::created('Poll created.', new GroupPollResource($poll));
+        return ApiResponse::created('Опитування створено.', new GroupPollResource($poll));
     }
 
     public function show(Group $group, GroupPoll $poll, Request $request, GroupPermissionService $permissions): JsonResponse
     {
         $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($poll->group_id === $group->id, 404);
+        if ($poll->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $poll->load(['creator', 'options.votes']);
 
         return ApiResponse::data(new GroupPollResource($poll));
@@ -76,10 +78,12 @@ class GroupPollController extends Controller
     public function destroy(Group $group, GroupPoll $poll, Request $request, GroupPermissionService $permissions): JsonResponse
     {
         $permissions->authorize($request->user(), $group, 'create_polls');
-        abort_unless($poll->group_id === $group->id, 404);
+        if ($poll->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $poll->delete();
 
-        return ApiResponse::ok('Poll deleted.');
+        return ApiResponse::ok('Опитування видалено.');
     }
 
     public function vote(
@@ -89,7 +93,9 @@ class GroupPollController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $membership = $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($poll->group_id === $group->id, 404);
+        if ($poll->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $optionIds = collect($request->validated('option_ids'))
             ->map(fn ($item) => (int) $item)
@@ -102,11 +108,11 @@ class GroupPollController extends Controller
             ->pluck('id');
 
         if ($options->count() !== $optionIds->count()) {
-            throw new UnivaHttpException('One or more selected options do not belong to this poll.', ResponseState::Unprocessable);
+            throw new UnivaHttpException('Один або кілька вибраних варіантів не належать до цього опитування.', ResponseState::Unprocessable);
         }
 
         if (! $poll->allows_multiple && $optionIds->count() > 1) {
-            throw new UnivaHttpException('This poll allows only one option.', ResponseState::Unprocessable);
+            throw new UnivaHttpException('У цьому опитуванні можна вибрати лише один варіант.', ResponseState::Unprocessable);
         }
 
         DB::transaction(function () use ($poll, $membership, $optionIds) {
@@ -126,6 +132,6 @@ class GroupPollController extends Controller
 
         $poll->load(['creator', 'options.votes']);
 
-        return ApiResponse::ok('Vote saved.', new GroupPollResource($poll));
+        return ApiResponse::ok('Голос збережено.', new GroupPollResource($poll));
     }
 }

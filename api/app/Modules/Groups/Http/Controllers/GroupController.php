@@ -39,7 +39,7 @@ class GroupController extends Controller
 
         $group = $useCase->handle($request->user(), $request->validated());
 
-        return ApiResponse::created('Group created.', new GroupResource($group));
+        return ApiResponse::created('Групу створено.', new GroupResource($group));
     }
 
     public function show(Group $group): JsonResponse
@@ -58,7 +58,7 @@ class GroupController extends Controller
         $group->update($request->validated());
         $group->load(['owner', 'creator'])->loadCount('members');
 
-        return ApiResponse::ok('Group updated.', new GroupResource($group));
+        return ApiResponse::ok('Групу оновлено.', new GroupResource($group));
     }
 
     public function destroy(Group $group): JsonResponse
@@ -67,7 +67,7 @@ class GroupController extends Controller
 
         $group->delete();
 
-        return ApiResponse::ok('Group deleted.');
+        return ApiResponse::ok('Групу видалено.');
     }
 
     /**

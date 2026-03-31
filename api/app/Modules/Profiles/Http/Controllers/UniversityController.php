@@ -107,7 +107,7 @@ class UniversityController extends Controller
         ]);
 
         return ApiResponse::ok(
-            message: 'University saved.',
+            message: 'Навчальний заклад збережено.',
             data: new UniversityResource($university),
         );
     }
@@ -119,7 +119,7 @@ class UniversityController extends Controller
         $profile = $useCase->handle($request->user());
 
         return ApiResponse::ok(
-            message: 'University removed.',
+            message: 'Навчальний заклад видалено.',
             data: new ProfileResource($profile),
         );
     }

@@ -3,6 +3,7 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
 use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Groups\Http\Requests\RespondGroupJoinRequestRequest;
@@ -42,7 +43,7 @@ class GroupJoinRequestController extends Controller
         $joinRequest = $useCase->handle($request->user(), $group, $request->validated());
         $joinRequest->load('user');
 
-        return ApiResponse::created('Join request submitted.', new GroupJoinRequestResource($joinRequest));
+        return ApiResponse::created('Запит на вступ надіслано.', new GroupJoinRequestResource($joinRequest));
     }
 
     /**
@@ -57,10 +58,12 @@ class GroupJoinRequestController extends Controller
     ): JsonResponse
     {
         $permissions->authorize($request->user(), $group, 'invite');
-        abort_unless($joinRequest->group_id === $group->id, 404);
+        if ($joinRequest->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $joinRequest = $useCase->handle($request->user(), $joinRequest, $request->input('status'));
 
-        return ApiResponse::ok('Join request updated.', new GroupJoinRequestResource($joinRequest));
+        return ApiResponse::ok('Запит на вступ оновлено.', new GroupJoinRequestResource($joinRequest));
     }
 }

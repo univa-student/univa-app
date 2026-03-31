@@ -2,15 +2,14 @@
 
 namespace App\Modules\User\UseCases;
 
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Models\User;
 use App\Modules\Notification\Enums\NotificationType;
 use App\Modules\Notification\Support\Notifier;
 use App\Modules\User\Enums\FriendshipStatus;
 use App\Modules\User\Models\Friendship;
 use App\Modules\User\Support\FriendshipBroadcaster;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-
 class SendFriendRequest
 {
     public function __construct(
@@ -21,7 +20,7 @@ class SendFriendRequest
     public function execute(User $sender, User $receiver): Friendship
     {
         if ($sender->id === $receiver->id) {
-            throw new BadRequestHttpException('Cannot send a friend request to yourself.');
+            throw new UnivaHttpException('Неможливо надіслати запит у друзі самому собі.', ResponseState::Warning);
         }
 
         $existing = Friendship::where(function ($query) use ($sender, $receiver) {
@@ -32,11 +31,11 @@ class SendFriendRequest
 
         if ($existing) {
             if ($existing->status === FriendshipStatus::ACCEPTED) {
-                throw new ConflictHttpException('You are already friends with this user.');
+                throw new UnivaHttpException('Ви вже в друзях із цим користувачем.', ResponseState::Warning);
             }
 
             if ($existing->user_id === $sender->id) {
-                throw new ConflictHttpException('Friend request already sent.');
+                throw new UnivaHttpException('Запит у друзі вже надіслано.', ResponseState::Warning);
             }
 
             $existing->update(['status' => FriendshipStatus::ACCEPTED]);

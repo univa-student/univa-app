@@ -3,6 +3,8 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Groups\Http\Requests\StoreGroupChannelRequest;
 use App\Modules\Groups\Http\Requests\StoreGroupMessageRequest;
@@ -42,7 +44,7 @@ class GroupChannelController extends Controller
 
         $channel->load('subject');
 
-        return ApiResponse::created('Channel created.', new GroupChannelResource($channel));
+        return ApiResponse::created('Канал створено.', new GroupChannelResource($channel));
     }
 
     public function messages(
@@ -52,7 +54,9 @@ class GroupChannelController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($channel->group_id === $group->id, 404);
+        if ($channel->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $query = $channel->messages()->with(['user', 'file', 'attachmentLinks.file'])->latest();
 
@@ -80,7 +84,9 @@ class GroupChannelController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($channel->group_id === $group->id, 404);
+        if ($channel->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $message = $channel->messages()->create([
             ...$request->validated(),
@@ -89,7 +95,7 @@ class GroupChannelController extends Controller
 
         $message->load(['user', 'file', 'attachmentLinks.file']);
 
-        return ApiResponse::created('Message created.', new GroupMessageResource($message));
+        return ApiResponse::created('Повідомлення створено.', new GroupMessageResource($message));
     }
 
     public function destroyMessage(
@@ -100,13 +106,17 @@ class GroupChannelController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $membership = $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($channel->group_id === $group->id && $message->group_channel_id === $channel->id, 404);
+        if ($channel->group_id !== $group->id || $message->group_channel_id !== $channel->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $canDelete = $message->user_id === $membership->user_id || $permissions->can($request->user(), $group, 'edit');
-        abort_unless($canDelete, 403);
+        if (! $canDelete) {
+            throw new UnivaHttpException('Доступ заборонено.', ResponseState::Forbidden);
+        }
 
         $message->delete();
 
-        return ApiResponse::ok('Message deleted.');
+        return ApiResponse::ok('Повідомлення видалено.');
     }
 }

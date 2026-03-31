@@ -24,6 +24,10 @@ use App\Modules\Groups\Http\Controllers\GroupSubjectController;
 use App\Modules\Notification\Http\Controllers\NotificationController;
 use App\Modules\Organizer\Http\Controllers\NoteController;
 use App\Modules\Organizer\Http\Controllers\TaskController;
+use App\Modules\Planner\Http\Controllers\PlannerBlockController;
+use App\Modules\Planner\Http\Controllers\PlannerSourcePlanningController;
+use App\Modules\Planner\Http\Controllers\PlannerSuggestionController;
+use App\Modules\Planner\Http\Controllers\PlannerViewController;
 use App\Modules\Profiles\Http\Controllers\ProfileController;
 use App\Modules\Profiles\Http\Controllers\UniversityController;
 use App\Modules\Schedule\Http\Controllers\DictionaryController;
@@ -134,6 +138,19 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
     Route::apiResource('notes', NoteController::class);
     Route::patch('notes/{note}/pin', [NoteController::class, 'pin']);
     Route::patch('notes/{note}/archive', [NoteController::class, 'archive']);
+    Route::get('planner/day', [PlannerViewController::class, 'day']);
+    Route::get('planner/week', [PlannerViewController::class, 'week']);
+    Route::get('planner/blocks', [PlannerBlockController::class, 'index']);
+    Route::post('planner/blocks', [PlannerBlockController::class, 'store']);
+    Route::patch('planner/blocks/{plannerBlock}', [PlannerBlockController::class, 'update']);
+    Route::delete('planner/blocks/{plannerBlock}', [PlannerBlockController::class, 'destroy']);
+    Route::patch('planner/blocks/{plannerBlock}/status', [PlannerBlockController::class, 'status']);
+    Route::patch('planner/blocks/{plannerBlock}/move', [PlannerBlockController::class, 'move']);
+    Route::patch('planner/blocks/{plannerBlock}/resize', [PlannerBlockController::class, 'resize']);
+    Route::post('planner/suggestions/day', [PlannerSuggestionController::class, 'day']);
+    Route::post('planner/suggestions/apply', [PlannerSuggestionController::class, 'apply']);
+    Route::post('planner/tasks/{task}/plan', [PlannerSourcePlanningController::class, 'task']);
+    Route::post('planner/deadlines/{deadline}/plan', [PlannerSourcePlanningController::class, 'deadline']);
 
     // Built schedule (lessons + exams merged)
     Route::get('/schedule', [ScheduleController::class, 'index']);
@@ -202,7 +219,7 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
         Route::get('/summaries', 'index');
         Route::get('/summaries/{artifact}', 'show');
         Route::delete('/summaries/{artifact}', 'destroy');
-        Route::post('/{file}/summary', 'store');
+        Route::post('/files/{file}/summary', 'store');
     });
 
     Route::controller(DailyDigestController::class)->group(function () {

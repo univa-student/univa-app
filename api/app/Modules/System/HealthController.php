@@ -10,6 +10,6 @@ class HealthController extends Controller
 {
     public function health(): JsonResponse
     {
-        return ApiResponse::ok('pong');
+        return ApiResponse::ok('Понг');
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Groups\Http\Requests\StoreGroupDeadlineRequest;
 use App\Modules\Groups\Http\Requests\UpdateGroupDeadlineProgressRequest;
@@ -44,13 +46,15 @@ class GroupDeadlineController extends Controller
         $fileLinks->sync($deadline, $data['file_ids'] ?? []);
         $deadline->load(['subject', 'memberStatuses', 'attachmentLinks.file']);
 
-        return ApiResponse::created('Group deadline created.', new GroupDeadlineResource($deadline));
+        return ApiResponse::created('Дедлайн групи створено.', new GroupDeadlineResource($deadline));
     }
 
     public function show(Group $group, GroupDeadline $deadline, Request $request, GroupPermissionService $permissions): JsonResponse
     {
         $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($deadline->group_id === $group->id, 404);
+        if ($deadline->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $deadline->load(['subject', 'memberStatuses', 'attachmentLinks.file']);
 
         return ApiResponse::data(new GroupDeadlineResource($deadline));
@@ -65,7 +69,9 @@ class GroupDeadlineController extends Controller
         GroupFileLinkService $fileLinks,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_deadlines');
-        abort_unless($deadline->group_id === $group->id, 404);
+        if ($deadline->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $data = $request->validated();
         $deadline = $service->update($deadline, $data);
@@ -74,7 +80,7 @@ class GroupDeadlineController extends Controller
         }
         $deadline->load(['subject', 'memberStatuses', 'attachmentLinks.file']);
 
-        return ApiResponse::ok('Group deadline updated.', new GroupDeadlineResource($deadline));
+        return ApiResponse::ok('Дедлайн групи оновлено.', new GroupDeadlineResource($deadline));
     }
 
     public function destroy(
@@ -84,10 +90,12 @@ class GroupDeadlineController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_deadlines');
-        abort_unless($deadline->group_id === $group->id, 404);
+        if ($deadline->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $deadline->delete();
 
-        return ApiResponse::ok('Group deadline deleted.');
+        return ApiResponse::ok('Дедлайн групи видалено.');
     }
 
     public function progress(
@@ -98,11 +106,13 @@ class GroupDeadlineController extends Controller
         GroupDeadlineService $service,
     ): JsonResponse {
         $membership = $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($deadline->group_id === $group->id, 404);
+        if ($deadline->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $row = $service->updateProgress($deadline, $membership, $request->input('status'));
 
-        return ApiResponse::ok('Deadline progress updated.', [
+        return ApiResponse::ok('Прогрес дедлайну оновлено.', [
             'status' => $row->status?->value ?? $row->status,
             'completed_at' => $row->completed_at?->toISOString(),
         ]);

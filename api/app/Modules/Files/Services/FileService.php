@@ -113,8 +113,8 @@ class FileService
 
         if ($user->storage_used + $fileSize > $user->storage_limit) {
             throw new UnivaHttpException(
-                'Storage limit exceeded. You cannot upload this file.',
-                ResponseState::Error,
+                'Перевищено ліміт сховища. Ви не можете завантажити цей файл.',
+                ResponseState::Forbidden,
                 403
             );
         }
@@ -182,7 +182,7 @@ class FileService
         } catch (\Throwable $e) {
             $file->update(['status' => FileStatus::Failed]);
             throw new UnivaHttpException(
-                'File upload failed: ' . $e->getMessage(),
+                'Не вдалося завантажити файл.',
                 ResponseState::Error,
             );
         }

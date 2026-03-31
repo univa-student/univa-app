@@ -3,6 +3,7 @@
 namespace App\Modules\Subjects\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
 use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Subjects\Http\Requests\StoreSubjectRequest;
@@ -34,7 +35,7 @@ class SubjectController extends Controller
     {
         $subject = $this->service->create((int) auth()->id(), $request->validated());
 
-        return ApiResponse::created('Subject created.', $subject);
+        return ApiResponse::created('Предмет створено.', $subject);
     }
 
     /**
@@ -46,7 +47,7 @@ class SubjectController extends Controller
 
         $updated = $this->service->update($subject, $request->validated());
 
-        return ApiResponse::ok('Subject updated.', $updated);
+        return ApiResponse::ok('Предмет оновлено.', $updated);
     }
 
     public function destroy(Subject $subject): JsonResponse
@@ -55,13 +56,13 @@ class SubjectController extends Controller
 
         $this->service->delete($subject);
 
-        return ApiResponse::ok('Subject deleted.');
+        return ApiResponse::ok('Предмет видалено.');
     }
 
     public function folder(Subject $subject): JsonResponse
     {
         if ($subject->user_id !== auth()->id()) {
-            abort(403);
+            throw new UnivaHttpException('Доступ заборонено.', ResponseState::Forbidden);
         }
 
         $folder = Folder::firstOrCreate(

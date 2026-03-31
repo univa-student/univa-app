@@ -48,7 +48,7 @@ class FriendshipController extends Controller
     {
         $friendship = $useCase->execute($request->user(), $user);
 
-        return ApiResponse::ok('Friend request sent.', [
+        return ApiResponse::ok('Запит у друзі надіслано.', [
             'status' => $friendship->status,
         ]);
     }
@@ -57,7 +57,7 @@ class FriendshipController extends Controller
     {
         $friendship = $useCase->execute($request->user(), $user);
 
-        return ApiResponse::ok('Friend request accepted.', [
+        return ApiResponse::ok('Запит у друзі прийнято.', [
             'status' => $friendship->status,
         ]);
     }
@@ -66,7 +66,7 @@ class FriendshipController extends Controller
     {
         $useCase->execute($request->user(), $user);
 
-        return ApiResponse::ok('Friendship removed.');
+        return ApiResponse::ok('Дружбу видалено.');
     }
 
     public function status(Request $request, User $user, FriendshipService $friendships): JsonResponse

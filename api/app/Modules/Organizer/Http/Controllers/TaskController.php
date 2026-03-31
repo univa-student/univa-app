@@ -47,7 +47,7 @@ class TaskController extends Controller
 
         $task = $action->handle($task, $request->validated());
 
-        return ApiResponse::ok('Task updated successfully.', new TaskResource($task));
+        return ApiResponse::ok('Завдання успішно оновлено.', new TaskResource($task));
     }
 
     public function destroy(Task $task): JsonResponse
@@ -56,6 +56,6 @@ class TaskController extends Controller
 
         $task->delete();
 
-        return ApiResponse::ok('Task deleted successfully.');
+        return ApiResponse::ok('Завдання успішно видалено.');
     }
 }

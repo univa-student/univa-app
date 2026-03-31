@@ -16,39 +16,27 @@ class DictionaryController extends Controller
     {
         $lessonTypes = LessonType::all();
 
-        return ApiResponse::ok(
-            message: 'Lesson types retrieved.',
-            data: $lessonTypes
-        );
+        return ApiResponse::data($lessonTypes);
     }
 
     public function deliveryModes(): JsonResponse
     {
         $deliveryModes = DeliveryMode::all();
 
-        return ApiResponse::ok(
-            message: 'Delivery modes retrieved.',
-            data: $deliveryModes
-        );
+        return ApiResponse::data($deliveryModes);
     }
 
     public function examTypes(): JsonResponse
     {
         $examTypes = ExamType::all();
 
-        return ApiResponse::ok(
-            message: 'Exam types retrieved.',
-            data: $examTypes,
-        );
+        return ApiResponse::data($examTypes);
     }
 
     public function recurrenceRules(): JsonResponse
     {
         $recurrenceRules = RecurrenceRule::all();
 
-        return ApiResponse::ok(
-            message: 'Recurrence rules retrieved.',
-            data: $recurrenceRules
-        );
+        return ApiResponse::data($recurrenceRules);
     }
 }

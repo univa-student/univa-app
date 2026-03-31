@@ -34,7 +34,7 @@ class ScheduleExceptionController extends Controller
             'lesson_id' => $lesson->id
         ]);
 
-        return ApiResponse::created('Exception created.', $exception);
+        return ApiResponse::created('Виняток створено.', $exception);
     }
 
     public function destroy(ScheduleLessonException $exception): JsonResponse
@@ -43,6 +43,6 @@ class ScheduleExceptionController extends Controller
 
         $this->service->deleteException($exception);
 
-        return ApiResponse::ok('Exception deleted.');
+        return ApiResponse::ok('Виняток видалено.');
     }
 }

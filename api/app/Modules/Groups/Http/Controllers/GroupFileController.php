@@ -3,6 +3,7 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
 use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Files\Http\Resources\FileResource;
@@ -83,7 +84,7 @@ class GroupFileController extends Controller
             $request->integer('group_subject_id') ?: null,
         );
 
-        return ApiResponse::created('File uploaded.', new FileResource($file->load(['user', 'groupSubject'])));
+        return ApiResponse::created('Файл завантажено.', new FileResource($file->load(['user', 'groupSubject'])));
     }
 
     public function import(
@@ -101,13 +102,15 @@ class GroupFileController extends Controller
             $request->integer('group_subject_id') ?: null,
         );
 
-        return ApiResponse::created('Files imported.', FileResource::collection($files));
+        return ApiResponse::created('Файли імпортовано.', FileResource::collection($files));
     }
 
     public function show(Group $group, File $file, Request $request, GroupPermissionService $permissions): JsonResponse
     {
         $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($file->group_id === $group->id, 404);
+        if ($file->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         return ApiResponse::data(new FileResource($file->load(['user', 'groupSubject'])));
     }
@@ -120,7 +123,9 @@ class GroupFileController extends Controller
         FileService $service,
     ): StreamedResponse {
         $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($file->group_id === $group->id, 404);
+        if ($file->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $stream = $service->downloadStream($file);
 
@@ -170,6 +175,6 @@ class GroupFileController extends Controller
             $request->integer('group_subject_id') ?: null,
         );
 
-        return ApiResponse::created('Folder created.', new FolderResource($folder));
+        return ApiResponse::created('Папку створено.', new FolderResource($folder));
     }
 }

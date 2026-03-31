@@ -112,7 +112,7 @@ class FileController extends Controller
             'file_id' => $file->id
         ]);
 
-        return ApiResponse::created('File uploaded.', $file);
+        return ApiResponse::created('Файл завантажено.', $file);
     }
 
     /**
@@ -140,7 +140,7 @@ class FileController extends Controller
             $file = $this->service->togglePin($file);
         }
 
-        return ApiResponse::ok('File updated.', $file);
+        return ApiResponse::ok('Файл оновлено.', $file);
     }
 
     /**
@@ -152,7 +152,7 @@ class FileController extends Controller
 
         $this->service->delete($file);
 
-        return ApiResponse::ok('File deleted.');
+        return ApiResponse::ok('Файл видалено.');
     }
 
     /**

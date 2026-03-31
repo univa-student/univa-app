@@ -27,6 +27,7 @@ import { isPreviewable } from "@/modules/files/ui/file-type-icon";
 import type { FileItem } from "@/modules/files/model/types";
 import { API_BASE_URL } from "@/app/config/app.config";
 import { ENDPOINTS } from "@/shared/api/endpoints";
+import { DateInput, TimeInput } from "@/shared/ui/date-time-input";
 
 interface Props {
     lesson: ScheduleLesson;
@@ -256,11 +257,12 @@ export function EditLessonModal({ lesson, onClose }: Props) {
                         <Field label="Початок" required>
                             <div className="relative">
                                 <ClockIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
-                                <input
-                                    type="time"
-                                    className={`${inputCls} pl-9`}
+                                <TimeInput
+                                    className="w-full"
+                                    inputClassName={`${inputCls} pl-9`}
                                     value={form.startsAt}
-                                    onChange={e => set("startsAt", e.target.value)}
+                                    onChange={value => set("startsAt", value)}
+                                    withSeconds
                                     required
                                 />
                             </div>
@@ -269,11 +271,12 @@ export function EditLessonModal({ lesson, onClose }: Props) {
                         <Field label="Кінець" required>
                             <div className="relative">
                                 <ClockIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
-                                <input
-                                    type="time"
-                                    className={`${inputCls} pl-9`}
+                                <TimeInput
+                                    className="w-full"
+                                    inputClassName={`${inputCls} pl-9`}
                                     value={form.endsAt}
-                                    onChange={e => set("endsAt", e.target.value)}
+                                    onChange={value => set("endsAt", value)}
+                                    withSeconds
                                     required
                                 />
                             </div>
@@ -362,21 +365,19 @@ export function EditLessonModal({ lesson, onClose }: Props) {
 
                         <div className="grid grid-cols-2 gap-3">
                             <Field label="З" required>
-                                <input
-                                    type="date"
-                                    className={inputCls}
+                                <DateInput
+                                    inputClassName={inputCls}
                                     value={form.activeFrom}
-                                    onChange={e => set("activeFrom", e.target.value)}
+                                    onChange={value => set("activeFrom", value)}
                                     required
                                 />
                             </Field>
 
                             <Field label="До (включно)">
-                                <input
-                                    type="date"
-                                    className={inputCls}
+                                <DateInput
+                                    inputClassName={inputCls}
                                     value={form.activeTo}
-                                    onChange={e => set("activeTo", e.target.value)}
+                                    onChange={value => set("activeTo", value)}
                                 />
                             </Field>
                         </div>

@@ -17,6 +17,7 @@ import {
     DialogTitle,
 } from "@/shared/shadcn/ui/dialog";
 import { Input } from "@/shared/shadcn/ui/input";
+import { DateTimeInput } from "@/shared/ui/date-time-input";
 
 import {
     EmptyState,
@@ -223,16 +224,16 @@ export function GroupAnnouncementsSection({
                         </Field>
 
                         <Field label="Дедлайн підтвердження">
-                            <Input
-                                type="datetime-local"
+                            <DateTimeInput
                                 value={form.deadlineAt}
-                                onChange={(event) =>
+                                onChange={(value) =>
                                     setForm((current) => ({
                                         ...current,
-                                        deadlineAt: event.target.value,
+                                        deadlineAt: value,
                                     }))
                                 }
-                                className="h-10 rounded-xl"
+                                dateInputClassName="h-10 rounded-xl"
+                                timeInputClassName="h-10 rounded-xl"
                             />
                         </Field>
 

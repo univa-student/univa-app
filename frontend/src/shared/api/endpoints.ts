@@ -146,6 +146,22 @@ export const ENDPOINTS = {
         id: (id: number) => `${API}/deadlines/${id}`,
     },
 
+    planner: {
+        day: (date: string) => withQuery(`${API}/planner/day`, { date }),
+        week: (date: string) => withQuery(`${API}/planner/week`, { date }),
+        blocks: (startAt: string, endAt: string) =>
+            withQuery(`${API}/planner/blocks`, { start_at: startAt, end_at: endAt }),
+        base: `${API}/planner/blocks`,
+        block: (id: number) => `${API}/planner/blocks/${id}`,
+        status: (id: number) => `${API}/planner/blocks/${id}/status`,
+        move: (id: number) => `${API}/planner/blocks/${id}/move`,
+        resize: (id: number) => `${API}/planner/blocks/${id}/resize`,
+        suggestDay: `${API}/planner/suggestions/day`,
+        applySuggestions: `${API}/planner/suggestions/apply`,
+        taskPlan: (taskId: number) => `${API}/planner/tasks/${taskId}/plan`,
+        deadlinePlan: (deadlineId: number) => `${API}/planner/deadlines/${deadlineId}/plan`,
+    },
+
     organizer: {
         tasks: {
             base: `${API}/tasks`,

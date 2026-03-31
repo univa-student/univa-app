@@ -1,7 +1,8 @@
 import { useState, type FormEvent, type ReactNode } from "react";
-import { GraduationCapIcon, MapPinIcon, StickyNoteIcon, ClockIcon, BookOpenIcon } from "lucide-react";
+import { GraduationCapIcon, MapPinIcon, StickyNoteIcon, BookOpenIcon } from "lucide-react";
 import { useSubjects, useCreateExam, useExamTypes } from "@/modules/schedule/api/hooks";
 import { ModalShell } from "@/shared/ui/modal-shell";
+import { DateTimeInput } from "@/shared/ui/date-time-input";
 
 interface Props {
     onClose: () => void;
@@ -114,27 +115,23 @@ export function AddExamModal({ onClose }: Props) {
 
                 <div className="grid grid-cols-2 gap-3">
                     <Field label="Початок" required>
-                        <div className="relative">
-                            <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
-                            <input
-                                type="datetime-local"
-                                className={inputCls + " pl-9"}
-                                value={form.startsAt}
-                                onChange={e => set("startsAt", e.target.value)}
-                                required
-                            />
-                        </div>
+                        <DateTimeInput
+                            value={form.startsAt}
+                            onChange={value => set("startsAt", value)}
+                            required
+                            className="grid-cols-1 gap-2"
+                            dateInputClassName={inputCls}
+                            timeInputClassName={inputCls}
+                        />
                     </Field>
                     <Field label="Кінець">
-                        <div className="relative">
-                            <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
-                            <input
-                                type="datetime-local"
-                                className={inputCls + " pl-9"}
-                                value={form.endsAt}
-                                onChange={e => set("endsAt", e.target.value)}
-                            />
-                        </div>
+                        <DateTimeInput
+                            value={form.endsAt}
+                            onChange={value => set("endsAt", value)}
+                            className="grid-cols-1 gap-2"
+                            dateInputClassName={inputCls}
+                            timeInputClassName={inputCls}
+                        />
                     </Field>
                 </div>
 

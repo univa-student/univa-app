@@ -3,6 +3,8 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Groups\Http\Requests\IndexGroupScheduleRequest;
 use App\Modules\Groups\Http\Requests\StoreGroupExamRequest;
@@ -48,7 +50,7 @@ class GroupScheduleController extends Controller
         $permissions->authorize($request->user(), $group, 'manage_schedule');
         $lesson = $service->storeLesson($group, $request->validated());
 
-        return ApiResponse::created('Group lesson created.', $lesson->load(['subject', 'lessonType', 'deliveryMode', 'recurrenceRule']));
+        return ApiResponse::created('Заняття групи створено.', $lesson->load(['subject', 'lessonType', 'deliveryMode', 'recurrenceRule']));
     }
 
     public function updateLesson(
@@ -59,9 +61,11 @@ class GroupScheduleController extends Controller
         GroupScheduleService $service,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_schedule');
-        abort_unless($lesson->group_id === $group->id, 404);
+        if ($lesson->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
-        return ApiResponse::ok('Group lesson updated.', $service->updateLesson($lesson, $request->validated()));
+        return ApiResponse::ok('Заняття групи оновлено.', $service->updateLesson($lesson, $request->validated()));
     }
 
     public function destroyLesson(
@@ -71,10 +75,12 @@ class GroupScheduleController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_schedule');
-        abort_unless($lesson->group_id === $group->id, 404);
+        if ($lesson->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $lesson->delete();
 
-        return ApiResponse::ok('Group lesson deleted.');
+        return ApiResponse::ok('Заняття групи видалено.');
     }
 
     public function storeException(
@@ -85,11 +91,13 @@ class GroupScheduleController extends Controller
         GroupScheduleService $service,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_schedule');
-        abort_unless($lesson->group_id === $group->id, 404);
+        if ($lesson->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $exception = $service->storeException($lesson, $request->validated());
 
-        return ApiResponse::created('Schedule exception created.', $exception);
+        return ApiResponse::created('Виняток розкладу створено.', $exception);
     }
 
     public function destroyException(
@@ -99,10 +107,12 @@ class GroupScheduleController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_schedule');
-        abort_unless($exception->lesson->group_id === $group->id, 404);
+        if ($exception->lesson->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $exception->delete();
 
-        return ApiResponse::ok('Schedule exception deleted.');
+        return ApiResponse::ok('Виняток розкладу видалено.');
     }
 
     public function storeExam(
@@ -117,7 +127,7 @@ class GroupScheduleController extends Controller
             'group_id' => $group->id,
         ]);
 
-        return ApiResponse::created('Group exam created.', $exam->load(['subject', 'examType']));
+        return ApiResponse::created('Екзамен групи створено.', $exam->load(['subject', 'examType']));
     }
 
     public function updateExam(
@@ -127,10 +137,12 @@ class GroupScheduleController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_schedule');
-        abort_unless($exam->group_id === $group->id, 404);
+        if ($exam->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $exam->update($request->validated());
 
-        return ApiResponse::ok('Group exam updated.', $exam->load(['subject', 'examType']));
+        return ApiResponse::ok('Екзамен групи оновлено.', $exam->load(['subject', 'examType']));
     }
 
     public function destroyExam(
@@ -140,9 +152,11 @@ class GroupScheduleController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'manage_schedule');
-        abort_unless($exam->group_id === $group->id, 404);
+        if ($exam->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $exam->delete();
 
-        return ApiResponse::ok('Group exam deleted.');
+        return ApiResponse::ok('Екзамен групи видалено.');
     }
 }

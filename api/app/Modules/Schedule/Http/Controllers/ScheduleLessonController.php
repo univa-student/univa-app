@@ -15,23 +15,35 @@ use Illuminate\Http\JsonResponse;
 
 class ScheduleLessonController extends Controller
 {
+    private const array RESOURCE_RELATIONS = [
+        'subject',
+        'lessonType',
+        'deliveryMode',
+        'recurrenceRule',
+    ];
+
     public function __construct(
         private readonly ScheduleService $service,
     ) {}
 
     public function show(ScheduleLesson $lesson): JsonResponse
     {
-        $lesson->load(['subject', 'lessonType', 'deliveryMode', 'recurrenceRule']);
+        $lesson->load(self::RESOURCE_RELATIONS);
 
         return ApiResponse::data(new ScheduleLessonResource($lesson));
     }
 
     public function materials(ScheduleLesson $lesson): JsonResponse
     {
-        $subject = clone $lesson->subject;
-        $subject->load('files');
+        $lesson->loadMissing('subject.files');
 
-        return ApiResponse::data(FileResource::collection($subject->files));
+        if (! $lesson->subject) {
+            return ApiResponse::data([]);
+        }
+
+        return ApiResponse::data(
+            FileResource::collection($lesson->subject->files ?? collect())
+        );
     }
 
     public function store(StoreScheduleLessonRequest $request): JsonResponse
@@ -45,9 +57,9 @@ class ScheduleLessonController extends Controller
             return $e->render();
         }
 
-        $lesson->load(['subject', 'lessonType', 'deliveryMode', 'recurrenceRule']);
+        $lesson->load(self::RESOURCE_RELATIONS);
 
-        return ApiResponse::created('Lesson created.', $lesson);
+        return ApiResponse::created('Заняття створено.', new ScheduleLessonResource($lesson));
     }
 
     public function update(UpdateScheduleLessonRequest $request, ScheduleLesson $lesson): JsonResponse
@@ -60,7 +72,9 @@ class ScheduleLessonController extends Controller
             return $e->render();
         }
 
-        return ApiResponse::ok('Lesson updated.', $updated);
+        $updated->loadMissing(self::RESOURCE_RELATIONS);
+
+        return ApiResponse::ok('Заняття оновлено.', new ScheduleLessonResource($updated));
     }
 
     public function destroy(ScheduleLesson $lesson): JsonResponse
@@ -69,6 +83,6 @@ class ScheduleLessonController extends Controller
 
         $lesson->delete();
 
-        return ApiResponse::ok('Lesson deleted.');
+        return ApiResponse::ok('Заняття видалено.');
     }
 }

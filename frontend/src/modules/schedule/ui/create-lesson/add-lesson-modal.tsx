@@ -18,6 +18,7 @@ import {
     useRecurrenceRules,
 } from "@/modules/schedule/api/hooks";
 import { ModalShell } from "@/shared/ui/modal-shell";
+import { DateInput, TimeInput } from "@/shared/ui/date-time-input";
 
 interface Props {
     onClose: () => void;
@@ -201,11 +202,11 @@ export function AddLessonModal({ onClose }: Props) {
                     <Field label="Початок" required>
                         <div className="relative">
                             <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
-                            <input
-                                type="time"
-                                className={inputCls + " pl-9"}
+                            <TimeInput
+                                className="w-full"
+                                inputClassName={inputCls + " pl-9"}
                                 value={form.startsAt}
-                                onChange={(e) => setField("startsAt", e.target.value)}
+                                onChange={(value) => setField("startsAt", value)}
                                 required
                             />
                         </div>
@@ -214,11 +215,11 @@ export function AddLessonModal({ onClose }: Props) {
                     <Field label="Кінець" required>
                         <div className="relative">
                             <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
-                            <input
-                                type="time"
-                                className={inputCls + " pl-9"}
+                            <TimeInput
+                                className="w-full"
+                                inputClassName={inputCls + " pl-9"}
                                 value={form.endsAt}
-                                onChange={(e) => setField("endsAt", e.target.value)}
+                                onChange={(value) => setField("endsAt", value)}
                                 required
                             />
                         </div>
@@ -306,21 +307,19 @@ export function AddLessonModal({ onClose }: Props) {
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                         <Field label="З" required>
-                            <input
-                                type="date"
-                                className={inputCls}
+                            <DateInput
+                                inputClassName={inputCls}
                                 value={form.activeFrom}
-                                onChange={(e) => setField("activeFrom", e.target.value)}
+                                onChange={(value) => setField("activeFrom", value)}
                                 required
                             />
                         </Field>
 
                         <Field label="До (включно)">
-                            <input
-                                type="date"
-                                className={inputCls}
+                            <DateInput
+                                inputClassName={inputCls}
                                 value={form.activeTo}
-                                onChange={(e) => setField("activeTo", e.target.value)}
+                                onChange={(value) => setField("activeTo", value)}
                             />
                         </Field>
                     </div>

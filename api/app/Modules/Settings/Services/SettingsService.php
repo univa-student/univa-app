@@ -19,7 +19,7 @@ class SettingsService
             ->find($settingId);
 
         if (! $setting) {
-            throw new UnivaHttpException('Setting not found');
+            throw new UnivaHttpException('Налаштування не знайдено.');
         }
 
         $userValueId = ApplicationUserSetting::query()
@@ -30,7 +30,7 @@ class SettingsService
         $effective = $userValueId ?? $setting->default_setting_value_id;
 
         if ($effective === null) {
-            throw new UnivaHttpException('Setting value not set');
+            throw new UnivaHttpException('Значення налаштування не встановлено.');
         }
 
         return (int) $effective;
@@ -91,7 +91,7 @@ class SettingsService
     public function setValueId(int $userId, int $settingId, int $valueId): void
     {
         if (! ApplicationSetting::query()->whereKey($settingId)->exists()) {
-            throw new UnivaHttpException('Setting not found');
+            throw new UnivaHttpException('Налаштування не знайдено.');
         }
 
         $belongs = ApplicationSettingValue::query()
@@ -100,7 +100,7 @@ class SettingsService
             ->exists();
 
         if (! $belongs) {
-            throw new UnivaHttpException('Setting value does not belong to this setting');
+            throw new UnivaHttpException('Значення налаштування не належить до цього налаштування.');
         }
 
         ApplicationUserSetting::query()->updateOrCreate(
@@ -115,7 +115,7 @@ class SettingsService
     public function resetToDefault(int $userId, int $settingId): void
     {
         if (! ApplicationSetting::query()->whereKey($settingId)->exists()) {
-            throw new UnivaHttpException('Setting not found');
+            throw new UnivaHttpException('Налаштування не знайдено.');
         }
 
         ApplicationUserSetting::query()
@@ -135,7 +135,7 @@ class SettingsService
             ->first();
 
         if (! $setting) {
-            throw new UnivaHttpException('Setting not found');
+            throw new UnivaHttpException('Налаштування не знайдено.');
         }
 
         $settingValue = ApplicationSettingValue::query()
@@ -145,7 +145,7 @@ class SettingsService
             ->first();
 
         if (! $settingValue) {
-            throw new UnivaHttpException('Invalid value for this setting');
+            throw new UnivaHttpException('Недопустиме значення для цього налаштування.');
         }
 
         ApplicationUserSetting::query()->updateOrCreate(
@@ -180,7 +180,7 @@ class SettingsService
             $setting = $settings->get($pair['key']);
 
             if (! $setting) {
-                throw new UnivaHttpException("Setting not found: {$pair['key']}");
+                throw new UnivaHttpException("Налаштування '{$pair['key']}' не знайдено.");
             }
 
             $settingValue = ApplicationSettingValue::query()
@@ -190,7 +190,7 @@ class SettingsService
                 ->first();
 
             if (! $settingValue) {
-                throw new UnivaHttpException("Invalid value '{$pair['value']}' for setting '{$pair['key']}'");
+                throw new UnivaHttpException("Недопустиме значення '{$pair['value']}' для налаштування '{$pair['key']}'.");
             }
 
             $upserts[] = [
@@ -223,7 +223,7 @@ class SettingsService
             ->get();
 
         if ($settings->isEmpty()) {
-            throw new UnivaHttpException('Group not found or has no settings');
+            throw new UnivaHttpException('Групу не знайдено або вона не має налаштувань.');
         }
 
         $settingIds = $settings->pluck('id')->all();

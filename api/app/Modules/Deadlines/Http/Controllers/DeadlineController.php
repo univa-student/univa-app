@@ -87,7 +87,7 @@ class DeadlineController extends Controller
         $deadline = $action->handle($deadline, $request->validated());
 
         return ApiResponse::ok(
-            'Deadline updated successfully.',
+            'Дедлайн успішно оновлено.',
             new DeadlineResource($deadline),
         );
     }
@@ -102,7 +102,7 @@ class DeadlineController extends Controller
         $deadline->delete();
 
         return ApiResponse::ok(
-            'Deadline deleted successfully.'
+            'Дедлайн успішно видалено.'
         );
     }
 }

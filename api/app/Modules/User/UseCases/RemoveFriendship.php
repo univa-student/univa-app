@@ -2,11 +2,11 @@
 
 namespace App\Modules\User\UseCases;
 
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Models\User;
 use App\Modules\User\Models\Friendship;
 use App\Modules\User\Support\FriendshipBroadcaster;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-
 class RemoveFriendship
 {
     public function __construct(
@@ -25,8 +25,8 @@ class RemoveFriendship
             })
             ->first();
 
-        if (!$friendship) {
-            throw new NotFoundHttpException('Friendship or request not found.');
+        if (! $friendship) {
+            throw new UnivaHttpException('Дружбу або запит не знайдено.', ResponseState::NotFound);
         }
 
         $friendship->delete();

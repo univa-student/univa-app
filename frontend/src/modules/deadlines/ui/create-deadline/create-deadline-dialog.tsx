@@ -10,6 +10,7 @@ import { Button } from "@/shared/shadcn/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/shadcn/ui/dialog";
 import { Input } from "@/shared/shadcn/ui/input";
 import { Label } from "@/shared/shadcn/ui/label";
+import { DateInput, TimeInput } from "@/shared/ui/date-time-input";
 import { UploadCloudIcon, XIcon, FileIcon } from "lucide-react";
 import type { FileItem } from "@/modules/files/model/types";
 import { UploadDialog } from "@/modules/files/ui/upload-file/upload-dialog";
@@ -137,21 +138,19 @@ export function CreateDeadlineDialog({ open, onOpenChange, prefillSubjectId, sub
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="due_at">Дата здачі</Label>
-                            <Input
+                            <DateInput
                                 id="due_at"
-                                type="date"
                                 value={dueAt}
-                                onChange={e => setDueAt(e.target.value)}
+                                onChange={setDueAt}
                                 required
                             />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="due_time">Час</Label>
-                            <Input
+                            <TimeInput
                                 id="due_time"
-                                type="time"
                                 value={dueTime}
-                                onChange={e => setDueTime(e.target.value)}
+                                onChange={setDueTime}
                                 required
                             />
                         </div>

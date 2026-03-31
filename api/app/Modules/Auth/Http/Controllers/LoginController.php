@@ -19,7 +19,7 @@ class LoginController extends Controller
         if (! Auth::attempt($credentials)) {
             return ApiResponse::error(
                 state: ResponseState::Unauthorized,
-                message: __('Невірний email або пароль'),
+                message: 'Невірний email або пароль',
             );
         }
 
@@ -27,7 +27,7 @@ class LoginController extends Controller
         $sessionMetadataService->sync($request);
 
         return ApiResponse::ok(
-            message: __('Ви успішно увійшли!'),
+            message: 'Ви успішно увійшли!',
             data: UserResource::make($request->user()),
         );
     }

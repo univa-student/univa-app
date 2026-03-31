@@ -46,7 +46,7 @@ class SettingsController extends Controller
             return $e->render();
         }
 
-        return \App\Core\Response\ApiResponse::ok('Setting updated.');
+        return \App\Core\Response\ApiResponse::ok('Налаштування оновлено.');
     }
 
     public function bulkUpdate(BulkUpdateSettingsRequest $request): JsonResponse
@@ -60,6 +60,6 @@ class SettingsController extends Controller
             return $e->render();
         }
 
-        return \App\Core\Response\ApiResponse::ok('Settings bulk updated.');
+        return \App\Core\Response\ApiResponse::ok('Налаштування масово оновлено.');
     }
 }

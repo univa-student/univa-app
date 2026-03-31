@@ -23,7 +23,7 @@ class JoinGroupByInvite
             ->first();
 
         if ($invite === null || ! $invite->isUsable()) {
-            throw new UnivaHttpException('Invite is invalid or expired.', ResponseState::Unprocessable);
+            throw new UnivaHttpException('Запрошення недійсне або його термін дії минув.', ResponseState::Unprocessable);
         }
 
         return DB::transaction(function () use ($user, $invite): GroupMember {

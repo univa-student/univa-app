@@ -29,7 +29,7 @@ class UpdateProfileRequest extends UnivaRequest
     {
         return [
             'phone.regex' => 'Некоректний номер телефону.',
-            'telegram.regex' => 'Некоректний Telegram username.',
+            'telegram.regex' => 'Некоректне ім’я користувача Telegram.',
             'birth_date.before' => 'Дата народження має бути в минулому.',
         ];
     }

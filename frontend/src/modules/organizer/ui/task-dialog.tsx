@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/shared/shadcn/ui/input";
 import { Label } from "@/shared/shadcn/ui/label";
 import { Textarea } from "@/shared/shadcn/ui/textarea";
+import { DateTimeInput } from "@/shared/ui/date-time-input";
 
 const selectClassName = "flex h-10 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
@@ -171,14 +172,15 @@ export function TaskDialog({ open, onOpenChange, task, defaultStatus = "todo" }:
 
                     <div className="space-y-2">
                         <Label htmlFor="task-due-at">Дедлайн</Label>
-                        <Input
+                        <DateTimeInput
                             id="task-due-at"
-                            type="datetime-local"
                             value={toDateTimeInputValue(form.dueAt)}
-                            onChange={(event) => setForm((current) => ({
+                            onChange={(value) => setForm((current) => ({
                                 ...current,
-                                dueAt: toIsoFromDateTimeInput(event.target.value),
+                                dueAt: toIsoFromDateTimeInput(value),
                             }))}
+                            dateInputClassName="h-10"
+                            timeInputClassName="h-10"
                         />
                     </div>
 

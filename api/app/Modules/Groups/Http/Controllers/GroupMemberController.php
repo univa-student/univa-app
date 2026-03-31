@@ -3,6 +3,7 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
 use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Groups\Http\Requests\StoreGroupMemberRequest;
@@ -60,7 +61,7 @@ class GroupMemberController extends Controller
 
         $member->load(['user', 'inviter']);
 
-        return ApiResponse::created('Member added.', new GroupMemberResource($member));
+        return ApiResponse::created('Учасника додано.', new GroupMemberResource($member));
     }
 
     public function update(
@@ -70,12 +71,14 @@ class GroupMemberController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'invite');
-        abort_unless($member->group_id === $group->id, 404);
+        if ($member->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $member->update($request->validated());
         $member->load(['user', 'inviter']);
 
-        return ApiResponse::ok('Member updated.', new GroupMemberResource($member));
+        return ApiResponse::ok('Учасника оновлено.', new GroupMemberResource($member));
     }
 
     public function destroy(
@@ -85,11 +88,13 @@ class GroupMemberController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'invite');
-        abort_unless($member->group_id === $group->id, 404);
+        if ($member->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $member->delete();
 
-        return ApiResponse::ok('Member removed.');
+        return ApiResponse::ok('Учасника видалено.');
     }
 
     public function leave(Group $group, Request $request, GroupPermissionService $permissions): JsonResponse
@@ -101,6 +106,6 @@ class GroupMemberController extends Controller
             'left_at' => now(),
         ]);
 
-        return ApiResponse::ok('You left the group.', new GroupMemberResource($membership->fresh(['user'])));
+        return ApiResponse::ok('Ви вийшли з групи.', new GroupMemberResource($membership->fresh(['user'])));
     }
 }

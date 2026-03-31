@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Ai\Http\Requests;
 
 use App\Core\Request\UnivaRequest;
-use App\Modules\Files\Models\File;
 use App\Modules\Ai\DTO\SummarizeFileData;
 use App\Modules\Ai\Enums\AiSessionMode;
+use App\Modules\Files\Models\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
@@ -23,7 +23,7 @@ class SummarizeFileRequest extends UnivaRequest
 
         $file = $this->resolveFile();
 
-        if (!$file instanceof File) {
+        if (! $file instanceof File) {
             return false;
         }
 
@@ -95,7 +95,7 @@ class SummarizeFileRequest extends UnivaRequest
             'session_id.exists' => 'Вказану AI-сесію не знайдено.',
 
             'mode.required' => 'Режим AI-запиту є обов’язковим.',
-            'mode.in' => 'Для цього endpoint доступний тільки режим summary.',
+            'mode.in' => 'Для цього ендпойнта доступний лише режим summary.',
 
             'language.string' => 'Мова відповіді має бути рядком.',
             'language.max' => 'Поле мови має бути не довше 10 символів.',

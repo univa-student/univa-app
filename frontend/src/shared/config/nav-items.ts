@@ -37,6 +37,12 @@ export const navItems: NavItem[] = [
         items: [],
     },
     {
+        title: "РџР»Р°РЅРµСЂ",
+        url: "/dashboard/planner",
+        icon: CalendarDaysIcon,
+        items: [],
+    },
+    {
         title: "Предмети",
         url: "/dashboard/schedule/subjects",
         icon: BookCheckIcon,

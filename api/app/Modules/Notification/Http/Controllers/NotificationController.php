@@ -2,10 +2,12 @@
 
 namespace App\Modules\Notification\Http\Controllers;
 
+use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Notification\Http\Resources\NotificationResource;
 use App\Modules\Notification\Models\Notification;
-use App\Core\Response\ApiResponse;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -23,12 +25,12 @@ class NotificationController extends Controller
     public function markAsRead(Request $request, Notification $notification)
     {
         if ($notification->user_id !== $request->user()->id) {
-            abort(403);
+            throw new UnivaHttpException('Доступ заборонено.', ResponseState::Forbidden);
         }
 
         $notification->update(['read_at' => now()]);
 
-        return ApiResponse::OK('Сповіщення позначено як "Прочитане"');
+        return ApiResponse::ok('Сповіщення позначено як "Прочитане"');
     }
 
     public function markAllAsRead(Request $request)
@@ -38,17 +40,17 @@ class NotificationController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        return ApiResponse::OK('Всі сповіщення позначені як "Прочитані"');
+        return ApiResponse::ok('Всі сповіщення позначені як "Прочитані"');
     }
 
     public function destroy(Request $request, Notification $notification)
     {
         if ($notification->user_id !== $request->user()->id) {
-            abort(403);
+            throw new UnivaHttpException('Доступ заборонено.', ResponseState::Forbidden);
         }
 
         $notification->delete();
 
-        return ApiResponse::OK('Сповіщення видалено');
+        return ApiResponse::ok('Сповіщення видалено');
     }
 }

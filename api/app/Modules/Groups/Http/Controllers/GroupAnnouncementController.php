@@ -3,6 +3,8 @@
 namespace App\Modules\Groups\Http\Controllers;
 
 use App\Core\Response\ApiResponse;
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Http\Controllers\Controller;
 use App\Modules\Groups\Http\Requests\StoreGroupAnnouncementRequest;
 use App\Modules\Groups\Http\Requests\UpdateGroupAnnouncementRequest;
@@ -47,13 +49,15 @@ class GroupAnnouncementController extends Controller
         $fileLinks->sync($announcement, $data['file_ids'] ?? []);
         $announcement->load(['creator', 'acknowledgements', 'attachmentLinks.file']);
 
-        return ApiResponse::created('Announcement created.', new GroupAnnouncementResource($announcement));
+        return ApiResponse::created('Оголошення створено.', new GroupAnnouncementResource($announcement));
     }
 
     public function show(Group $group, GroupAnnouncement $announcement, Request $request, GroupPermissionService $permissions): JsonResponse
     {
         $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($announcement->group_id === $group->id, 404);
+        if ($announcement->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
         $announcement->load(['creator', 'acknowledgements', 'attachmentLinks.file']);
 
         return ApiResponse::data(new GroupAnnouncementResource($announcement));
@@ -67,7 +71,9 @@ class GroupAnnouncementController extends Controller
         GroupFileLinkService $fileLinks,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'post_announcements');
-        abort_unless($announcement->group_id === $group->id, 404);
+        if ($announcement->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $data = $request->validated();
         $announcement->update($data);
@@ -78,7 +84,7 @@ class GroupAnnouncementController extends Controller
 
         $announcement->load(['creator', 'acknowledgements', 'attachmentLinks.file']);
 
-        return ApiResponse::ok('Announcement updated.', new GroupAnnouncementResource($announcement));
+        return ApiResponse::ok('Оголошення оновлено.', new GroupAnnouncementResource($announcement));
     }
 
     public function destroy(
@@ -88,11 +94,13 @@ class GroupAnnouncementController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $permissions->authorize($request->user(), $group, 'post_announcements');
-        abort_unless($announcement->group_id === $group->id, 404);
+        if ($announcement->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $announcement->delete();
 
-        return ApiResponse::ok('Announcement deleted.');
+        return ApiResponse::ok('Оголошення видалено.');
     }
 
     public function acknowledge(
@@ -102,7 +110,9 @@ class GroupAnnouncementController extends Controller
         GroupPermissionService $permissions,
     ): JsonResponse {
         $membership = $permissions->requireActiveMembership($request->user(), $group);
-        abort_unless($announcement->group_id === $group->id, 404);
+        if ($announcement->group_id !== $group->id) {
+            throw new UnivaHttpException('Ресурс не знайдено.', ResponseState::NotFound);
+        }
 
         $ack = GroupAnnouncementAcknowledgement::query()->updateOrCreate(
             [
@@ -114,7 +124,7 @@ class GroupAnnouncementController extends Controller
             ]
         );
 
-        return ApiResponse::ok('Announcement acknowledged.', [
+        return ApiResponse::ok('Оголошення позначено як переглянуте.', [
             'id' => $ack->id,
             'acknowledged_at' => $ack->acknowledged_at?->toISOString(),
         ]);

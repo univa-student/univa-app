@@ -2,15 +2,14 @@
 
 namespace App\Modules\User\UseCases;
 
+use App\Core\Response\ResponseState;
+use App\Core\UnivaHttpException;
 use App\Models\User;
 use App\Modules\Notification\Enums\NotificationType;
 use App\Modules\Notification\Support\Notifier;
 use App\Modules\User\Enums\FriendshipStatus;
 use App\Modules\User\Models\Friendship;
 use App\Modules\User\Support\FriendshipBroadcaster;
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-
 class AcceptFriendRequest
 {
     public function __construct(
@@ -24,12 +23,12 @@ class AcceptFriendRequest
             ->where('friend_id', $user->id)
             ->first();
 
-        if (!$friendship) {
-            throw new NotFoundHttpException('Friend request not found.');
+        if (! $friendship) {
+            throw new UnivaHttpException('Запит у друзі не знайдено.', ResponseState::NotFound);
         }
 
         if ($friendship->status === FriendshipStatus::ACCEPTED) {
-            throw new ConflictHttpException('You are already friends.');
+            throw new UnivaHttpException('Ви вже є друзями.', ResponseState::Warning);
         }
 
         $friendship->update(['status' => FriendshipStatus::ACCEPTED]);

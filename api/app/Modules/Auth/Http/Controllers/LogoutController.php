@@ -15,7 +15,7 @@ class LogoutController extends Controller
             ->logout();
 
         return ApiResponse::ok(
-            message: __('Ви вийшли з системи'),
+            message: 'Ви вийшли з системи',
         );
     }
 }
