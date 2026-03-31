@@ -80,6 +80,7 @@ final readonly class GenerateDailyDigest implements AiUseCaseContract
         $resolvedModel = $this->modelResolver->resolve(
             useCase: 'generate_daily_digest',
             requestedModel: $data->model,
+            userId: $data->userId,
         );
 
         $run = $this->runRecorder->createPendingRun(

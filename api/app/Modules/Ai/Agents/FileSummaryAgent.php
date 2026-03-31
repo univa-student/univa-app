@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Ai\Agents;
 
-use App\Models\User;
-use App\Modules\Ai\DTO\FileSummaryContextData;
 use App\Modules\Ai\DTO\SummarizeFileData;
+use App\Modules\Ai\DTO\SummaryContextData;
 use App\Modules\Ai\Enums\AiProvider;
 use App\Modules\Ai\Exceptions\AiContextException;
 use App\Modules\Ai\Models\AiContextSession;
@@ -18,9 +17,7 @@ use Laravel\Ai\Attributes\MaxTokens;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Attributes\Temperature;
 use Laravel\Ai\Attributes\Timeout;
-use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
-use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Contracts\HasStructuredOutput;
 use Laravel\Ai\Enums\Lab;
@@ -32,15 +29,14 @@ use Laravel\Ai\Responses\AgentResponse;
 use Stringable;
 
 #[Provider(Lab::Gemini)]
-#[MaxTokens(4096)]
+#[MaxTokens(8192)]
 #[Temperature(0.2)]
 #[Timeout(120)]
-final class FileSummaryAgent implements Agent, Conversational, HasStructuredOutput, HasProviderOptions
+final class FileSummaryAgent implements Agent, HasStructuredOutput, HasProviderOptions
 {
     use Promptable;
-    use RemembersConversations;
 
-    private ?FileSummaryContextData $context = null;
+    private ?SummaryContextData $context = null;
     private ?SummarizeFileData $input = null;
 
     /**
@@ -48,7 +44,7 @@ final class FileSummaryAgent implements Agent, Conversational, HasStructuredOutp
      */
     public function instructions(): Stringable|string
     {
-        if (!$this->context instanceof FileSummaryContextData) {
+        if (!$this->context instanceof SummaryContextData) {
             throw AiContextException::emptyContext('file');
         }
 
@@ -66,12 +62,23 @@ final class FileSummaryAgent implements Agent, Conversational, HasStructuredOutp
             'main_points' => $schema->array()->items($schema->string())->required(),
             'key_terms' => $schema->array()->items($schema->string())->required(),
             'possible_questions' => $schema->array()->items($schema->string())->required(),
+            'flashcards' => $schema->array()->items(
+                $schema->object(
+                    properties: [
+                        'question' => $schema->string()->required(),
+                        'answer' => $schema->string()->required(),
+                    ],
+                ),
+            )->required(),
         ];
     }
 
     public function providerOptions(Lab|string $provider): array
     {
         return match ($provider) {
+            Lab::Gemini => [
+                'thinking' => ['budget_tokens' => 0],
+            ],
             Lab::OpenAI => [
                 'reasoning' => ['effort' => 'low'],
             ],
@@ -83,7 +90,7 @@ final class FileSummaryAgent implements Agent, Conversational, HasStructuredOutp
     }
 
     /**
-     * @param array{
+     * @param array<int, array{
      *     disk: string,
      *     path: string,
      *     absolute_path: string|null,
@@ -91,105 +98,83 @@ final class FileSummaryAgent implements Agent, Conversational, HasStructuredOutp
      *     mime_type: string|null,
      *     extension: string|null,
      *     size: int|null
-     * } $attachment
-     *
+     * }> $attachments
      */
     public function summarize(
-        FileSummaryContextData $context,
-        array $attachment,
+        SummaryContextData $context,
+        array $attachments,
         AiProvider $provider,
         string $model,
         ?SummarizeFileData $input = null,
         ?AiContextSession $session = null,
-    ): AgentResponse
-    {
+    ): AgentResponse {
         $this->context = $context;
         $this->input = $input;
 
-        $prompt = $this->buildPrompt($context, $input);
-        $attachments = [$this->toDocumentAttachment($attachment)];
-        $lab = $this->toLab($provider);
-
-        $response = $this->promptThroughConversation(
-            prompt: $prompt,
-            provider: $lab,
+        return $this->prompt(
+            $this->buildPrompt($context, $input),
+            attachments: array_map(
+                fn (array $attachment): LocalDocument|StoredDocument => $this->toDocumentAttachment($attachment),
+                $attachments,
+            ),
+            provider: $this->toLab($provider),
             model: $model,
-            attachments: $attachments,
-            session: $session,
         );
-
-        $this->storeConversationId($response, $session);
-
-        return $response;
     }
 
     private function buildPrompt(
-        FileSummaryContextData $context,
+        SummaryContextData $context,
         ?SummarizeFileData $input = null,
     ): string {
-        $language = $input?->language
-            ?? $context->language
-            ?? 'uk';
+        $language = $input?->language ?? $context->language ?? 'uk';
+        $fileCount = count($context->files);
+        $sourceSummaries = $this->compactSourceSummaries($context->extra['source_summaries'] ?? null);
 
-        $notes = $input?->notes !== null && trim($input->notes) !== ''
-            ? 'Додаткові побажання: ' . trim($input->notes) . PHP_EOL
-            : '';
+        $lines = [
+            'Створи один структурований навчальний конспект.',
+            'Мова відповіді: ' . $language,
+            'Кількість матеріалів: ' . $fileCount,
+        ];
 
-        return <<<PROMPT
-Створи структурований конспект вкладеного документа.
+        if ($sourceSummaries !== []) {
+            $lines[] = 'Нижче вже є проміжні конспекти по частинах. Використай їх як джерело для фінального зведення.';
+            $lines[] = 'Проміжні конспекти: ' . json_encode($sourceSummaries, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
 
-Вимоги:
-- мова відповіді: {$language}
-- файл: {$context->fileName}
-- будь точним і не вигадуй фактів
-- якщо документ частково нечитабельний або неповний, прямо вкажи це
-- поверни тільки структурований результат згідно з output rules
+        if ($input?->notes !== null && trim($input->notes) !== '') {
+            $lines[] = 'Додаткові побажання: ' . trim($input->notes);
+        }
 
-{$notes}
-PROMPT;
+        $lines[] = 'Поверни тільки дані за схемою.';
+
+        return implode(PHP_EOL, $lines);
     }
 
     /**
-     * @param array<int, LocalDocument|StoredDocument|mixed> $attachments
+     * @return array<int, array<string, mixed>>
      */
-    private function promptThroughConversation(
-        string $prompt,
-        Lab $provider,
-        string $model,
-        array $attachments,
-        ?AiContextSession $session = null,
-    ): AgentResponse
+    private function compactSourceSummaries(mixed $value): array
     {
-        $user = $this->resolveUser($session);
-
-        if (
-            $session instanceof AiContextSession
-            && $this->sessionConversationId($session) !== null
-            && $user instanceof User
-        ) {
-            return $this->continue($this->sessionConversationId($session), as: $user)->prompt(
-                $prompt,
-                attachments: $attachments,
-                provider: $provider,
-                model: $model,
-            );
+        if (!is_array($value)) {
+            return [];
         }
 
-        if ($user instanceof User) {
-            return $this->forUser($user)->prompt(
-                $prompt,
-                attachments: $attachments,
-                provider: $provider,
-                model: $model,
-            );
-        }
+        return array_values(array_map(
+            static function (mixed $summary): array {
+                if (!is_array($summary)) {
+                    return [];
+                }
 
-        return $this->prompt(
-            $prompt,
-            attachments: $attachments,
-            provider: $provider,
-            model: $model,
-        );
+                return [
+                    'title' => $summary['title'] ?? null,
+                    'files' => array_slice(is_array($summary['files'] ?? null) ? $summary['files'] : [], 0, 3),
+                    'short_summary' => $summary['short_summary'] ?? null,
+                    'main_points' => array_slice(is_array($summary['main_points'] ?? null) ? $summary['main_points'] : [], 0, 4),
+                    'key_terms' => array_slice(is_array($summary['key_terms'] ?? null) ? $summary['key_terms'] : [], 0, 4),
+                ];
+            },
+            array_filter($value, static fn (mixed $summary): bool => is_array($summary)),
+        ));
     }
 
     /**
@@ -231,69 +216,5 @@ PROMPT;
             AiProvider::OPENAI => Lab::OpenAI,
             AiProvider::ANTHROPIC => Lab::Anthropic,
         };
-    }
-
-    private function resolveUser(?AiContextSession $session = null): ?User
-    {
-        if (!$session instanceof AiContextSession) {
-            return null;
-        }
-
-        if ($session->relationLoaded('user')) {
-            $user = $session->getRelation('user');
-
-            return $user instanceof User ? $user : null;
-        }
-
-        return User::query()->find($session->getAttribute('user_id'));
-    }
-
-    private function storeConversationId(mixed $response, ?AiContextSession $session = null): void
-    {
-        if (!$session instanceof AiContextSession) {
-            return;
-        }
-
-        $conversationId = $this->extractConversationId($response);
-
-        if ($conversationId === null) {
-            return;
-        }
-
-        if ($this->sessionConversationId($session) === $conversationId) {
-            return;
-        }
-
-        $session->forceFill([
-            'agent_conversation_id' => $conversationId,
-        ])->save();
-    }
-
-    private function extractConversationId(mixed $response): ?string
-    {
-        if (is_object($response) && isset($response->conversationId) && is_scalar($response->conversationId)) {
-            $value = (string) $response->conversationId;
-
-            return trim($value) !== '' ? $value : null;
-        }
-
-        if (is_array($response) && isset($response['conversationId']) && is_scalar($response['conversationId'])) {
-            $value = (string) $response['conversationId'];
-
-            return trim($value) !== '' ? $value : null;
-        }
-
-        return null;
-    }
-
-    private function sessionConversationId(AiContextSession $session): ?string
-    {
-        $value = $session->getAttribute('agent_conversation_id');
-
-        if (!is_string($value) || trim($value) === '') {
-            return null;
-        }
-
-        return trim($value);
     }
 }

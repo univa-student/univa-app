@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Ai\Support;
 
-use App\Modules\Ai\DTO\FileSummaryContextData;
+use App\Modules\Ai\DTO\SummaryContextData;
+use App\Modules\Ai\DTO\SummarySourceFileData;
 use App\Modules\Ai\Exceptions\AiException;
 use App\Modules\Ai\Exceptions\UnsupportedAiAttachmentException;
 use Illuminate\Support\Facades\Storage;
@@ -37,8 +38,30 @@ final readonly class AiAttachmentFactory
     }
 
     /**
-     * Повертає нормалізований payload для подальшого adapter-layer.
+     * @return array<int, array{
+     *     disk: string,
+     *     path: string,
+     *     absolute_path: string|null,
+     *     file_name: string,
+     *     mime_type: string|null,
+     *     extension: string|null,
+     *     size: int|null
+     * }>
      *
+     * @throws UnsupportedAiAttachmentException|AiException
+     */
+    public function buildPayloads(SummaryContextData $context): array
+    {
+        $payloads = [];
+
+        foreach ($context->files as $file) {
+            $payloads[] = $this->buildPayload($file);
+        }
+
+        return $payloads;
+    }
+
+    /**
      * @return array{
      *     disk: string,
      *     path: string,
@@ -48,9 +71,10 @@ final readonly class AiAttachmentFactory
      *     extension: string|null,
      *     size: int|null
      * }
+     *
      * @throws UnsupportedAiAttachmentException|AiException
      */
-    public function buildPayload(FileSummaryContextData $context): array
+    public function buildPayload(SummarySourceFileData $context): array
     {
         $this->assertSupported($context);
 
@@ -92,7 +116,7 @@ final readonly class AiAttachmentFactory
     /**
      * @throws UnsupportedAiAttachmentException
      */
-    public function assertSupported(FileSummaryContextData $context): void
+    public function assertSupported(SummarySourceFileData $context): void
     {
         if ($context->size !== null && $context->size > $this->maxSizeBytes) {
             throw UnsupportedAiAttachmentException::fileTooLarge(

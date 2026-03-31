@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Ai\UseCases;
 
-use App\Modules\Files\Models\File;
 use App\Modules\Ai\Agents\FileSummaryAgent;
-use App\Modules\Ai\Contracts\AiUseCaseContract;
 use App\Modules\Ai\Context\Builders\FileSummaryContextBuilder;
+use App\Modules\Ai\Contracts\AiUseCaseContract;
 use App\Modules\Ai\DTO\SummarizeFileData;
+use App\Modules\Ai\DTO\SummaryContextData;
 use App\Modules\Ai\Enums\AiArtifactType;
 use App\Modules\Ai\Enums\AiProvider;
 use App\Modules\Ai\Enums\AiRunStatus;
 use App\Modules\Ai\Enums\AiSessionMode;
 use App\Modules\Ai\Enums\AiSessionStatus;
+use App\Modules\Ai\Enums\AiSummaryStyle;
 use App\Modules\Ai\Events\AiArtifactCreated;
 use App\Modules\Ai\Events\AiRunCompleted;
 use App\Modules\Ai\Events\AiRunFailed;
@@ -29,12 +30,15 @@ use App\Modules\Ai\Support\AiAttachmentFactory;
 use App\Modules\Ai\Support\AiModelResolver;
 use App\Modules\Ai\Support\AiResponseExtractor;
 use App\Modules\Ai\Support\AiRunRecorder;
+use App\Modules\Files\Models\File;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
 final readonly class SummarizeFile implements AiUseCaseContract
 {
+    private const DIRECT_MULTI_FILE_LIMIT = 2;
+
     public function __construct(
         private FileSummaryContextBuilder $contextBuilder,
         private FileSummaryAgent $agent,
@@ -64,10 +68,10 @@ final readonly class SummarizeFile implements AiUseCaseContract
         }
 
         $context = $this->contextBuilder->buildFromData($data);
-        $session = $this->resolveSession($data, $context->fileName, $context->fileId);
+        $session = $this->resolveSession($data, $context->displayName());
 
-        if (!$data->forceRefresh) {
-            $existingArtifact = $this->resolveLatestArtifact($data->userId, $context->fileId);
+        if ($this->canReuseArtifact($data)) {
+            $existingArtifact = $this->resolveLatestArtifact($data->userId, $data->primaryFileId());
 
             if ($existingArtifact instanceof AiArtifact) {
                 $session->touchLastUsedAt();
@@ -87,9 +91,8 @@ final readonly class SummarizeFile implements AiUseCaseContract
         $resolvedModel = $this->modelResolver->resolve(
             useCase: 'summarize_file',
             requestedModel: $data->model,
+            userId: $data->userId,
         );
-
-        $attachmentPayload = $this->attachmentFactory->buildPayload($context);
 
         $run = $this->runRecorder->createPendingRun(
             userId: $data->userId,
@@ -102,9 +105,12 @@ final readonly class SummarizeFile implements AiUseCaseContract
             inputSnapshot: $data->toArray(),
             contextSnapshot: $context->toArray(),
             meta: [
-                'file_id' => $context->fileId,
-                'file_name' => $context->fileName,
+                'file_id' => $data->primaryFileId(),
+                'file_ids' => $context->fileIds(),
+                'file_name' => $context->displayName(),
                 'session_id' => $session->getKey(),
+                'style' => $data->style->value,
+                'include_flashcards' => $data->includeFlashcards,
             ],
         );
 
@@ -118,22 +124,29 @@ final readonly class SummarizeFile implements AiUseCaseContract
         ));
 
         try {
-            $response = $this->agent->summarize(
+            ['response' => $response, 'format_context' => $formatContext] = $this->generateSummaryResponse(
                 context: $context,
-                attachment: $attachmentPayload,
+                data: $data,
                 provider: $resolvedModel['provider'],
                 model: $resolvedModel['model'],
-                input: $data,
                 session: $session,
             );
 
             $artifactData = $this->formatter->formatSummary(
                 response: $response,
-                context: $context,
+                context: $formatContext,
                 input: $data,
             );
 
             $artifact = DB::transaction(function () use ($data, $run, $context, $artifactData): AiArtifact {
+                $sourceContextType = null;
+                $sourceContextId = null;
+
+                if (!$context->isMultiFile()) {
+                    $sourceContextType = $this->fileMorphType();
+                    $sourceContextId = $data->primaryFileId();
+                }
+
                 return AiArtifact::query()->create([
                     'user_id' => $data->userId,
                     'run_id' => $run->getKey(),
@@ -141,8 +154,8 @@ final readonly class SummarizeFile implements AiUseCaseContract
                     'title' => $artifactData->title,
                     'content_json' => $artifactData->toContentJson(),
                     'content_text' => $artifactData->toContentText(),
-                    'source_context_type' => $this->fileMorphType(),
-                    'source_context_id' => $context->fileId,
+                    'source_context_type' => $sourceContextType,
+                    'source_context_id' => $sourceContextId,
                 ]);
             });
 
@@ -158,7 +171,8 @@ final readonly class SummarizeFile implements AiUseCaseContract
                     $this->responseExtractor->extractMeta($response),
                     [
                         'artifact_id' => $artifact->getKey(),
-                        'file_id' => $context->fileId,
+                        'file_id' => $data->primaryFileId(),
+                        'file_ids' => $context->fileIds(),
                     ],
                 ),
                 static fn (mixed $value): bool => $value !== null && $value !== '',
@@ -192,7 +206,7 @@ final readonly class SummarizeFile implements AiUseCaseContract
                 run: $run,
                 error: $e,
                 meta: [
-                    'file_id' => $context->fileId,
+                    'file_id' => $data->primaryFileId(),
                     'session_id' => $session->getKey(),
                 ],
                 latencyMs: $latencyMs,
@@ -207,8 +221,7 @@ final readonly class SummarizeFile implements AiUseCaseContract
      */
     private function resolveSession(
         SummarizeFileData $data,
-        string $fileName,
-        int $fileId,
+        string $title,
     ): AiContextSession {
         if ($data->sessionId !== null) {
             $session = AiContextSession::query()
@@ -239,32 +252,34 @@ final readonly class SummarizeFile implements AiUseCaseContract
             return $session;
         }
 
-        $session = AiContextSession::query()
-            ->where('user_id', $data->userId)
-            ->where('context_type', $this->fileMorphType())
-            ->where('context_id', $fileId)
-            ->where('mode', AiSessionMode::SUMMARY->value)
-            ->first();
+        if ($this->canReuseArtifact($data)) {
+            $session = AiContextSession::query()
+                ->where('user_id', $data->userId)
+                ->where('context_type', $this->fileMorphType())
+                ->where('context_id', $data->primaryFileId())
+                ->where('mode', AiSessionMode::SUMMARY->value)
+                ->first();
 
-        if ($session instanceof AiContextSession) {
-            if (!$session->canAcceptNewRuns()) {
-                throw AiContextException::fromMessage(
-                    'Для цього файла існує AI-сесія, але вона неактивна.',
-                    [
-                        'session_id' => $session->getKey(),
-                        'status' => $this->sessionStatusValue($session),
-                    ],
-                );
+            if ($session instanceof AiContextSession) {
+                if (!$session->canAcceptNewRuns()) {
+                    throw AiContextException::fromMessage(
+                        'Для цього файла існує AI-сесія, але вона неактивна.',
+                        [
+                            'session_id' => $session->getKey(),
+                            'status' => $this->sessionStatusValue($session),
+                        ],
+                    );
+                }
+
+                return $session;
             }
-
-            return $session;
         }
 
         return AiContextSession::query()->create([
             'user_id' => $data->userId,
-            'context_type' => $this->fileMorphType(),
-            'context_id' => $fileId,
-            'title' => 'Файл: ' . $fileName,
+            'context_type' => $this->canReuseArtifact($data) ? $this->fileMorphType() : null,
+            'context_id' => $this->canReuseArtifact($data) ? $data->primaryFileId() : null,
+            'title' => 'Матеріал: ' . $title,
             'mode' => AiSessionMode::SUMMARY,
             'status' => AiSessionStatus::ACTIVE,
             'last_used_at' => now(),
@@ -284,6 +299,155 @@ final readonly class SummarizeFile implements AiUseCaseContract
             })
             ->latest('id')
             ->first();
+    }
+
+    private function canReuseArtifact(SummarizeFileData $data): bool
+    {
+        return !$data->forceRefresh
+            && !$data->isMultiFile()
+            && !$data->includeFlashcards
+            && $data->style === AiSummaryStyle::STANDARD;
+    }
+
+    /**
+     * @return array{response: mixed, format_context: SummaryContextData}
+     *
+     * @throws AiProviderException
+     * @throws UnsupportedAiAttachmentException
+     * @throws Throwable
+     */
+    private function generateSummaryResponse(
+        SummaryContextData $context,
+        SummarizeFileData $data,
+        AiProvider $provider,
+        string $model,
+        ?AiContextSession $session = null,
+    ): array {
+        if (!$this->shouldUseHierarchicalMerge($context)) {
+            return [
+                'response' => $this->callSummaryAgent(
+                    context: $context,
+                    data: $data,
+                    provider: $provider,
+                    model: $model,
+                    session: $session,
+                ),
+                'format_context' => $context,
+            ];
+        }
+
+        $chunkSummaries = [];
+
+        foreach (array_chunk($context->files, self::DIRECT_MULTI_FILE_LIMIT) as $index => $chunkFiles) {
+            $chunkContext = new SummaryContextData(
+                files: $chunkFiles,
+                subjectId: $context->subjectId,
+                subjectName: $context->subjectName,
+                language: $context->language,
+                extra: array_merge($context->extra, [
+                    'chunk_index' => $index + 1,
+                    'chunk_total' => (int) ceil(count($context->files) / self::DIRECT_MULTI_FILE_LIMIT),
+                ]),
+            );
+
+            $chunkInput = $this->makeIntermediateInput($data, $chunkContext->fileIds());
+            $chunkResponse = $this->callSummaryAgent(
+                context: $chunkContext,
+                data: $chunkInput,
+                provider: $provider,
+                model: $model,
+                session: null,
+            );
+
+            $chunkArtifact = $this->formatter->formatSummary(
+                response: $chunkResponse,
+                context: $chunkContext,
+                input: $chunkInput,
+            );
+
+            $chunkSummaries[] = [
+                'files' => $chunkContext->fileNames(),
+                'title' => $chunkArtifact->title,
+                'short_summary' => $chunkArtifact->shortSummary,
+                'main_points' => array_slice($chunkArtifact->mainPoints, 0, 4),
+                'key_terms' => array_slice($chunkArtifact->keyTerms, 0, 4),
+            ];
+        }
+
+        $mergeContext = new SummaryContextData(
+            files: $context->files,
+            subjectId: $context->subjectId,
+            subjectName: $context->subjectName,
+            language: $context->language,
+            extra: array_merge($context->extra, [
+                'source_summaries' => $chunkSummaries,
+                'merge_strategy' => 'hierarchical',
+            ]),
+        );
+
+        return [
+            'response' => $this->callSummaryAgent(
+                context: $mergeContext,
+                data: $data,
+                provider: $provider,
+                model: $model,
+                session: $session,
+            ),
+            'format_context' => $mergeContext,
+        ];
+    }
+
+    /**
+     * @throws AiProviderException
+     * @throws UnsupportedAiAttachmentException
+     * @throws Throwable
+     */
+    private function callSummaryAgent(
+        SummaryContextData $context,
+        SummarizeFileData $data,
+        AiProvider $provider,
+        string $model,
+        ?AiContextSession $session = null,
+    ): mixed {
+        $attachments = $this->shouldAttachSourceFiles($context)
+            ? $this->attachmentFactory->buildPayloads($context)
+            : [];
+
+        return $this->agent->summarize(
+            context: $context,
+            attachments: $attachments,
+            provider: $provider,
+            model: $model,
+            input: $data,
+            session: $session,
+        );
+    }
+
+    private function shouldUseHierarchicalMerge(SummaryContextData $context): bool
+    {
+        return count($context->files) > self::DIRECT_MULTI_FILE_LIMIT;
+    }
+
+    private function shouldAttachSourceFiles(SummaryContextData $context): bool
+    {
+        return !is_array($context->extra['source_summaries'] ?? null)
+            || $context->extra['source_summaries'] === [];
+    }
+
+    private function makeIntermediateInput(SummarizeFileData $data, array $fileIds): SummarizeFileData
+    {
+        return new SummarizeFileData(
+            userId: $data->userId,
+            fileIds: $fileIds,
+            mode: $data->mode,
+            sessionId: null,
+            language: $data->language,
+            notes: $data->notes,
+            forceRefresh: $data->forceRefresh,
+            model: $data->model,
+            style: $data->style,
+            includeFlashcards: false,
+        );
     }
 
     private function sessionStatusValue(AiContextSession $session): ?string

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Ai\Formatters;
 
 use App\Modules\Ai\Contracts\ArtifactFormatterContract;
-use App\Modules\Ai\DTO\FileSummaryContextData;
 use App\Modules\Ai\DTO\SummarizeFileData;
 use App\Modules\Ai\DTO\SummaryArtifactData;
+use App\Modules\Ai\DTO\SummaryContextData;
 use App\Modules\Ai\Exceptions\AiContextException;
 use App\Modules\Ai\Exceptions\AiProviderException;
 use App\Modules\Ai\Support\AiResponseExtractor;
@@ -25,9 +25,9 @@ final readonly class SummaryArtifactFormatter implements ArtifactFormatterContra
      */
     public function format(mixed $response, object $context, ?object $input = null): object
     {
-        if (!$context instanceof FileSummaryContextData) {
+        if (!$context instanceof SummaryContextData) {
             throw AiContextException::invalidDto(
-                FileSummaryContextData::class,
+                SummaryContextData::class,
                 get_debug_type($context),
             );
         }
@@ -47,7 +47,7 @@ final readonly class SummaryArtifactFormatter implements ArtifactFormatterContra
      */
     public function formatSummary(
         mixed $response,
-        FileSummaryContextData $context,
+        SummaryContextData $context,
         ?SummarizeFileData $input = null,
     ): SummaryArtifactData {
         $provider = 'unknown';
@@ -63,38 +63,56 @@ final readonly class SummaryArtifactFormatter implements ArtifactFormatterContra
         $mainPoints = $this->normalizeStringList($structured['main_points'] ?? []);
         $keyTerms = $this->normalizeStringList($structured['key_terms'] ?? []);
         $possibleQuestions = $this->normalizeStringList($structured['possible_questions'] ?? []);
+        $flashcards = $structured['flashcards'] ?? [];
 
-        $contentText = $this->buildContentText(
-            title: $title,
-            shortSummary: $shortSummary,
-            mainPoints: $mainPoints,
-            keyTerms: $keyTerms,
-            possibleQuestions: $possibleQuestions,
-        );
-
-        return new SummaryArtifactData(
-            title: $title,
-            shortSummary: $shortSummary,
-            mainPoints: $mainPoints,
-            keyTerms: $keyTerms,
-            possibleQuestions: $possibleQuestions,
-            contentText: $contentText,
-            meta: [
-                'file_id' => $context->fileId,
-                'file_name' => $context->fileName,
+        $artifact = SummaryArtifactData::fromArray([
+            'title' => $title,
+            'short_summary' => $shortSummary,
+            'main_points' => $mainPoints,
+            'key_terms' => $keyTerms,
+            'possible_questions' => $possibleQuestions,
+            'flashcards' => $flashcards,
+            'meta' => [
+                'file_ids' => $context->fileIds(),
+                'file_names' => $context->fileNames(),
+                'source_files' => array_map(
+                    static fn ($file): array => [
+                        'id' => $file->fileId,
+                        'name' => $file->fileName,
+                        'subject_id' => $file->subjectId,
+                        'subject_name' => $file->subjectName,
+                    ],
+                    $context->files,
+                ),
                 'subject_id' => $context->subjectId,
                 'subject_name' => $context->subjectName,
                 'language' => $context->language ?? $input?->language,
                 'mode' => $input?->mode->value,
+                'style' => $input?->style->value,
+                'include_flashcards' => $input?->includeFlashcards ?? false,
                 'source' => 'ai',
+                'is_multi_file' => $context->isMultiFile(),
             ],
+            'style' => $input?->style?->value,
+        ]);
+
+        return new SummaryArtifactData(
+            title: $artifact->title,
+            shortSummary: $artifact->shortSummary,
+            mainPoints: $artifact->mainPoints,
+            keyTerms: $artifact->keyTerms,
+            possibleQuestions: $artifact->possibleQuestions,
+            flashcards: $artifact->flashcards,
+            contentText: $this->buildContentText($artifact),
+            meta: $artifact->meta,
+            style: $artifact->style,
         );
     }
 
     /**
      * @param array<string, mixed> $structured
      */
-    private function resolveTitle(array $structured, FileSummaryContextData $context): string
+    private function resolveTitle(array $structured, SummaryContextData $context): string
     {
         $title = $structured['title'] ?? null;
 
@@ -102,7 +120,7 @@ final readonly class SummaryArtifactFormatter implements ArtifactFormatterContra
             return trim($title);
         }
 
-        return 'Конспект: ' . $context->fileName;
+        return 'Конспект: ' . $context->displayName();
     }
 
     /**
@@ -120,7 +138,6 @@ final readonly class SummaryArtifactFormatter implements ArtifactFormatterContra
     }
 
     /**
-     * @param mixed $value
      * @return array<int, string>
      */
     private function normalizeStringList(mixed $value): array
@@ -140,48 +157,8 @@ final readonly class SummaryArtifactFormatter implements ArtifactFormatterContra
         return array_values($items);
     }
 
-    /**
-     * @param array<int, string> $mainPoints
-     * @param array<int, string> $keyTerms
-     * @param array<int, string> $possibleQuestions
-     */
-    private function buildContentText(
-        string $title,
-        ?string $shortSummary,
-        array $mainPoints,
-        array $keyTerms,
-        array $possibleQuestions,
-    ): string {
-        $parts = [$title];
-
-        if ($shortSummary !== null && trim($shortSummary) !== '') {
-            $parts[] = $shortSummary;
-        }
-
-        if ($mainPoints !== []) {
-            $lines = ['Основні думки:'];
-
-            foreach ($mainPoints as $point) {
-                $lines[] = '- ' . $point;
-            }
-
-            $parts[] = implode(PHP_EOL, $lines);
-        }
-
-        if ($keyTerms !== []) {
-            $parts[] = 'Ключові терміни: ' . implode(', ', $keyTerms);
-        }
-
-        if ($possibleQuestions !== []) {
-            $lines = ['Можливі запитання:'];
-
-            foreach ($possibleQuestions as $question) {
-                $lines[] = '- ' . $question;
-            }
-
-            $parts[] = implode(PHP_EOL, $lines);
-        }
-
-        return implode(PHP_EOL . PHP_EOL, array_filter($parts));
+    private function buildContentText(SummaryArtifactData $artifact): string
+    {
+        return $artifact->toContentText();
     }
 }

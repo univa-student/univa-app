@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Ai\Context\Builders;
 
-use App\Modules\Files\Models\File;
 use App\Modules\Ai\Contracts\ContextBuilderContract;
-use App\Modules\Ai\DTO\FileSummaryContextData;
 use App\Modules\Ai\DTO\SummarizeFileData;
+use App\Modules\Ai\DTO\SummaryContextData;
+use App\Modules\Ai\DTO\SummarySourceFileData;
 use App\Modules\Ai\Exceptions\AiContextException;
+use App\Modules\Files\Models\File;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 final readonly class FileSummaryContextBuilder implements ContextBuilderContract
@@ -36,68 +38,78 @@ final readonly class FileSummaryContextBuilder implements ContextBuilderContract
     /**
      * @throws AiContextException
      */
-    public function buildFromData(SummarizeFileData $data): FileSummaryContextData
+    public function buildFromData(SummarizeFileData $data): SummaryContextData
     {
-        $file = $this->resolveFile($data);
-        $subject = $this->resolveSubject($file);
+        $files = $this->resolveFiles($data);
+        $mappedFiles = [];
 
-        $fileName = $this->firstNonEmptyAttribute($file, [
-            'name',
-            'original_name',
-            'file_name',
-            'filename',
-            'title',
-        ]);
+        foreach ($files as $file) {
+            $subject = $this->resolveSubject($file);
 
-        if ($fileName === null) {
-            throw AiContextException::fileNameCannotBeResolved((int) $file->getKey());
+            $fileName = $this->firstNonEmptyAttribute($file, [
+                'name',
+                'original_name',
+                'file_name',
+                'filename',
+                'title',
+            ]);
+
+            if ($fileName === null) {
+                throw AiContextException::fileNameCannotBeResolved((int) $file->getKey());
+            }
+
+            $mappedFiles[] = new SummarySourceFileData(
+                fileId: (int) $file->getKey(),
+                fileName: $fileName,
+                mimeType: $this->firstNonEmptyAttribute($file, ['mime_type', 'mime', 'content_type']),
+                extension: $this->firstNonEmptyAttribute($file, ['extension', 'ext']) ?? pathinfo($fileName, PATHINFO_EXTENSION) ?: null,
+                size: $this->nullableInt($file->getAttribute('size')),
+                disk: $this->firstNonEmptyAttribute($file, ['disk', 'storage_disk']),
+                path: $this->firstNonEmptyAttribute($file, ['path', 'file_path', 'storage_path', 'storage_key']),
+                subjectId: $subject ? (int) $subject->getKey() : null,
+                subjectName: $subject ? $this->firstNonEmptyAttribute($subject, ['name', 'title']) : null,
+                language: $data->language ?? $this->firstNonEmptyAttribute($file, ['language', 'lang']),
+                extra: [
+                    'file_hash' => $this->firstNonEmptyAttribute($file, ['hash', 'checksum']),
+                    'visibility' => $this->firstNonEmptyAttribute($file, ['visibility']),
+                    'subject_color' => $subject ? $this->firstNonEmptyAttribute($subject, ['color']) : null,
+                ],
+            );
         }
 
-        $mimeType = $this->firstNonEmptyAttribute($file, [
-            'mime_type',
-            'mime',
-            'content_type',
-        ]);
+        $subjectIds = array_values(array_unique(array_filter(array_map(
+            static fn (SummarySourceFileData $file): ?int => $file->subjectId,
+            $mappedFiles,
+        ))));
 
-        $path = $this->firstNonEmptyAttribute($file, [
-            'path',
-            'file_path',
-            'storage_path',
-            'storage_key',
-        ]);
+        $subjectNames = array_values(array_unique(array_filter(array_map(
+            static fn (SummarySourceFileData $file): ?string => $file->subjectName,
+            $mappedFiles,
+        ))));
 
-        $disk = $this->firstNonEmptyAttribute($file, [
-            'disk',
-            'storage_disk',
-        ]);
+        $language = $data->language;
+        if ($language === null) {
+            foreach ($mappedFiles as $file) {
+                if ($file->language !== null && trim($file->language) !== '') {
+                    $language = $file->language;
+                    break;
+                }
+            }
+        }
 
-        $extension = $this->firstNonEmptyAttribute($file, [
-            'extension',
-            'ext',
-        ]) ?? pathinfo($fileName, PATHINFO_EXTENSION) ?: null;
-
-        $language = $data->language
-            ?? $this->firstNonEmptyAttribute($file, ['language', 'lang']);
-
-        return new FileSummaryContextData(
-            fileId: (int) $file->getKey(),
-            fileName: $fileName,
-            mimeType: $mimeType,
-            extension: $extension,
-            size: $this->nullableInt($file->getAttribute('size')),
-            disk: $disk,
-            path: $path,
-            subjectId: $subject ? (int) $subject->getKey() : null,
-            subjectName: $subject ? $this->firstNonEmptyAttribute($subject, ['name', 'title']) : null,
+        return new SummaryContextData(
+            files: $mappedFiles,
+            subjectId: count($subjectIds) === 1 ? $subjectIds[0] : null,
+            subjectName: count($subjectNames) === 1 ? $subjectNames[0] : null,
             language: $language,
             extra: [
                 'mode' => $data->mode->value,
+                'style' => $data->style->value,
                 'notes' => $data->notes,
                 'force_refresh' => $data->forceRefresh,
                 'requested_model' => $data->model,
-                'file_hash' => $this->firstNonEmptyAttribute($file, ['hash', 'checksum']),
-                'visibility' => $this->firstNonEmptyAttribute($file, ['visibility']),
-                'subject_color' => $subject ? $this->firstNonEmptyAttribute($subject, ['color']) : null,
+                'include_flashcards' => $data->includeFlashcards,
+                'file_count' => count($mappedFiles),
             ],
         );
     }
@@ -105,19 +117,28 @@ final readonly class FileSummaryContextBuilder implements ContextBuilderContract
     /**
      * @throws AiContextException
      */
-    private function resolveFile(SummarizeFileData $data): File
+    private function resolveFiles(SummarizeFileData $data): Collection
     {
-        $file = $this->fileModel::query()
-            ->whereKey($data->fileId)
+        $files = $this->fileModel::query()
+            ->whereIn('id', $data->fileIds)
             ->where('user_id', $data->userId)
             ->with('subject')
-            ->first();
+            ->get()
+            ->keyBy(static fn (File $file): int => (int) $file->getKey());
 
-        if (!$file instanceof File) {
-            throw AiContextException::fileNotFoundOrForbidden($data->fileId, $data->userId);
+        $orderedFiles = [];
+
+        foreach ($data->fileIds as $fileId) {
+            $file = $files->get($fileId);
+
+            if (!$file instanceof File) {
+                throw AiContextException::fileNotFoundOrForbidden($fileId, $data->userId);
+            }
+
+            $orderedFiles[] = $file;
         }
 
-        return $file;
+        return new Collection($orderedFiles);
     }
 
     private function resolveSubject(File $file): ?Model

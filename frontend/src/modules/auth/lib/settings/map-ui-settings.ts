@@ -29,7 +29,7 @@ export function mapUiSettings(items: UserSettingsApiResponse): UserSettings {
 
     for (const it of items ?? []) {
         const key = it?.setting?.key;
-        const raw = it?.value?.value;
+        const raw = it?.value?.value ?? it?.rawValue ?? null;
 
         switch (key) {
             case "theme":

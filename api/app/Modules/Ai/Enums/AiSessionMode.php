@@ -12,6 +12,7 @@ enum AiSessionMode: string
     case QUIZ = 'quiz';
     case STUDY_PLAN = 'study_plan';
     case ANALYZE = 'analyze';
+    case PLANNER = 'planner';
 
     public static function values(): array
     {
@@ -27,6 +28,7 @@ enum AiSessionMode: string
             self::QUIZ => 'Quiz',
             self::STUDY_PLAN => 'Study plan',
             self::ANALYZE => 'Analyze',
+            self::PLANNER => 'Planner',
         };
     }
 }

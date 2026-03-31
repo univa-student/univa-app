@@ -1,4 +1,5 @@
 export type LlmProvider = "openai" | "anthropic" | "google" | "ollama" | "other";
+export type AiSummaryStyle = "standard" | "teacher" | "beginner";
 
 export interface LlmModel {
     id: number;
@@ -13,7 +14,23 @@ export interface LlmModel {
 export interface SummaryContentMeta {
     fileName?: string;
     subjectName?: string;
+    fileIds?: number[];
+    fileNames?: string[];
+    sourceFiles?: Array<{
+        id: number;
+        name: string;
+        subjectId?: number | null;
+        subjectName?: string | null;
+    }>;
+    style?: AiSummaryStyle;
+    includeFlashcards?: boolean;
+    isMultiFile?: boolean;
     [key: string]: unknown;
+}
+
+export interface SummaryFlashcard {
+    question: string;
+    answer: string;
 }
 
 export interface SummaryContentJson {
@@ -22,6 +39,8 @@ export interface SummaryContentJson {
     mainPoints?: string[];
     keyTerms?: string[];
     possibleQuestions?: string[];
+    flashcards?: SummaryFlashcard[];
+    style?: AiSummaryStyle;
     [key: string]: unknown;
 }
 
@@ -37,6 +56,13 @@ export interface SummaryListItem {
 
 export interface SummaryArtifact extends SummaryListItem {
     contentJson: SummaryContentJson | null;
+}
+
+export interface GenerateStudySummaryPayload {
+    fileIds: number[];
+    style?: AiSummaryStyle;
+    includeFlashcards?: boolean;
+    notes?: string;
 }
 
 export interface DailyDigestLessonItem {

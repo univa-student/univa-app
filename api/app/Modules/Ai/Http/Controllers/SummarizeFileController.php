@@ -7,9 +7,9 @@ namespace App\Modules\Ai\Http\Controllers;
 use App\Core\Response\ApiResponse;
 use App\Core\Response\ResponseState;
 use App\Http\Controllers\Controller;
-use App\Modules\Files\Models\File;
 use App\Modules\Ai\Enums\AiArtifactType;
 use App\Modules\Ai\Http\Requests\DeleteFileSummaryRequest;
+use App\Modules\Ai\Http\Requests\GenerateSummaryRequest;
 use App\Modules\Ai\Http\Requests\IndexFileSummariesRequest;
 use App\Modules\Ai\Http\Requests\ShowFileSummaryRequest;
 use App\Modules\Ai\Http\Requests\SummarizeFileRequest;
@@ -17,8 +17,9 @@ use App\Modules\Ai\Http\Resources\AiArtifactResource;
 use App\Modules\Ai\Http\Resources\AiRunResource;
 use App\Modules\Ai\Models\AiArtifact;
 use App\Modules\Ai\UseCases\SummarizeFile;
-use App\Modules\Notification\Support\Notifier;
+use App\Modules\Files\Models\File;
 use App\Modules\Notification\Enums\NotificationType;
+use App\Modules\Notification\Support\Notifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Throwable;
@@ -61,21 +62,26 @@ class SummarizeFileController extends Controller
         SummarizeFileRequest $request,
         SummarizeFile $useCase,
     ): JsonResponse {
-        $result = $useCase->handle($request->toDto());
+        return $this->handleGeneration(
+            request: $request,
+            useCase: $useCase,
+            successMessage: 'Конспект файлу успішно сформовано.',
+            notificationMessage: 'Новий AI-матеріал для вашого файлу успішно згенеровано.',
+        );
+    }
 
-        Notifier::send($request->user()->id, NotificationType::AI_SUMMARY_CREATED, [
-            'message' => 'Новий конспект до вашого файлу успішно згенеровано.'
-        ]);
-
-        return ApiResponse::make(
-            state: ResponseState::OK,
-            message: 'Конспект файла успішно сформовано.',
-            data: [
-                'run' => isset($result['run'])
-                    ? new AiRunResource($result['run'])
-                    : null,
-                'artifact' => new AiArtifactResource($result['artifact']),
-            ],
+    /**
+     * @throws Throwable
+     */
+    public function storeMany(
+        GenerateSummaryRequest $request,
+        SummarizeFile $useCase,
+    ): JsonResponse {
+        return $this->handleGeneration(
+            request: $request,
+            useCase: $useCase,
+            successMessage: 'Зведений AI-матеріал успішно сформовано.',
+            notificationMessage: 'Новий AI-матеріал на основі кількох файлів успішно згенеровано.',
         );
     }
 
@@ -96,7 +102,34 @@ class SummarizeFileController extends Controller
 
         return ApiResponse::make(
             state: ResponseState::OK,
-            message: 'Конспект файла успішно видалено.',
+            message: 'Конспект файлу успішно видалено.',
+        );
+    }
+
+    /**
+     * @throws Throwable
+     */
+    private function handleGeneration(
+        SummarizeFileRequest|GenerateSummaryRequest $request,
+        SummarizeFile $useCase,
+        string $successMessage,
+        string $notificationMessage,
+    ): JsonResponse {
+        $result = $useCase->handle($request->toDto());
+
+        Notifier::send($request->user()->id, NotificationType::AI_SUMMARY_CREATED, [
+            'message' => $notificationMessage,
+        ]);
+
+        return ApiResponse::make(
+            state: ResponseState::OK,
+            message: $successMessage,
+            data: [
+                'run' => isset($result['run'])
+                    ? new AiRunResource($result['run'])
+                    : null,
+                'artifact' => new AiArtifactResource($result['artifact']),
+            ],
         );
     }
 }

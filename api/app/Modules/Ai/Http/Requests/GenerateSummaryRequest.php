@@ -12,7 +12,7 @@ use App\Modules\Files\Models\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
-class SummarizeFileRequest extends UnivaRequest
+class GenerateSummaryRequest extends UnivaRequest
 {
     public function authorize(): bool
     {
@@ -22,27 +22,33 @@ class SummarizeFileRequest extends UnivaRequest
             return false;
         }
 
-        $file = $this->resolveFile();
+        $fileIds = $this->resolveFileIds();
 
-        if (!$file instanceof File) {
+        if ($fileIds === []) {
             return false;
         }
 
-        return Gate::forUser($user)->allows('view', $file);
+        $files = File::query()
+            ->whereIn('id', $fileIds)
+            ->get();
+
+        if ($files->count() !== count($fileIds)) {
+            return false;
+        }
+
+        foreach ($files as $file) {
+            if (!Gate::forUser($user)->allows('view', $file)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected function prepareForValidation(): void
     {
-        $fileId = $this->resolveFileId();
-
-        if ($fileId !== null) {
-            $this->merge([
-                'file_id' => $fileId,
-                'file_ids' => [$fileId],
-            ]);
-        }
-
         $this->merge([
+            'file_ids' => $this->resolveFileIds(),
             'mode' => AiSessionMode::SUMMARY->value,
         ]);
     }
@@ -50,20 +56,17 @@ class SummarizeFileRequest extends UnivaRequest
     public function rules(): array
     {
         return [
-            'file_id' => [
-                'required',
-                'integer',
-                Rule::exists('files', 'id'),
-            ],
             'file_ids' => [
                 'required',
                 'array',
-                'size:1',
+                'min:1',
+                'max:8',
             ],
             'file_ids.*' => [
                 'required',
                 'integer',
                 Rule::exists('files', 'id'),
+                'distinct',
             ],
             'session_id' => [
                 'nullable',
@@ -110,8 +113,7 @@ class SummarizeFileRequest extends UnivaRequest
 
         return SummarizeFileData::fromArray([
             'user_id' => (int) $this->user()->getAuthIdentifier(),
-            'file_id' => (int) $validated['file_id'],
-            'file_ids' => [$validated['file_id']],
+            'file_ids' => array_map('intval', $validated['file_ids'] ?? []),
             'mode' => AiSessionMode::SUMMARY,
             'session_id' => isset($validated['session_id']) ? (int) $validated['session_id'] : null,
             'language' => isset($validated['language']) ? (string) $validated['language'] : null,
@@ -123,41 +125,20 @@ class SummarizeFileRequest extends UnivaRequest
         ]);
     }
 
-    private function resolveFile(): ?File
+    /**
+     * @return array<int, int>
+     */
+    private function resolveFileIds(): array
     {
-        $routeFile = $this->route('file');
+        $raw = $this->input('file_ids', []);
 
-        if ($routeFile instanceof File) {
-            return $routeFile;
+        if (!is_array($raw)) {
+            return [];
         }
 
-        $fileId = $this->resolveFileId();
-
-        if ($fileId === null) {
-            return null;
-        }
-
-        return File::query()->find($fileId);
-    }
-
-    private function resolveFileId(): ?int
-    {
-        $routeFile = $this->route('file');
-
-        if ($routeFile instanceof File) {
-            return (int) $routeFile->getKey();
-        }
-
-        if (is_numeric($routeFile)) {
-            return (int) $routeFile;
-        }
-
-        $inputFileId = $this->input('file_id');
-
-        if (is_numeric($inputFileId)) {
-            return (int) $inputFileId;
-        }
-
-        return null;
+        return array_values(array_map('intval', array_filter(
+            $raw,
+            static fn (mixed $value): bool => is_numeric($value),
+        )));
     }
 }

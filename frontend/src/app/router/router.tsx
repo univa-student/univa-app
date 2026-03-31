@@ -31,6 +31,7 @@ import { PlannerPage } from "@/pages/planner/planner.page";
 import { PrivateRoot } from "./PrivateRoot.tsx";
 import { routesLoaders } from "./loaders.ts";
 import { AiHome } from "@/pages/ai/ai-home.tsx";
+import { AiNewSummaryPage } from "@/pages/ai/ai-new-summary.tsx";
 import { SummariesListPage } from "@/pages/ai/summaries-list.tsx";
 import { SummaryViewPage } from "@/pages/ai/summary-view.tsx";
 import {IntegrationsPage} from "@/landing/pages/integrations.page.tsx";
@@ -467,6 +468,26 @@ export const router = createBrowserRouter([
                             </LazyBoundary>
                         ),
                     },
+                    {
+                        path: "dashboard/ai/summaries/new",
+                        element: (
+                            <LazyBoundary>
+                                <AuthGuard>
+                                    <DashboardLayout
+                                        breadcrumbs={[
+                                            { label: "Головна", href: "/dashboard" },
+                                            { label: "AI-помічник", href: "/dashboard/ai" },
+                                            { label: "Конспекти", href: "/dashboard/ai/summaries" },
+                                            { label: "Новий" },
+                                        ]}
+                                    >
+                                        <AiNewSummaryPage />
+                                    </DashboardLayout>
+                                </AuthGuard>
+                            </LazyBoundary>
+                        ),
+                    },
+
                     {
                         path: "dashboard/ai",
                         element: (
