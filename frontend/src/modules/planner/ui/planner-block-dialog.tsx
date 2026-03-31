@@ -3,14 +3,14 @@ import { LoaderCircleIcon, Trash2Icon } from "lucide-react";
 import type { Deadline } from "@/modules/deadlines/model/types";
 import type { Task } from "@/modules/organizer/model/types";
 import type { Subject } from "@/modules/subjects/model/types";
-import type { PlannerBlock, PlannerBlockPayload, PlannerBlockStatus, PlannerBlockType, PlannerEnergyLevel } from "../model/types";
-import { isoToDateParts, toIsoFromDateAndTime } from "../lib/planner-time";
 import { Button } from "@/shared/shadcn/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/shadcn/ui/dialog";
 import { Input } from "@/shared/shadcn/ui/input";
 import { Label } from "@/shared/shadcn/ui/label";
 import { Textarea } from "@/shared/shadcn/ui/textarea";
 import { DateInput, TimeInput } from "@/shared/ui/date-time-input";
+import { isoToDateParts, toIsoFromDateAndTime } from "../lib/planner-time";
+import type { PlannerBlock, PlannerBlockPayload, PlannerBlockStatus, PlannerBlockType, PlannerEnergyLevel } from "../model/types";
 
 const selectClassName = "flex h-10 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
@@ -98,10 +98,12 @@ export function PlannerBlockDialog({
     isPending = false,
 }: PlannerBlockDialogProps) {
     const [draft, setDraft] = useState<Draft>(() => buildDraft(block, prefill));
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     useEffect(() => {
         if (!open) return;
         setDraft(buildDraft(block, prefill));
+        setShowAdvanced(Boolean(block));
     }, [block, open, prefill]);
 
     const linkedTask = useMemo(() => tasks.find((item) => item.id === draft.taskId) ?? null, [draft.taskId, tasks]);
@@ -132,9 +134,9 @@ export function PlannerBlockDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>{block ? "Редагувати planner block" : "Новий planner block"}</DialogTitle>
+                    <DialogTitle>{block ? "Редагувати блок" : "Новий блок"}</DialogTitle>
                     <DialogDescription>
-                        Прив’яжіть блок до задачі, дедлайну або предмета, щоб Planner збирав день в одному місці.
+                        Спочатку заповни основні поля для швидкого планування. Додаткові параметри можна відкрити нижче.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -148,49 +150,6 @@ export function PlannerBlockDialog({
                                 onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
                                 placeholder={linkedTask?.title ?? linkedDeadline?.title ?? "Наприклад, підготовка до семінару"}
                             />
-                        </div>
-
-                        <div className="space-y-2 sm:col-span-2">
-                            <Label htmlFor="planner-description">Опис</Label>
-                            <Textarea
-                                id="planner-description"
-                                className="min-h-24"
-                                value={draft.description}
-                                onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
-                                placeholder="Контекст, підетапи або чекпоїнти"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="planner-type">Тип</Label>
-                            <select
-                                id="planner-type"
-                                className={selectClassName}
-                                value={draft.type}
-                                onChange={(event) => setDraft((current) => ({ ...current, type: event.target.value as PlannerBlockType }))}
-                            >
-                                <option value="manual">Manual</option>
-                                <option value="focus">Focus</option>
-                                <option value="task">Task</option>
-                                <option value="deadline">Deadline</option>
-                                <option value="break">Break</option>
-                            </select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="planner-status">Статус</Label>
-                            <select
-                                id="planner-status"
-                                className={selectClassName}
-                                value={draft.status}
-                                onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value as PlannerBlockStatus }))}
-                            >
-                                <option value="planned">Planned</option>
-                                <option value="in_progress">In progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="skipped">Skipped</option>
-                                <option value="canceled">Canceled</option>
-                            </select>
                         </div>
 
                         <div className="space-y-2">
@@ -210,7 +169,7 @@ export function PlannerBlockDialog({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="planner-task">Task</Label>
+                            <Label htmlFor="planner-task">Задача</Label>
                             <select
                                 id="planner-task"
                                 className={selectClassName}
@@ -220,7 +179,7 @@ export function PlannerBlockDialog({
                                     taskId: event.target.value ? Number(event.target.value) : null,
                                 }))}
                             >
-                                <option value="">Без task</option>
+                                <option value="">Без задачі</option>
                                 {tasks.map((task) => (
                                     <option key={task.id} value={task.id}>
                                         {task.title}
@@ -230,7 +189,7 @@ export function PlannerBlockDialog({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="planner-deadline">Deadline</Label>
+                            <Label htmlFor="planner-deadline">Дедлайн</Label>
                             <select
                                 id="planner-deadline"
                                 className={selectClassName}
@@ -240,7 +199,7 @@ export function PlannerBlockDialog({
                                     deadlineId: event.target.value ? Number(event.target.value) : null,
                                 }))}
                             >
-                                <option value="">Без deadline</option>
+                                <option value="">Без дедлайну</option>
                                 {deadlines.map((deadline) => (
                                     <option key={deadline.id} value={deadline.id}>
                                         {deadline.title}
@@ -249,7 +208,7 @@ export function PlannerBlockDialog({
                             </select>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 sm:col-span-2">
                             <Label htmlFor="planner-subject">Предмет</Label>
                             <select
                                 id="planner-subject"
@@ -268,41 +227,6 @@ export function PlannerBlockDialog({
                                 ))}
                             </select>
                         </div>
-
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="planner-priority">Priority</Label>
-                                <Input
-                                    id="planner-priority"
-                                    type="number"
-                                    min={0}
-                                    max={10}
-                                    value={draft.priority ?? ""}
-                                    onChange={(event) => setDraft((current) => ({
-                                        ...current,
-                                        priority: event.target.value ? Number(event.target.value) : null,
-                                    }))}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="planner-energy">Energy</Label>
-                                <select
-                                    id="planner-energy"
-                                    className={selectClassName}
-                                    value={draft.energyLevel ?? ""}
-                                    onChange={(event) => setDraft((current) => ({
-                                        ...current,
-                                        energyLevel: event.target.value ? event.target.value as PlannerEnergyLevel : null,
-                                    }))}
-                                >
-                                    <option value="">Без energy level</option>
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
-                        </div>
                     </div>
 
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -313,6 +237,97 @@ export function PlannerBlockDialog({
                         />
                         Заблокувати блок від автопланування
                     </label>
+
+                    <div className="rounded-xl border border-border/60">
+                        <button
+                            type="button"
+                            className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-foreground"
+                            onClick={() => setShowAdvanced((current) => !current)}
+                        >
+                            <span>Додаткові параметри</span>
+                            <span className="text-xs text-muted-foreground">{showAdvanced ? "Приховати" : "Показати"}</span>
+                        </button>
+
+                        {showAdvanced && (
+                            <div className="grid gap-4 border-t border-border/60 p-4 sm:grid-cols-2">
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label htmlFor="planner-description">Опис</Label>
+                                    <Textarea
+                                        id="planner-description"
+                                        className="min-h-24"
+                                        value={draft.description}
+                                        onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
+                                        placeholder="Контекст, підетапи або чекпойнти"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="planner-type">Тип</Label>
+                                    <select
+                                        id="planner-type"
+                                        className={selectClassName}
+                                        value={draft.type}
+                                        onChange={(event) => setDraft((current) => ({ ...current, type: event.target.value as PlannerBlockType }))}
+                                    >
+                                        <option value="manual">Ручний</option>
+                                        <option value="focus">Фокус</option>
+                                        <option value="task">Задача</option>
+                                        <option value="deadline">Дедлайн</option>
+                                        <option value="break">Перерва</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="planner-status">Статус</Label>
+                                    <select
+                                        id="planner-status"
+                                        className={selectClassName}
+                                        value={draft.status}
+                                        onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value as PlannerBlockStatus }))}
+                                    >
+                                        <option value="planned">Заплановано</option>
+                                        <option value="in_progress">У процесі</option>
+                                        <option value="completed">Завершено</option>
+                                        <option value="skipped">Пропущено</option>
+                                        <option value="canceled">Скасовано</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="planner-priority">Пріоритет</Label>
+                                    <Input
+                                        id="planner-priority"
+                                        type="number"
+                                        min={0}
+                                        max={10}
+                                        value={draft.priority ?? ""}
+                                        onChange={(event) => setDraft((current) => ({
+                                            ...current,
+                                            priority: event.target.value ? Number(event.target.value) : null,
+                                        }))}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="planner-energy">Рівень енергії</Label>
+                                    <select
+                                        id="planner-energy"
+                                        className={selectClassName}
+                                        value={draft.energyLevel ?? ""}
+                                        onChange={(event) => setDraft((current) => ({
+                                            ...current,
+                                            energyLevel: event.target.value ? event.target.value as PlannerEnergyLevel : null,
+                                        }))}
+                                    >
+                                        <option value="">Без рівня</option>
+                                        <option value="low">Низький</option>
+                                        <option value="medium">Середній</option>
+                                        <option value="high">Високий</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     <DialogFooter className="items-center justify-between">
                         <div>

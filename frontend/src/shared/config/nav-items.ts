@@ -3,6 +3,7 @@ import {
     BookCheckIcon,
     BotIcon,
     CalendarDaysIcon,
+    Clock3Icon,
     FolderOpenIcon,
     LayoutDashboardIcon,
     ListChecksIcon,
@@ -39,7 +40,7 @@ export const navItems: NavItem[] = [
     {
         title: "РџР»Р°РЅРµСЂ",
         url: "/dashboard/planner",
-        icon: CalendarDaysIcon,
+        icon: Clock3Icon,
         items: [],
     },
     {

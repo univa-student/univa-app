@@ -16,9 +16,9 @@ class PlannerBlockResource extends JsonResource
             'description' => $this->description,
             'type' => $this->type?->value,
             'status' => $this->status?->value,
-            'start_at' => $this->start_at?->toISOString(),
-            'end_at' => $this->end_at?->toISOString(),
-            'date' => $this->date?->toDateString(),
+            'start_at' => $this->start_at?->toDateTimeString(),
+            'end_at' => $this->end_at?->toDateTimeString(),
+            'date' => $this->date?->toDateTimeString(),
             'is_all_day' => $this->is_all_day,
             'is_locked' => $this->is_locked,
             'created_by_ai' => $this->created_by_ai,
@@ -67,11 +67,11 @@ class PlannerBlockResource extends JsonResource
                     'title' => $this->deadline->title,
                     'status' => $this->deadline->status,
                     'priority' => $this->deadline->priority,
-                    'due_at' => $this->deadline->due_at?->toISOString(),
+                    'due_at' => $this->deadline->due_at?->toDateTimeString(),
                 ];
             }),
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
+            'created_at' => $this->created_at?->toDateTimeString(),
+            'updated_at' => $this->updated_at?->toDateTimeString(),
         ];
     }
 }

@@ -1,18 +1,31 @@
 import { type MouseEvent as ReactMouseEvent, useEffect, useMemo, useState } from "react";
-import { addDays, endOfWeek, format, parseISO, startOfWeek, subDays } from "date-fns";
+import { Link } from "react-router-dom";
+import { addDays, differenceInCalendarDays, endOfWeek, format, parseISO, startOfWeek, subDays } from "date-fns";
 import { uk } from "date-fns/locale";
-import { CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, LoaderCircleIcon, SparklesIcon } from "lucide-react";
+import {
+    AlertCircleIcon,
+    BotIcon,
+    CalendarDaysIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    Clock3Icon,
+    ListChecksIcon,
+    LoaderCircleIcon,
+    PlusIcon,
+} from "lucide-react";
 import { useDeadlines } from "@/modules/deadlines/api/hooks";
+import type { Deadline } from "@/modules/deadlines/model/types";
 import { useTasks } from "@/modules/organizer/api/hooks";
+import type { Task } from "@/modules/organizer/model/types";
+import { getSchedulerConfig } from "@/modules/schedule/ui/schedule-calendar/schedule.utils";
 import { useSettingsGroup } from "@/modules/settings/hooks/use-settings-group";
 import { SETTING_GROUP } from "@/modules/settings/model/tabs.config";
 import { useSubjects } from "@/modules/subjects/api/hooks";
-import { getSchedulerConfig } from "@/modules/schedule/ui/schedule-calendar/schedule.utils";
 import { Badge } from "@/shared/shadcn/ui/badge";
 import { Button } from "@/shared/shadcn/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/shadcn/ui/card";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/shadcn/ui/sheet";
 import { ApiError } from "@/shared/types/api";
+import { PageSidePanel } from "@/shared/ui/page-side-panel";
 import { cn } from "@/shared/shadcn/lib/utils";
 import {
     useApplyPlannerSuggestions,
@@ -26,8 +39,29 @@ import {
     useResizePlannerBlock,
     useUpdatePlannerBlock,
 } from "../api/hooks";
-import { buildHours, clampRange, formatMinutesLabel, gridHeight, heightFromMinutes, minutesFromIso, PLANNER_GRID_TOP, PLANNER_PX_PER_MIN, roundToStep, topFromMinutes, toIsoFromDateAndTime } from "../lib/planner-time";
-import type { PlannerBlock, PlannerBlockPayload, PlannerTimelineBlockItem, PlannerTimelineItem, PlannerSuggestionBlock } from "../model/types";
+import {
+    buildHours,
+    clampRange,
+    formatMinutesLabel,
+    gridHeight,
+    heightFromMinutes,
+    isoToDateParts,
+    minutesFromIso,
+    PLANNER_GRID_TOP,
+    PLANNER_PX_PER_MIN,
+    roundToStep,
+    topFromMinutes,
+    toIsoFromDateAndTime,
+} from "../lib/planner-time";
+import type {
+    PlannerBlock,
+    PlannerBlockPayload,
+    PlannerDaySummary,
+    PlannerSuggestion,
+    PlannerSuggestionBlock,
+    PlannerTimelineBlockItem,
+    PlannerTimelineItem,
+} from "../model/types";
 import { PlannerBlockDialog } from "./planner-block-dialog";
 
 type PlannerViewMode = "day" | "week";
@@ -49,161 +83,456 @@ type DragState = {
 
 type PlannerMoveResizePayload = Pick<PlannerBlockPayload, "type" | "startAt" | "endAt" | "allowLessonConflict">;
 
-function getAccent(item: PlannerTimelineItem) {
-    if (item.kind === "lesson") return item.subject.color ?? "#2563eb";
-    return item.color ?? item.subject?.color ?? "#0f766e";
-}
+type WeekDayCard = {
+    date: string;
+    timeline: PlannerTimelineItem[];
+    summary: PlannerDaySummary;
+};
+
+type StatusTone = "neutral" | "warning" | "danger";
+
+const focusTypes = new Set(["focus", "task", "deadline"]);
 
 function isPlannerBlock(item: PlannerTimelineItem): item is PlannerTimelineBlockItem {
     return item.kind === "planner_block";
 }
 
-function SummaryCards({ summary }: { summary: { plannedMinutes: number; completedMinutes: number; lessonMinutes: number; focusMinutes: number; freeMinutes: number; isOverloaded: boolean; conflictsCount: number } }) {
-    const items = [
-        { label: "Planned", value: `${Math.round(summary.plannedMinutes / 60)}h` },
-        { label: "Completed", value: `${Math.round(summary.completedMinutes / 60)}h` },
-        { label: "Lessons", value: `${Math.round(summary.lessonMinutes / 60)}h` },
-        { label: "Focus", value: `${Math.round(summary.focusMinutes / 60)}h` },
-        { label: "Free", value: `${Math.round(summary.freeMinutes / 60)}h` },
-    ];
-
-    return (
-        <div className="grid gap-3 md:grid-cols-5">
-            {items.map((item) => (
-                <Card key={item.label} className="border-border/60 bg-card/80">
-                    <CardContent className="p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{item.label}</p>
-                        <p className="mt-2 text-2xl font-semibold text-foreground">{item.value}</p>
-                    </CardContent>
-                </Card>
-            ))}
-            <Card className={cn("border-border/60 md:col-span-5", summary.isOverloaded && "border-amber-500/50 bg-amber-500/5")}>
-                <CardContent className="flex items-center justify-between gap-3 p-4 text-sm">
-                    <span className="text-muted-foreground">
-                        {summary.isOverloaded ? "День перевантажений або містить конфлікти." : "План дня збалансований."}
-                    </span>
-                    <Badge variant={summary.isOverloaded ? "outline" : "secondary"}>
-                        Conflicts: {summary.conflictsCount}
-                    </Badge>
-                </CardContent>
-            </Card>
-        </div>
-    );
+function isOpenTask(task: Task) {
+    return task.status !== "done" && task.status !== "cancelled";
 }
 
-function WeekSummaryCards({
-    summary,
-}: {
-    summary: {
-        plannedMinutes: number;
-        completedMinutes: number;
-        lessonMinutes: number;
-        focusMinutes: number;
-        freeMinutes: number;
-        overloadedDaysCount: number;
-        conflictsCount: number;
+function isActiveDeadline(deadline: Deadline) {
+    return deadline.status !== "completed" && deadline.status !== "cancelled";
+}
+
+function getDateKey(value: string | null | undefined) {
+    if (!value) return null;
+    return isoToDateParts(value).date;
+}
+
+function compareByDueDate<T extends { dueAt?: string | null }>(left: T, right: T) {
+    const leftValue = left.dueAt ?? "9999-12-31T23:59:59";
+    const rightValue = right.dueAt ?? "9999-12-31T23:59:59";
+
+    return leftValue.localeCompare(rightValue);
+}
+
+function formatDuration(minutes: number) {
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+
+    if (hours === 0) return `${remainder} хв`;
+    if (remainder === 0) return `${hours} год`;
+
+    return `${hours} год ${remainder} хв`;
+}
+
+function getSuggestionKey(block: PlannerSuggestionBlock) {
+    return `${block.title}-${block.startAt}-${block.endAt}`;
+}
+
+function getAccent(item: PlannerTimelineItem) {
+    if (item.kind === "lesson") return item.subject.color ?? "#94a3b8";
+    return item.color ?? item.subject?.color ?? "#0f766e";
+}
+
+function getBlockStatusLabel(status: PlannerTimelineBlockItem["status"]) {
+    switch (status) {
+    case "planned":
+        return "Заплановано";
+    case "in_progress":
+        return "У процесі";
+    case "completed":
+        return "Завершено";
+    case "skipped":
+        return "Пропущено";
+    case "canceled":
+        return "Скасовано";
+    default:
+        return status;
+    }
+}
+
+function getBlockTypeLabel(type: PlannerTimelineBlockItem["type"]) {
+    switch (type) {
+    case "manual":
+        return "Ручний";
+    case "task":
+        return "Задача";
+    case "deadline":
+        return "Дедлайн";
+    case "focus":
+        return "Фокус";
+    case "break":
+        return "Перерва";
+    case "lesson":
+        return "Пара";
+    default:
+        return type;
+    }
+}
+
+function getFocusStatus(
+    summary: PlannerDaySummary,
+    unplannedTasksCount: number,
+    unplannedDeadlinesCount: number,
+) {
+    const details: string[] = [];
+    let tone: StatusTone = "neutral";
+    let title = "День виглядає керованим";
+
+    if (summary.conflictsCount > 0) {
+        tone = "danger";
+        title = "Є конфлікти у плані";
+        details.push(`${summary.conflictsCount} конфлікт(и) між блоками або парами`);
+    }
+
+    if (summary.freeMinutes < 90) {
+        tone = tone === "danger" ? "danger" : "warning";
+        title = tone === "danger" ? title : "День щільно заповнений";
+        details.push(`Вільного часу лише ${formatDuration(summary.freeMinutes)}`);
+    }
+
+    if (unplannedDeadlinesCount > 0) {
+        tone = "danger";
+        title = "Є дедлайни без підготовки";
+        details.push(`${unplannedDeadlinesCount} дедлайн(и) без планових блоків`);
+    }
+
+    if (unplannedTasksCount > 0) {
+        tone = tone === "danger" ? "danger" : "warning";
+        if (tone === "warning") {
+            title = "Є незаплановані задачі";
+        }
+
+        details.push(`${unplannedTasksCount} задач(і) без слотів`);
+    }
+
+    if (details.length === 0) {
+        details.push(`Вільно ${formatDuration(summary.freeMinutes)} для додаткових блоків`);
+    }
+
+    return { tone, title, details };
+}
+
+function getWeekStatus(days: WeekDayCard[], unplannedTasksCount: number, unplannedDeadlinesCount: number) {
+    const overloadedDays = days.filter((day) => day.summary.isOverloaded).length;
+    const conflictDays = days.filter((day) => day.summary.conflictsCount > 0).length;
+    const details: string[] = [];
+    let tone: StatusTone = "neutral";
+    let title = "Тиждень виглядає рівномірно";
+
+    if (overloadedDays > 0) {
+        tone = "warning";
+        title = "Тиждень потребує корекції";
+        details.push(`${overloadedDays} дн. з перевантаженням`);
+    }
+
+    if (conflictDays > 0) {
+        tone = "danger";
+        title = "У тижні є конфлікти";
+        details.push(`${conflictDays} дн. з конфліктами`);
+    }
+
+    if (unplannedDeadlinesCount > 0) {
+        tone = "danger";
+        details.push(`${unplannedDeadlinesCount} дедлайн(и) без слотів`);
+    }
+
+    if (unplannedTasksCount > 0) {
+        tone = tone === "danger" ? "danger" : "warning";
+        details.push(`${unplannedTasksCount} задач(і) без блоків`);
+    }
+
+    if (details.length === 0) {
+        details.push("Усі активні задачі й дедлайни вже мають місце у плані");
+    }
+
+    return { tone, title, details };
+}
+
+function getStatusStyles(tone: StatusTone) {
+    if (tone === "danger") {
+        return "border-rose-200 bg-rose-50 text-rose-900";
+    }
+
+    if (tone === "warning") {
+        return "border-amber-200 bg-amber-50 text-amber-900";
+    }
+
+    return "border-emerald-200 bg-emerald-50 text-emerald-900";
+}
+
+function getWorkloadLabel(summary: PlannerDaySummary) {
+    if (summary.conflictsCount > 0 || summary.freeMinutes < 90) {
+        return "ризиковий";
+    }
+
+    if (summary.freeMinutes >= 240) {
+        return "легкий";
+    }
+
+    return "робочий";
+}
+
+function getWeekQuickSlot(date: string, dayStartMin: number, dayEndMin: number): DraftSlot {
+    const startMinutes = Math.min(Math.max(dayStartMin, 17 * 60), Math.max(dayStartMin, dayEndMin - 60));
+    const endMinutes = Math.min(dayEndMin, startMinutes + 60);
+
+    return {
+        startAt: toIsoFromDateAndTime(date, formatMinutesLabel(startMinutes)),
+        endAt: toIsoFromDateAndTime(date, formatMinutesLabel(endMinutes)),
     };
-}) {
-    const items = [
-        { label: "Planned", value: `${Math.round(summary.plannedMinutes / 60)}h` },
-        { label: "Completed", value: `${Math.round(summary.completedMinutes / 60)}h` },
-        { label: "Lessons", value: `${Math.round(summary.lessonMinutes / 60)}h` },
-        { label: "Focus", value: `${Math.round(summary.focusMinutes / 60)}h` },
-        { label: "Free", value: `${Math.round(summary.freeMinutes / 60)}h` },
-    ];
+}
 
+function SummaryStrip({
+    items,
+}: {
+    items: Array<{ label: string; value: string; tone?: "default" | "accent" | "warning" }>;
+}) {
     return (
-        <div className="grid gap-3 md:grid-cols-5">
+        <div className="flex flex-wrap gap-2">
             {items.map((item) => (
-                <Card key={item.label} className="border-border/60 bg-card/80">
-                    <CardContent className="p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{item.label}</p>
-                        <p className="mt-2 text-2xl font-semibold text-foreground">{item.value}</p>
-                    </CardContent>
-                </Card>
+                <div
+                    key={item.label}
+                    className={cn(
+                        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm",
+                        item.tone === "accent" && "border-primary/20 bg-primary/5 text-primary",
+                        item.tone === "warning" && "border-amber-200 bg-amber-50 text-amber-900",
+                        (!item.tone || item.tone === "default") && "border-border/60 bg-card text-foreground",
+                    )}
+                >
+                    <span className="text-xs text-muted-foreground">{item.label}</span>
+                    <span className="font-medium text-foreground">{item.value}</span>
+                </div>
             ))}
-            <Card className={cn("border-border/60 md:col-span-5", summary.overloadedDaysCount > 0 && "border-amber-500/50 bg-amber-500/5")}>
-                <CardContent className="flex items-center justify-between gap-3 p-4 text-sm">
-                    <span className="text-muted-foreground">
-                        {summary.overloadedDaysCount > 0
-                            ? `Overloaded days: ${summary.overloadedDaysCount}`
-                            : "Week plan looks balanced."}
-                    </span>
-                    <Badge variant={summary.overloadedDaysCount > 0 ? "outline" : "secondary"}>
-                        Conflicts: {summary.conflictsCount}
-                    </Badge>
-                </CardContent>
-            </Card>
         </div>
     );
 }
 
-function SuggestionsSheet({
-    open,
-    onOpenChange,
-    suggestion,
-    isLoading,
-    onGenerate,
-    onApply,
+function FocusStatusBar({
+    tone,
+    title,
+    details,
 }: {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    suggestion: { summary: string; blocks: PlannerSuggestionBlock[] } | null;
-    isLoading: boolean;
-    onGenerate: () => void;
-    onApply: (blocks: PlannerSuggestionBlock[]) => Promise<void>;
+    tone: StatusTone;
+    title: string;
+    details: string[];
 }) {
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-                <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                        <SparklesIcon className="size-4 text-primary" />
-                        AI suggestions
-                    </SheetTitle>
-                    <SheetDescription>
-                        Сформуйте пропозиції на день і застосуйте ті блоки, які хочете взяти в план.
-                    </SheetDescription>
-                </SheetHeader>
+        <div className={cn("rounded-2xl border px-4 py-3", getStatusStyles(tone))}>
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold">{title}</span>
+                <span className="text-sm opacity-80">{details.join(" • ")}</span>
+            </div>
+        </div>
+    );
+}
 
-                <div className="mt-6 space-y-4">
-                    <Button onClick={onGenerate} disabled={isLoading} className="w-full">
-                        {isLoading && <LoaderCircleIcon className="mr-2 size-4 animate-spin" />}
-                        Скласти план дня
+function PlannerSidebar({
+    viewMode,
+    selectedDate,
+    unplannedTasks,
+    unplannedDeadlines,
+    suggestionState,
+    selectedSuggestionKeys,
+    onToggleSuggestion,
+    onGenerateSuggestions,
+    onApplySuggestions,
+    onOpenCreate,
+    isGeneratingSuggestions,
+    isApplyingSuggestions,
+}: {
+    viewMode: PlannerViewMode;
+    selectedDate: string;
+    unplannedTasks: Task[];
+    unplannedDeadlines: Deadline[];
+    suggestionState: PlannerSuggestion | null;
+    selectedSuggestionKeys: string[];
+    onToggleSuggestion: (key: string) => void;
+    onGenerateSuggestions: () => Promise<void>;
+    onApplySuggestions: () => Promise<void>;
+    onOpenCreate: () => void;
+    isGeneratingSuggestions: boolean;
+    isApplyingSuggestions: boolean;
+}) {
+    const selectedSuggestionsCount = selectedSuggestionKeys.length;
+
+    return (
+        <PageSidePanel>
+            <div className="flex h-full flex-col border-r border-border/60 bg-card/80">
+                <div className="border-b border-border/60 px-5 py-5">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock3Icon className="size-4" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
+                            Шар планування
+                        </span>
+                    </div>
+                    <h1 className="mt-3 text-xl font-semibold tracking-tight">Планер</h1>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        Календар показує заняття. Планер показує, коли ти реально працюєш і що ще лишилось без слотів.
+                    </p>
+                </div>
+
+                <div className="space-y-3 border-b border-border/60 px-4 py-4">
+                    <Button className="w-full justify-start gap-2 rounded-xl" onClick={onOpenCreate}>
+                        <PlusIcon className="size-4" />
+                        Створити блок
                     </Button>
 
-                    {suggestion && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">Пропозиція</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <p className="text-sm text-muted-foreground">{suggestion.summary}</p>
-                                <div className="space-y-3">
-                                    {suggestion.blocks.map((block) => (
-                                        <div key={`${block.title}-${block.startAt}`} className="rounded-xl border border-border/60 p-3">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <p className="font-medium text-foreground">{block.title}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {format(parseISO(block.startAt), "HH:mm")} - {format(parseISO(block.endAt), "HH:mm")}
+                    <Button
+                        variant="outline"
+                        className="w-full justify-start gap-2 rounded-xl"
+                        disabled={isGeneratingSuggestions}
+                        onClick={() => void onGenerateSuggestions()}
+                    >
+                        {isGeneratingSuggestions ? (
+                            <LoaderCircleIcon className="size-4 animate-spin" />
+                        ) : (
+                            <ListChecksIcon className="size-4" />
+                        )}
+                        Зібрати чернетку дня
+                    </Button>
+
+                    <p className="text-xs text-muted-foreground">
+                        {viewMode === "day"
+                            ? `Чернетка збирається для ${format(parseISO(`${selectedDate}T00:00:00`), "d MMMM", { locale: uk })}`
+                            : "Чернетка збирається для вибраного дня тижня"}
+                    </p>
+                </div>
+
+                <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+                    <Card className="border-border/60 shadow-none">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-base">Потребує планування</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm">
+                            <div className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2">
+                                <span className="text-muted-foreground">Задачі без слотів</span>
+                                <span className="font-semibold text-foreground">{unplannedTasks.length}</span>
+                            </div>
+                            <div className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2">
+                                <span className="text-muted-foreground">Дедлайни без підготовки</span>
+                                <span className="font-semibold text-foreground">{unplannedDeadlines.length}</span>
+                            </div>
+
+                            {(unplannedTasks.length > 0 || unplannedDeadlines.length > 0) ? (
+                                <div className="space-y-2">
+                                    {unplannedDeadlines.slice(0, 3).map((deadline) => (
+                                        <div key={`deadline-${deadline.id}`} className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2">
+                                            <div className="flex items-start gap-2">
+                                                <AlertCircleIcon className="mt-0.5 size-4 shrink-0 text-rose-600" />
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-medium text-rose-950">{deadline.title}</p>
+                                                    <p className="text-xs text-rose-700">
+                                                        До {format(parseISO(deadline.dueAt), "d MMM, HH:mm", { locale: uk })}
                                                     </p>
                                                 </div>
-                                                <Badge variant="secondary">{block.type}</Badge>
                                             </div>
-                                            <p className="mt-2 text-xs text-muted-foreground">{block.reason}</p>
+                                        </div>
+                                    ))}
+
+                                    {unplannedTasks.slice(0, 3).map((task) => (
+                                        <div key={`task-${task.id}`} className="rounded-xl border border-border/60 bg-background px-3 py-2">
+                                            <p className="truncate font-medium text-foreground">{task.title}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {task.dueAt
+                                                    ? `Бажано закрити до ${format(parseISO(task.dueAt), "d MMM, HH:mm", { locale: uk })}`
+                                                    : "Без дедлайну, але ще без місця у плані"}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
-                                <Button className="w-full" disabled={suggestion.blocks.length === 0} onClick={() => void onApply(suggestion.blocks)}>
-                                    Застосувати пропозицію
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    )}
+                            ) : (
+                                <p className="text-sm text-muted-foreground">
+                                    Усі відкриті задачі та дедлайни вже прив’язані до блоків у поточному діапазоні.
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border/60 shadow-none">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-base">Чернетка дня</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            {!suggestionState && (
+                                <p className="text-sm text-muted-foreground">
+                                    Planner може автоматично розкласти задачі та дедлайни по вільних слотах без окремого правого sheet.
+                                </p>
+                            )}
+
+                            {suggestionState && (
+                                <>
+                                    <p className="text-sm text-muted-foreground">{suggestionState.summary}</p>
+
+                                    <div className="space-y-2">
+                                        {suggestionState.blocks.map((block) => {
+                                            const key = getSuggestionKey(block);
+                                            const isSelected = selectedSuggestionKeys.includes(key);
+
+                                            return (
+                                                <label
+                                                    key={key}
+                                                    className={cn(
+                                                        "flex cursor-pointer gap-3 rounded-xl border px-3 py-3 transition-colors",
+                                                        isSelected ? "border-primary/30 bg-primary/5" : "border-border/60 bg-background",
+                                                    )}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="mt-1"
+                                                        checked={isSelected}
+                                                        onChange={() => onToggleSuggestion(key)}
+                                                    />
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <p className="truncate font-medium text-foreground">{block.title}</p>
+                                                            <Badge variant="secondary">{getBlockTypeLabel(block.type)}</Badge>
+                                                        </div>
+                                                        <p className="mt-1 text-xs text-muted-foreground">
+                                                            {format(parseISO(block.startAt), "HH:mm")} - {format(parseISO(block.endAt), "HH:mm")}
+                                                        </p>
+                                                        <p className="mt-2 text-xs text-muted-foreground">{block.reason}</p>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <Button
+                                        className="w-full rounded-xl"
+                                        disabled={selectedSuggestionsCount === 0 || isApplyingSuggestions}
+                                        onClick={() => void onApplySuggestions()}
+                                    >
+                                        {isApplyingSuggestions && <LoaderCircleIcon className="mr-2 size-4 animate-spin" />}
+                                        Застосувати {selectedSuggestionsCount > 0 ? `(${selectedSuggestionsCount})` : ""}
+                                    </Button>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
-            </SheetContent>
-        </Sheet>
+
+                <div className="border-t border-border/60 px-4 py-4">
+                    <div className="rounded-2xl bg-muted/40 px-3 py-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                            <BotIcon className="size-4 text-primary" />
+                            AI-помічник окремо
+                        </div>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                            Для повноцінних AI-сценаріїв, пояснень і роботи з контекстом використовуй окремий модуль.
+                        </p>
+                        <Link
+                            to="/dashboard/ai"
+                            className="mt-3 inline-flex h-9 items-center justify-center rounded-xl border border-border/60 px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                        >
+                            Відкрити AI-помічник
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </PageSidePanel>
     );
 }
 
@@ -269,6 +598,14 @@ function PlannerDayBoard({
         }
 
         function handleUp() {
+            const didChange = activeDrag.previewStartMinutes !== activeDrag.originalStartMinutes
+                || activeDrag.previewEndMinutes !== activeDrag.originalEndMinutes;
+
+            if (!didChange) {
+                setDragState(null);
+                return;
+            }
+
             const nextStartAt = toIsoFromDateAndTime(date, formatMinutesLabel(activeDrag.previewStartMinutes));
             const nextEndAt = toIsoFromDateAndTime(date, formatMinutesLabel(activeDrag.previewEndMinutes));
 
@@ -301,23 +638,23 @@ function PlannerDayBoard({
     }
 
     return (
-        <Card className="overflow-hidden border-border/60">
-            <CardHeader className="flex flex-row items-center justify-between gap-3">
+        <Card className="overflow-hidden border-border/60 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border/50 py-3">
                 <CardTitle className="text-base capitalize">
                     {format(parseISO(`${date}T00:00:00`), "EEEE, d MMMM", { locale: uk })}
                 </CardTitle>
-                <span className="text-xs text-muted-foreground">Double click on empty space to add a block</span>
+                <span className="text-xs text-muted-foreground">Подвійний клік по вільному слоту створює блок</span>
             </CardHeader>
             <CardContent className="overflow-auto p-0">
-                <div className="flex min-w-[720px]">
-                    <div className="w-16 shrink-0 border-r border-border/60 bg-muted/20">
+                <div className="flex min-w-[760px]">
+                    <div className="w-16 shrink-0 border-r border-border/60 bg-muted/15">
                         {hours.map((hour, index) => (
                             <div
                                 key={hour}
-                                className="relative border-b border-border/30 px-2 text-[11px] text-muted-foreground"
+                                className="relative border-b border-border/25 px-2 text-[11px] text-muted-foreground"
                                 style={{ height: index === hours.length - 1 ? 0 : 60 * PLANNER_PX_PER_MIN }}
                             >
-                                <span className="-translate-y-1/2 absolute top-0 right-2">{String(hour).padStart(2, "0")}:00</span>
+                                <span className="absolute top-0 right-2 -translate-y-1/2">{String(hour).padStart(2, "0")}:00</span>
                             </div>
                         ))}
                     </div>
@@ -330,7 +667,7 @@ function PlannerDayBoard({
                         {hours.map((hour, index) => (
                             <div
                                 key={hour}
-                                className="absolute left-0 right-0 border-t border-border/35"
+                                className="absolute left-0 right-0 border-t border-border/30"
                                 style={{ top: PLANNER_GRID_TOP + index * 60 * PLANNER_PX_PER_MIN }}
                             />
                         ))}
@@ -342,16 +679,21 @@ function PlannerDayBoard({
                             const isDragging = isPlannerBlock(item) && dragState?.block.id === item.id;
                             const visualStart = isDragging ? dragState.previewStartMinutes : startMinutes;
                             const visualEnd = isDragging ? dragState.previewEndMinutes : endMinutes;
+                            const isFocusBlock = isPlannerBlock(item) && item.type === "focus";
+                            const isDeadlineBlock = isPlannerBlock(item) && item.type === "deadline";
+                            const isTaskBlock = isPlannerBlock(item) && item.type === "task";
 
                             return (
                                 <div
                                     key={`${item.kind}-${item.id}`}
                                     className={cn(
-                                        "absolute left-3 right-3 rounded-2xl border px-3 py-2 shadow-sm",
-                                        item.kind === "lesson"
-                                            ? "border-border/60 bg-slate-100/70"
-                                            : "border-border/70 bg-background/95",
-                                        isDragging && "opacity-80 ring-2 ring-primary/50",
+                                        "absolute left-3 right-3 rounded-2xl border px-3 py-2 transition-shadow",
+                                        item.kind === "lesson" && "border-border/40 bg-muted/30 text-muted-foreground shadow-none",
+                                        item.kind === "planner_block" && "border-border/70 bg-background shadow-md",
+                                        isFocusBlock && "border-emerald-200 bg-emerald-50 shadow-lg",
+                                        isDeadlineBlock && "border-rose-200 bg-rose-50",
+                                        isTaskBlock && "border-sky-200 bg-sky-50",
+                                        isDragging && "opacity-80 ring-2 ring-primary/40",
                                     )}
                                     style={{
                                         top: topFromMinutes(visualStart, slotStart),
@@ -359,8 +701,11 @@ function PlannerDayBoard({
                                         borderLeftWidth: 4,
                                         borderLeftColor: accent,
                                     }}
+                                    onDoubleClick={isPlannerBlock(item) ? () => onEditBlock(item) : undefined}
                                     onMouseDown={isPlannerBlock(item) && item.status !== "completed" ? (event) => {
-                                        if ((event.target as HTMLElement).dataset.resizeHandle === "true") return;
+                                        if ((event.target as HTMLElement).closest("[data-interactive='true']")) return;
+                                        event.preventDefault();
+
                                         setDragState({
                                             block: item,
                                             mode: "move",
@@ -374,50 +719,66 @@ function PlannerDayBoard({
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
-                                            <p className="text-xs font-medium text-muted-foreground">
+                                            <p className={cn("text-xs font-medium", item.kind === "lesson" ? "text-muted-foreground" : "text-foreground/70")}>
                                                 {format(parseISO(item.startAt), "HH:mm")} - {format(parseISO(item.endAt), "HH:mm")}
                                             </p>
                                             <p className="truncate font-semibold text-foreground">{item.title}</p>
                                             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                                                 {item.kind === "lesson"
-                                                    ? item.location || "Readonly lesson slot"
-                                                    : item.description || item.type}
+                                                    ? item.location || "Заняття з розкладу"
+                                                    : item.description || getBlockTypeLabel(item.type)}
                                             </p>
                                         </div>
 
-                                        <div className="flex shrink-0 items-center gap-2">
-                                            <Badge variant={item.kind === "lesson" ? "outline" : "secondary"}>
-                                                {item.kind === "lesson" ? "Lesson" : item.status}
-                                            </Badge>
+                                        <div className="flex shrink-0 flex-col items-end gap-2">
+                                            <div className="flex flex-wrap justify-end gap-2">
+                                                <Badge variant={item.kind === "lesson" ? "outline" : "secondary"}>
+                                                    {item.kind === "lesson" ? "Пара" : getBlockTypeLabel(item.type)}
+                                                </Badge>
+                                                {isPlannerBlock(item) && (
+                                                    <Badge variant="outline">{getBlockStatusLabel(item.status)}</Badge>
+                                                )}
+                                                {isPlannerBlock(item) && item.createdByAi && (
+                                                    <Badge variant="outline">Автоплан</Badge>
+                                                )}
+                                            </div>
+
                                             {isPlannerBlock(item) && (
-                                                <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => void onStatusToggle(item)}>
-                                                    {item.status === "completed" ? "Reset" : "Done"}
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    data-interactive="true"
+                                                    className="h-7 px-2 text-xs"
+                                                    onMouseDown={(event) => event.stopPropagation()}
+                                                    onClick={() => void onStatusToggle(item)}
+                                                >
+                                                    {item.status === "completed" ? "Повернути" : "Завершити"}
                                                 </Button>
                                             )}
                                         </div>
                                     </div>
 
                                     {isPlannerBlock(item) && (
-                                        <>
-                                            <button type="button" className="absolute inset-0" onDoubleClick={() => onEditBlock(item)} />
-                                            <button
-                                                type="button"
-                                                data-resize-handle="true"
-                                                className="absolute inset-x-4 bottom-1 h-2 cursor-ns-resize rounded-full bg-border/80"
-                                                onMouseDown={(event) => {
-                                                    event.stopPropagation();
-                                                    setDragState({
-                                                        block: item,
-                                                        mode: "resize",
-                                                        startY: event.clientY,
-                                                        previewStartMinutes: startMinutes,
-                                                        previewEndMinutes: endMinutes,
-                                                        originalStartMinutes: startMinutes,
-                                                        originalEndMinutes: endMinutes,
-                                                    });
-                                                }}
-                                            />
-                                        </>
+                                        <button
+                                            type="button"
+                                            data-interactive="true"
+                                            data-resize-handle="true"
+                                            className="absolute inset-x-4 bottom-1 h-2 cursor-ns-resize rounded-full bg-border/80"
+                                            onMouseDown={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                setDragState({
+                                                    block: item,
+                                                    mode: "resize",
+                                                    startY: event.clientY,
+                                                    previewStartMinutes: startMinutes,
+                                                    previewEndMinutes: endMinutes,
+                                                    originalStartMinutes: startMinutes,
+                                                    originalEndMinutes: endMinutes,
+                                                });
+                                            }}
+                                        />
                                     )}
                                 </div>
                             );
@@ -431,55 +792,122 @@ function PlannerDayBoard({
 
 function PlannerWeekBoard({
     days,
+    openTasks,
+    activeDeadlines,
+    linkedTaskIds,
+    linkedDeadlineIds,
     onOpenDay,
+    onQuickAdd,
 }: {
-    days: Array<{ date: string; timeline: PlannerTimelineItem[]; summary: { plannedMinutes: number; freeMinutes: number; isOverloaded: boolean } }>;
+    days: WeekDayCard[];
+    openTasks: Task[];
+    activeDeadlines: Deadline[];
+    linkedTaskIds: Set<number>;
+    linkedDeadlineIds: Set<number>;
     onOpenDay: (date: string) => void;
+    onQuickAdd: (date: string) => void;
 }) {
     return (
         <div className="grid gap-3 lg:grid-cols-7">
-            {days.map((day) => (
-                <Card
-                    key={day.date}
-                    className={cn("cursor-pointer border-border/60 transition-colors hover:border-primary/40", day.summary.isOverloaded && "border-amber-500/50")}
-                    onClick={() => onOpenDay(day.date)}
-                >
-                    <CardHeader className="space-y-2">
-                        <CardTitle className="text-sm capitalize">
-                            {format(parseISO(`${day.date}T00:00:00`), "EEE d MMM", { locale: uk })}
-                        </CardTitle>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{Math.round(day.summary.plannedMinutes / 60)}h planned</span>
-                            <span>{Math.round(day.summary.freeMinutes / 60)}h free</span>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        {day.timeline.slice(0, 4).map((item) => (
-                            <div key={`${item.kind}-${item.id}`} className="rounded-lg border border-border/50 px-2 py-1.5 text-xs">
-                                <div className="flex items-center justify-between gap-2">
-                                    <span className="truncate font-medium">{item.title}</span>
-                                    <span className="text-muted-foreground">{format(parseISO(item.startAt), "HH:mm")}</span>
-                                </div>
-                            </div>
-                        ))}
-                        {day.timeline.length === 0 && (
-                            <p className="text-xs text-muted-foreground">Вільний день</p>
+            {days.map((day) => {
+                const plannerBlocks = day.timeline.filter(isPlannerBlock);
+                const focusMinutes = plannerBlocks
+                    .filter((item) => focusTypes.has(item.type) && item.status !== "canceled")
+                    .reduce((total, item) => total + Math.max(0, minutesFromIso(item.endAt) - minutesFromIso(item.startAt)), 0);
+                const lessonCount = day.timeline.filter((item) => item.kind === "lesson").length;
+                const unplannedTasksCount = openTasks.filter((task) => getDateKey(task.dueAt) === day.date && !linkedTaskIds.has(task.id)).length;
+                const urgentDeadlinesCount = activeDeadlines.filter((deadline) => getDateKey(deadline.dueAt) === day.date && !linkedDeadlineIds.has(deadline.id)).length;
+                const workloadLabel = getWorkloadLabel(day.summary);
+
+                return (
+                    <Card
+                        key={day.date}
+                        className={cn(
+                            "cursor-pointer border-border/60 shadow-none transition-colors hover:border-primary/40",
+                            day.summary.isOverloaded && "border-amber-300 bg-amber-50/40",
                         )}
-                    </CardContent>
-                </Card>
-            ))}
+                        onClick={() => onOpenDay(day.date)}
+                    >
+                        <CardHeader className="space-y-3 pb-3">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <CardTitle className="text-sm capitalize">
+                                        {format(parseISO(`${day.date}T00:00:00`), "EEE d MMM", { locale: uk })}
+                                    </CardTitle>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {workloadLabel === "ризиковий" ? "Потребує уваги" : workloadLabel === "легкий" ? "Є місце для нових блоків" : "Робочий день"}
+                                    </p>
+                                </div>
+
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-2"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        onQuickAdd(day.date);
+                                    }}
+                                >
+                                    <PlusIcon className="size-4" />
+                                </Button>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 text-xs">
+                                <Badge variant="secondary">Вільно {formatDuration(day.summary.freeMinutes)}</Badge>
+                                <Badge variant="outline">Фокус {formatDuration(focusMinutes)}</Badge>
+                                <Badge variant="outline">Пари {lessonCount}</Badge>
+                            </div>
+                        </CardHeader>
+
+                        <CardContent className="space-y-3">
+                            {plannerBlocks.length > 0 ? (
+                                <div className="space-y-2">
+                                    {plannerBlocks.slice(0, 3).map((item) => (
+                                        <div key={`${item.kind}-${item.id}`} className="rounded-xl border border-border/50 bg-background px-2.5 py-2 text-xs">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="truncate font-medium text-foreground">{item.title}</span>
+                                                <span className="text-muted-foreground">{format(parseISO(item.startAt), "HH:mm")}</span>
+                                            </div>
+                                            <p className="mt-1 text-[11px] text-muted-foreground">{getBlockTypeLabel(item.type)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-muted-foreground">
+                                    Немає власних блоків. День поки тримається лише на розкладі або ще порожній.
+                                </p>
+                            )}
+
+                            {(unplannedTasksCount > 0 || urgentDeadlinesCount > 0) && (
+                                <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+                                    <div className="flex items-center gap-2 font-medium">
+                                        <AlertCircleIcon className="size-3.5" />
+                                        Є прогалини планування
+                                    </div>
+                                    <div className="mt-1 space-y-1 text-amber-900/90">
+                                        {urgentDeadlinesCount > 0 && <p>{urgentDeadlinesCount} дедлайн(и) цього дня без підготовки</p>}
+                                        {unplannedTasksCount > 0 && <p>{unplannedTasksCount} задач(і) цього дня без слотів</p>}
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                );
+            })}
         </div>
     );
 }
 
 export function PlannerWorkspace() {
     const [viewMode, setViewMode] = useState<PlannerViewMode>("day");
+    const [isViewInitialized, setIsViewInitialized] = useState(false);
     const [anchorDate, setAnchorDate] = useState<Date>(new Date());
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingBlock, setEditingBlock] = useState<PlannerBlock | null>(null);
     const [draftSlot, setDraftSlot] = useState<DraftSlot | null>(null);
-    const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-    const [suggestionState, setSuggestionState] = useState<{ summary: string; blocks: PlannerSuggestionBlock[] } | null>(null);
+    const [suggestionState, setSuggestionState] = useState<PlannerSuggestion | null>(null);
+    const [selectedSuggestionKeys, setSelectedSuggestionKeys] = useState<string[]>([]);
 
     const selectedDate = format(anchorDate, "yyyy-MM-dd");
     const { data: schedulerSettings } = useSettingsGroup(SETTING_GROUP.SCHEDULER);
@@ -499,10 +927,72 @@ export function PlannerWorkspace() {
     const applySuggestions = useApplyPlannerSuggestions();
 
     useEffect(() => {
+        if (isViewInitialized) return;
         if (schedulerConfig.defaultView === "week" || schedulerConfig.defaultView === "day") {
             setViewMode(schedulerConfig.defaultView);
+            setIsViewInitialized(true);
         }
-    }, [schedulerConfig.defaultView]);
+    }, [isViewInitialized, schedulerConfig.defaultView]);
+
+    useEffect(() => {
+        if (!suggestionState) {
+            setSelectedSuggestionKeys([]);
+            return;
+        }
+
+        setSelectedSuggestionKeys(suggestionState.blocks.map(getSuggestionKey));
+    }, [suggestionState]);
+
+    const openTasks = useMemo(() => [...tasks].filter(isOpenTask).sort(compareByDueDate), [tasks]);
+    const activeDeadlines = useMemo(() => [...deadlines].filter(isActiveDeadline).sort(compareByDueDate), [deadlines]);
+
+    const visibleTimeline = useMemo(() => {
+        if (viewMode === "day") {
+            return dayView?.timeline ?? [];
+        }
+
+        return weekView?.days.flatMap((day) => day.timeline) ?? [];
+    }, [dayView?.timeline, viewMode, weekView?.days]);
+
+    const linkedTaskIds = useMemo(() => {
+        const ids = new Set<number>();
+        visibleTimeline.forEach((item) => {
+            if (isPlannerBlock(item) && item.taskId !== null) {
+                ids.add(item.taskId);
+            }
+        });
+        return ids;
+    }, [visibleTimeline]);
+
+    const linkedDeadlineIds = useMemo(() => {
+        const ids = new Set<number>();
+        visibleTimeline.forEach((item) => {
+            if (isPlannerBlock(item) && item.deadlineId !== null) {
+                ids.add(item.deadlineId);
+            }
+        });
+        return ids;
+    }, [visibleTimeline]);
+
+    const unplannedTasks = useMemo(() => openTasks.filter((task) => !linkedTaskIds.has(task.id)), [linkedTaskIds, openTasks]);
+    const unplannedDeadlines = useMemo(
+        () => activeDeadlines.filter((deadline) => {
+            if (linkedDeadlineIds.has(deadline.id)) return false;
+            const diffDays = differenceInCalendarDays(parseISO(deadline.dueAt), parseISO(`${selectedDate}T00:00:00`));
+            return diffDays <= 7;
+        }),
+        [activeDeadlines, linkedDeadlineIds, selectedDate],
+    );
+
+    const dayStatus = useMemo(
+        () => dayView ? getFocusStatus(dayView.summary, unplannedTasks.length, unplannedDeadlines.length) : null,
+        [dayView, unplannedDeadlines.length, unplannedTasks.length],
+    );
+
+    const weekStatus = useMemo(
+        () => weekView ? getWeekStatus(weekView.days, unplannedTasks.length, unplannedDeadlines.length) : null,
+        [unplannedDeadlines.length, unplannedTasks.length, weekView],
+    );
 
     async function withLessonRetry<T extends PlannerBlockPayload>(
         payload: T,
@@ -518,7 +1008,7 @@ export function PlannerWorkspace() {
 
             if (!Array.isArray(lessonConflicts)) throw error;
 
-            if (window.confirm("Блок конфліктує із заняттям. Створити або оновити його все одно?")) {
+            if (window.confirm("Блок перетинається із заняттям. Зберегти його попри конфлікт?")) {
                 await runner({
                     ...payload,
                     allowLessonConflict: true,
@@ -593,104 +1083,175 @@ export function PlannerWorkspace() {
         setSuggestionState(suggestion);
     }
 
-    async function handleApplySuggestions(blocks: PlannerSuggestionBlock[]) {
+    async function handleApplySuggestions() {
+        if (!suggestionState) return;
+
+        const blocks = suggestionState.blocks.filter((block) => selectedSuggestionKeys.includes(getSuggestionKey(block)));
+        if (blocks.length === 0) return;
+
         await applySuggestions.mutateAsync(blocks);
-        setSuggestionsOpen(false);
+        setSuggestionState(null);
     }
 
-    const openCreateDialog = (slot?: DraftSlot) => {
+    function openCreateDialog(slot?: DraftSlot) {
         setEditingBlock(null);
         setDraftSlot(slot ?? null);
         setDialogOpen(true);
-    };
+    }
+
+    function openWeekQuickAdd(date: string) {
+        openCreateDialog(getWeekQuickSlot(date, schedulerConfig.dayStartMin, schedulerConfig.dayEndMin));
+    }
+
+    function toggleSuggestionSelection(key: string) {
+        setSelectedSuggestionKeys((current) => current.includes(key)
+            ? current.filter((item) => item !== key)
+            : [...current, key]);
+    }
 
     const isLoading = viewMode === "day" ? isLoadingDay : isLoadingWeek;
+    const summaryItems = viewMode === "day" && dayView ? [
+        { label: "Вільно", value: formatDuration(dayView.summary.freeMinutes), tone: dayView.summary.freeMinutes < 90 ? "warning" : "accent" },
+        { label: "Фокус", value: formatDuration(dayView.summary.focusMinutes) },
+        { label: "Заплановано", value: formatDuration(dayView.summary.plannedMinutes) },
+        { label: "Уроки", value: formatDuration(dayView.summary.lessonMinutes) },
+        { label: "Без слотів", value: `${unplannedTasks.length + unplannedDeadlines.length}` },
+    ] as const : viewMode === "week" && weekView ? [
+        { label: "Вільно", value: formatDuration(weekView.summary.freeMinutes), tone: "accent" },
+        { label: "Фокус", value: formatDuration(weekView.summary.focusMinutes) },
+        { label: "Заплановано", value: formatDuration(weekView.summary.plannedMinutes) },
+        { label: "Перевантажено днів", value: `${weekView.summary.overloadedDaysCount}`, tone: weekView.summary.overloadedDaysCount > 0 ? "warning" : "default" },
+        { label: "Без слотів", value: `${unplannedTasks.length + unplannedDeadlines.length}` },
+    ] as const : [];
+
     return (
-        <div className="space-y-4 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center overflow-hidden rounded-xl border border-border/70">
-                        <Button variant="ghost" className="rounded-none border-r border-border/70" onClick={() => setAnchorDate((current) => viewMode === "day" ? subDays(current, 1) : subDays(current, 7))}>
-                            <ChevronLeftIcon className="size-4" />
-                        </Button>
-                        <Button variant="ghost" className="rounded-none border-r border-border/70" onClick={() => setAnchorDate(new Date())}>
-                            Today
-                        </Button>
-                        <Button variant="ghost" className="rounded-none" onClick={() => setAnchorDate((current) => viewMode === "day" ? addDays(current, 1) : addDays(current, 7))}>
-                            <ChevronRightIcon className="size-4" />
-                        </Button>
+        <div className="flex h-full min-h-0">
+            <PlannerSidebar
+                viewMode={viewMode}
+                selectedDate={selectedDate}
+                unplannedTasks={unplannedTasks}
+                unplannedDeadlines={unplannedDeadlines}
+                suggestionState={suggestionState}
+                selectedSuggestionKeys={selectedSuggestionKeys}
+                onToggleSuggestion={toggleSuggestionSelection}
+                onGenerateSuggestions={handleGenerateSuggestions}
+                onApplySuggestions={handleApplySuggestions}
+                onOpenCreate={() => openCreateDialog()}
+                isGeneratingSuggestions={generateSuggestions.isPending}
+                isApplyingSuggestions={applySuggestions.isPending}
+            />
+
+            <div className="flex min-w-0 flex-1 flex-col">
+                <div className="border-b border-border/60 px-4 py-4 md:px-6 lg:px-8">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center overflow-hidden rounded-xl border border-border/70">
+                                    <Button variant="ghost" className="rounded-none border-r border-border/70" onClick={() => setAnchorDate((current) => viewMode === "day" ? subDays(current, 1) : subDays(current, 7))}>
+                                        <ChevronLeftIcon className="size-4" />
+                                    </Button>
+                                    <Button variant="ghost" className="rounded-none border-r border-border/70" onClick={() => setAnchorDate(new Date())}>
+                                        Сьогодні
+                                    </Button>
+                                    <Button variant="ghost" className="rounded-none" onClick={() => setAnchorDate((current) => viewMode === "day" ? addDays(current, 1) : addDays(current, 7))}>
+                                        <ChevronRightIcon className="size-4" />
+                                    </Button>
+                                </div>
+
+                                <div className="flex items-center rounded-xl border border-border/70 bg-muted/30 p-1">
+                                    <Button variant={viewMode === "day" ? "secondary" : "ghost"} size="sm" onClick={() => setViewMode("day")}>День</Button>
+                                    <Button variant={viewMode === "week" ? "secondary" : "ghost"} size="sm" onClick={() => setViewMode("week")}>Тиждень</Button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                                    {viewMode === "day"
+                                        ? format(anchorDate, "EEEE, d MMMM", { locale: uk })
+                                        : `${format(startOfWeek(anchorDate, { weekStartsOn: 1 }), "d MMM", { locale: uk })} - ${format(endOfWeek(anchorDate, { weekStartsOn: 1 }), "d MMM", { locale: uk })}`}
+                                </h2>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {viewMode === "day"
+                                        ? "Фокус на твоїх блоках, вільних вікнах і тому, що ще не має місця в плані."
+                                        : "Огляд тижня для рішення, де саме розмістити підготовку, а не просто перегляд пар."}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button variant="outline" onClick={() => openCreateDialog()}>
+                                <CalendarDaysIcon className="mr-2 size-4" />
+                                Новий блок
+                            </Button>
+                        </div>
                     </div>
 
-                    <div>
-                        <h2 className="text-xl font-semibold text-foreground">
-                            {viewMode === "day"
-                                ? format(anchorDate, "EEEE, d MMMM", { locale: uk })
-                                : `${format(startOfWeek(anchorDate, { weekStartsOn: 1 }), "d MMM", { locale: uk })} - ${format(endOfWeek(anchorDate, { weekStartsOn: 1 }), "d MMM", { locale: uk })}`}
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            Planner збирає заняття, дедлайни, задачі й ручні блоки в один погодинний план.
-                        </p>
-                    </div>
+                    {summaryItems.length > 0 && (
+                        <div className="mt-4">
+                            <SummaryStrip items={[...summaryItems]} />
+                        </div>
+                    )}
+
+                    {viewMode === "day" && dayStatus && (
+                        <div className="mt-3">
+                            <FocusStatusBar tone={dayStatus.tone} title={dayStatus.title} details={dayStatus.details} />
+                        </div>
+                    )}
+
+                    {viewMode === "week" && weekStatus && (
+                        <div className="mt-3">
+                            <FocusStatusBar tone={weekStatus.tone} title={weekStatus.title} details={weekStatus.details} />
+                        </div>
+                    )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center rounded-xl border border-border/70 bg-muted/30 p-1">
-                        <Button variant={viewMode === "day" ? "secondary" : "ghost"} size="sm" onClick={() => setViewMode("day")}>Day</Button>
-                        <Button variant={viewMode === "week" ? "secondary" : "ghost"} size="sm" onClick={() => setViewMode("week")}>Week</Button>
-                    </div>
-                    <Button variant="outline" onClick={() => setSuggestionsOpen(true)}>
-                        <SparklesIcon className="mr-2 size-4" />
-                        Suggestions
-                    </Button>
-                    <Button onClick={() => openCreateDialog()}>
-                        <CalendarDaysIcon className="mr-2 size-4" />
-                        New block
-                    </Button>
+                <div className="min-h-0 flex-1 overflow-auto px-4 py-4 md:px-6 lg:px-8">
+                    {isLoading ? (
+                        <Card className="shadow-none">
+                            <CardContent className="flex h-64 items-center justify-center">
+                                <LoaderCircleIcon className="size-6 animate-spin text-muted-foreground" />
+                            </CardContent>
+                        </Card>
+                    ) : viewMode === "day" && dayView ? (
+                        <PlannerDayBoard
+                            date={dayView.date}
+                            items={dayView.timeline}
+                            slotStart={schedulerConfig.dayStartMin}
+                            slotEnd={schedulerConfig.dayEndMin}
+                            onCreateSlot={openCreateDialog}
+                            onEditBlock={(block) => {
+                                setEditingBlock(block);
+                                setDraftSlot(null);
+                                setDialogOpen(true);
+                            }}
+                            onMoveBlock={handleMove}
+                            onResizeBlock={handleResize}
+                            onStatusToggle={handleStatusToggle}
+                        />
+                    ) : weekView ? (
+                        <PlannerWeekBoard
+                            days={weekView.days}
+                            openTasks={openTasks}
+                            activeDeadlines={activeDeadlines}
+                            linkedTaskIds={linkedTaskIds}
+                            linkedDeadlineIds={linkedDeadlineIds}
+                            onOpenDay={(date) => {
+                                setAnchorDate(parseISO(`${date}T00:00:00`));
+                                setViewMode("day");
+                            }}
+                            onQuickAdd={openWeekQuickAdd}
+                        />
+                    ) : null}
                 </div>
             </div>
-
-            {viewMode === "day" && dayView?.summary && <SummaryCards summary={dayView.summary} />}
-            {viewMode === "week" && weekView?.summary && <WeekSummaryCards summary={weekView.summary} />}
-
-            {isLoading ? (
-                <Card>
-                    <CardContent className="flex h-64 items-center justify-center">
-                        <LoaderCircleIcon className="size-6 animate-spin text-muted-foreground" />
-                    </CardContent>
-                </Card>
-            ) : viewMode === "day" && dayView ? (
-                <PlannerDayBoard
-                    date={dayView.date}
-                    items={dayView.timeline}
-                    slotStart={schedulerConfig.dayStartMin}
-                    slotEnd={schedulerConfig.dayEndMin}
-                    onCreateSlot={(slot) => openCreateDialog(slot)}
-                    onEditBlock={(block) => {
-                        setEditingBlock(block);
-                        setDraftSlot(null);
-                        setDialogOpen(true);
-                    }}
-                    onMoveBlock={handleMove}
-                    onResizeBlock={handleResize}
-                    onStatusToggle={handleStatusToggle}
-                />
-            ) : weekView ? (
-                <PlannerWeekBoard
-                    days={weekView.days}
-                    onOpenDay={(date) => {
-                        setAnchorDate(parseISO(`${date}T00:00:00`));
-                        setViewMode("day");
-                    }}
-                />
-            ) : null}
 
             <PlannerBlockDialog
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
                 block={editingBlock}
                 prefill={draftSlot}
-                tasks={tasks.filter((task) => task.status !== "done" && task.status !== "cancelled")}
-                deadlines={deadlines.filter((deadline) => deadline.status !== "completed" && deadline.status !== "cancelled")}
+                tasks={openTasks}
+                deadlines={activeDeadlines}
                 subjects={subjects}
                 onSubmit={handleSubmit}
                 onDelete={handleDelete}
@@ -701,15 +1262,6 @@ export function PlannerWorkspace() {
                     moveBlock.isPending ||
                     resizeBlock.isPending
                 }
-            />
-
-            <SuggestionsSheet
-                open={suggestionsOpen}
-                onOpenChange={setSuggestionsOpen}
-                suggestion={suggestionState}
-                isLoading={generateSuggestions.isPending}
-                onGenerate={handleGenerateSuggestions}
-                onApply={handleApplySuggestions}
             />
         </div>
     );

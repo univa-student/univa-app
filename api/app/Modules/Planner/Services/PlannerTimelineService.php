@@ -6,6 +6,7 @@ use App\Modules\Planner\Http\Resources\PlannerBlockResource;
 use App\Modules\Planner\Models\PlannerBlock;
 use App\Modules\Schedule\Services\ScheduleService;
 use Carbon\Carbon;
+use Carbon\Constants\UnitValue;
 use Illuminate\Http\Request;
 
 class PlannerTimelineService
@@ -49,8 +50,8 @@ class PlannerTimelineService
 
     public function buildWeekView(int $userId, Carbon $date): array
     {
-        $weekStart = $date->copy()->startOfWeek(Carbon::MONDAY);
-        $weekEnd = $date->copy()->endOfWeek(Carbon::SUNDAY);
+        $weekStart = $date->copy()->startOfWeek(UnitValue::MONDAY);
+        $weekEnd = $date->copy()->endOfWeek(UnitValue::SUNDAY);
 
         $days = [];
         $cursor = $weekStart->copy();
@@ -76,7 +77,7 @@ class PlannerTimelineService
             ->map(function (PlannerBlock $block) use ($request): array {
                 return array_merge(
                     ['kind' => 'planner_block'],
-                    (new PlannerBlockResource($block))->toArray($request),
+                    new PlannerBlockResource($block)->toArray($request),
                 );
             })
             ->values()
@@ -96,8 +97,8 @@ class PlannerTimelineService
                 'id' => $lesson['id'],
                 'lesson_id' => $lesson['lesson_id'],
                 'title' => $lesson['subject']['name'] ?? 'Заняття',
-                'start_at' => $startAt->toISOString(),
-                'end_at' => $endAt->toISOString(),
+                'start_at' => $startAt->format('Y-m-d\TH:i:s'),
+                'end_at' => $endAt->format('Y-m-d\TH:i:s'),
                 'readonly' => true,
                 'source' => $lesson['source'],
                 'subject' => [
