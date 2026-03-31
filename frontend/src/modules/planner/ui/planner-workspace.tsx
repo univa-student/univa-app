@@ -458,7 +458,7 @@ function PlannerSidebar({
                         <CardContent className="space-y-3">
                             {!suggestionState && (
                                 <p className="text-sm text-muted-foreground">
-                                    Planner може автоматично розкласти задачі та дедлайни по вільних слотах без окремого правого sheet.
+                                    Planner звертається до AI-модуля, щоб зібрати чернетку дня на основі розкладу, дедлайнів, задач і вільних слотів.
                                 </p>
                             )}
 

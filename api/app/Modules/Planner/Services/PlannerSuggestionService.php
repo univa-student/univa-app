@@ -2,15 +2,20 @@
 
 namespace App\Modules\Planner\Services;
 
+use App\Modules\Ai\DTO\GeneratePlannerDaySuggestionsData;
+use App\Modules\Ai\UseCases\GeneratePlannerDaySuggestions;
 use App\Modules\Deadlines\Models\Deadline;
 use App\Modules\Organizer\Models\Task;
 use App\Modules\Planner\Enums\PlannerBlockType;
 use App\Modules\Planner\Events\PlannerSuggestionGenerated;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use Throwable;
 
 class PlannerSuggestionService
 {
     public function __construct(
+        private readonly GeneratePlannerDaySuggestions $generatePlannerDaySuggestions,
         private readonly PlannerTimelineService $timelineService,
         private readonly PlannerSettingsService $settingsService,
     ) {}
@@ -20,8 +25,30 @@ class PlannerSuggestionService
         Carbon $date,
         bool $includeTasks = true,
         bool $includeDeadlines = true,
+        bool $respectLockedBlocks = true,
         int $maxBlocks = 6,
     ): array {
+        try {
+            $result = $this->generatePlannerDaySuggestions->handle(
+                GeneratePlannerDaySuggestionsData::forDate(
+                    userId: $userId,
+                    date: CarbonImmutable::parse($date->toDateString()),
+                    includeTasks: $includeTasks,
+                    includeDeadlines: $includeDeadlines,
+                    respectLockedBlocks: $respectLockedBlocks,
+                    maxBlocks: $maxBlocks,
+                ),
+            );
+
+            $suggestion = $result['suggestion'];
+
+            event(new PlannerSuggestionGenerated($userId, $suggestion));
+
+            return $suggestion;
+        } catch (Throwable $e) {
+            report($e);
+        }
+
         $dayView = $this->timelineService->buildDayView($userId, $date);
         $occupiedIntervals = collect($dayView['timeline'])
             ->map(fn (array $item): array => [
@@ -116,8 +143,8 @@ class PlannerSuggestionService
                 'title' => $candidate['title'],
                 'description' => null,
                 'type' => $candidate['type'],
-                'start_at' => $slot['start']->toISOString(),
-                'end_at' => $slot['end']->toISOString(),
+                'start_at' => $slot['start']->format('Y-m-d\TH:i:s'),
+                'end_at' => $slot['end']->format('Y-m-d\TH:i:s'),
                 'task_id' => $candidate['task_id'],
                 'deadline_id' => $candidate['deadline_id'],
                 'subject_id' => $candidate['subject_id'],

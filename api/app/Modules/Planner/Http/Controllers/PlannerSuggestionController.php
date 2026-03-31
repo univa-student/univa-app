@@ -25,6 +25,7 @@ class PlannerSuggestionController extends Controller
                 Carbon::parse($request->input('date')),
                 (bool) $request->boolean('include_tasks', true),
                 (bool) $request->boolean('include_deadlines', true),
+                (bool) $request->boolean('respect_locked_blocks', true),
                 (int) $request->integer('max_blocks', 6),
             )
         );

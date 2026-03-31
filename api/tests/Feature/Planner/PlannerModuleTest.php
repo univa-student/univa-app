@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature\Planner;
 
 use App\Models\User;
+use App\Modules\Ai\DTO\GeneratePlannerDaySuggestionsData;
+use App\Modules\Ai\UseCases\GeneratePlannerDaySuggestions;
 use App\Modules\Deadlines\Models\Deadline;
 use App\Modules\Organizer\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Mockery;
 use Tests\TestCase;
 
 class PlannerModuleTest extends TestCase
@@ -259,6 +262,55 @@ class PlannerModuleTest extends TestCase
             'user_id' => $user->id,
             'created_by_ai' => true,
         ]);
+    }
+
+    public function test_it_uses_ai_module_for_day_suggestions_when_available(): void
+    {
+        $user = User::factory()->create();
+
+        $mock = Mockery::mock(GeneratePlannerDaySuggestions::class);
+        $mock->shouldReceive('handle')
+            ->once()
+            ->withArgs(function (object $data): bool {
+                return $data instanceof GeneratePlannerDaySuggestionsData
+                    && $data->date->toDateString() === '2026-04-05'
+                    && $data->includeTasks === true
+                    && $data->includeDeadlines === false
+                    && $data->maxBlocks === 2;
+            })
+            ->andReturn([
+                'run' => null,
+                'suggestion' => [
+                    'date' => '2026-04-05',
+                    'summary' => 'AI запропонував два фокус-блоки.',
+                    'blocks' => [
+                        [
+                            'title' => 'AI focus block',
+                            'description' => null,
+                            'type' => 'focus',
+                            'start_at' => '2026-04-05T17:00:00',
+                            'end_at' => '2026-04-05T18:00:00',
+                            'task_id' => null,
+                            'deadline_id' => null,
+                            'subject_id' => null,
+                            'estimated_minutes' => 60,
+                            'reason' => 'Найкращий вільний слот для фокусу.',
+                        ],
+                    ],
+                ],
+            ]);
+
+        $this->app->instance(GeneratePlannerDaySuggestions::class, $mock);
+
+        $this->actingAs($user)->postJson('/api/v1/planner/suggestions/day', [
+            'date' => '2026-04-05',
+            'include_tasks' => true,
+            'include_deadlines' => false,
+            'max_blocks' => 2,
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.summary', 'AI запропонував два фокус-блоки.')
+            ->assertJsonPath('data.blocks.0.title', 'AI focus block');
     }
 
     private function createSubject(int $userId, string $name): int
