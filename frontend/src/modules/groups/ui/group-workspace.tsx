@@ -34,7 +34,7 @@ import {
     DEFAULT_GROUP_SECTION,
     GroupsSidebar,
 } from "@/modules/groups/ui/groups-sidebar";
-import { Card, CardContent } from "@/shared/shadcn/ui/card";
+import { UsersIcon } from "lucide-react";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 
 interface GroupWorkspaceProps {
@@ -174,25 +174,26 @@ export function GroupWorkspace({ groupId }: GroupWorkspaceProps) {
 
     if (isGroupLoading) {
         return (
-            <div className="space-y-4">
-                <Skeleton className="h-14 w-64 rounded-2xl" />
-                <Skeleton className="h-[520px] w-full rounded-[32px]" />
+            <div className="space-y-3">
+                <Skeleton className="h-10 w-48 rounded-xl" />
+                <Skeleton className="h-[480px] w-full rounded-2xl" />
             </div>
         );
     }
 
     if (error || !group) {
         return (
-            <Card className="border-dashed border-border/80">
-                <CardContent className="space-y-2 py-12 text-center">
-                    <div className="text-xl font-semibold text-foreground">
-                        Групу не вдалося завантажити
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        Перевірте права доступу або спробуйте відкрити сторінку пізніше.
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border/50 bg-muted/10 py-20 text-center">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+                    <UsersIcon className="size-6" />
+                </div>
+                <div>
+                    <p className="font-semibold">Не вдалося завантажити групу</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Перевірте права доступу або спробуйте пізніше.
                     </p>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         );
     }
 

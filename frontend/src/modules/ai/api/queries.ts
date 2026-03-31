@@ -1,6 +1,6 @@
 import { apiFetch } from "@/shared/api/http";
 import { ENDPOINTS } from "@/shared/api/endpoints";
-import type { DailyDigestArtifact, SummaryArtifact, SummaryListItem } from "../model/types";
+import type { DailyDigestArtifact, GenerateStudySummaryPayload, SummaryArtifact, SummaryListItem } from "../model/types";
 
 interface GenerateSummaryResponse {
     run: { id: number; [key: string]: unknown };
@@ -27,6 +27,28 @@ export const summaryQueries = {
             queryFn: () =>
                 apiFetch<GenerateSummaryResponse>(ENDPOINTS.summaries.generate(fileId), {
                     method: "POST",
+                }),
+        };
+    },
+
+    generateStudy(payload: GenerateStudySummaryPayload) {
+        return {
+            queryKey: [
+                "summaries",
+                "generate-study",
+                payload.fileIds.join("-"),
+                payload.style ?? "standard",
+                payload.includeFlashcards ? "flashcards" : "plain",
+            ],
+            queryFn: () =>
+                apiFetch<GenerateSummaryResponse>(ENDPOINTS.summaries.create, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        file_ids: payload.fileIds,
+                        style: payload.style ?? "standard",
+                        include_flashcards: payload.includeFlashcards ?? false,
+                        notes: payload.notes?.trim() ? payload.notes.trim() : undefined,
+                    }),
                 }),
         };
     },

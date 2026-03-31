@@ -53,6 +53,7 @@ export function NotesWorkspace() {
                     <Label htmlFor="notes-search">Пошук</Label>
                     <Input
                         id="notes-search"
+                        className="h-10"
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
                         placeholder="Назва або зміст нотатки"
