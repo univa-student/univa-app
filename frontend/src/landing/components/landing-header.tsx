@@ -24,8 +24,23 @@ export function LandingHeader() {
         return () => window.removeEventListener("scroll", fn)
     }, [])
 
+    useEffect(() => {
+        document.body.style.overflow = mobileMenuOpen ? "hidden" : ""
+
+        return () => {
+            document.body.style.overflow = ""
+        }
+    }, [mobileMenuOpen])
+
     return (
         <>
+            {mobileMenuOpen && (
+                <div
+                    className="md:hidden fixed inset-0 z-40"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ background: "rgba(13,11,30,0.24)", backdropFilter: "blur(6px)" }}
+                />
+            )}
             <div className="fixed inset-x-0 top-0 z-50 pointer-events-none">
                 <motion.div
                     initial={{ y: -20, opacity: 0 }}
@@ -116,13 +131,16 @@ export function LandingHeader() {
                         <AnimatePresence>
                             {mobileMenuOpen && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                                            className="md:hidden px-5 pb-5" style={{ borderTop: `1px solid ${T.border}` }}>
+                                            className="md:hidden px-5 pb-5" style={{ borderTop: `1px solid ${T.border}`, position: "relative", zIndex: 50 }}>
                                     <div style={{ paddingTop: 12, display: "flex", flexDirection: "column", gap: 2 }}>
                                         {navLinks.map(l => {
                                             const s: React.CSSProperties = { display: "block", padding: "10px 12px", color: T.muted, fontSize: 15, background: "transparent", border: "none", cursor: "pointer", textAlign: "left", width: "100%", borderRadius: 10, textDecoration: "none", fontWeight: 500 }
                                             if (l.href) return <button key={l.label} onClick={() => { document.getElementById(l.href!.replace("#", ""))?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false) }} style={s}>{l.label}</button>
                                             return <Link key={l.label} to={l.to!} onClick={() => setMobileMenuOpen(false)} style={s}>{l.label}</Link>
                                         })}
+                                        <Link to="/login" onClick={() => setMobileMenuOpen(false)} style={{ display: "block", textAlign: "center", marginTop: 8, padding: "12px", borderRadius: 12, fontWeight: 600, fontSize: 14, color: T.text, textDecoration: "none", border: `1px solid ${T.border}`, background: "#fff" }}>
+                                            Увійти
+                                        </Link>
                                         <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} style={{ display: "block", textAlign: "center", marginTop: 8, padding: "12px", borderRadius: 12, fontWeight: 600, fontSize: 14, background: T.gradient, color: "#fff", textDecoration: "none" }}>
                                             Почати безкоштовно
                                         </Link>

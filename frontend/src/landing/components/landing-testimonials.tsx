@@ -15,8 +15,8 @@ const testimonials = [
 
 function Card({ t }: { t: typeof testimonials[0] }) {
     return (
-        <div style={{
-            width: 320, flexShrink: 0, padding: "24px 26px", borderRadius: 20,
+        <div className="testimonial-card" style={{
+            width: 320, maxWidth: "calc(100vw - 48px)", flexShrink: 0, padding: "24px 26px", borderRadius: 20,
             border: `1px solid rgba(255,255,255,0.06)`,
             background: "rgba(255,255,255,0.03)",
             backdropFilter: "blur(12px)",
@@ -75,6 +75,30 @@ function Marquee({ items, reverse = false, speed = 40 }: { items: typeof testimo
 export function LandingTestimonials() {
     return (
         <section id="відгуки" style={{ padding: "130px 0", background: T.dark, position: "relative", overflow: "hidden" }}>
+            <style>{`
+                .testimonials-mobile-list {
+                    display: none;
+                }
+
+                @media (max-width: 768px) {
+                    .testimonials-marquees {
+                        display: none !important;
+                    }
+
+                    .testimonials-mobile-list {
+                        display: grid;
+                        gap: 14px;
+                        padding: 0 24px;
+                        max-width: 520px;
+                        margin: 0 auto;
+                    }
+
+                    .testimonial-card {
+                        width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                }
+            `}</style>
             <div className="pointer-events-none absolute" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 900, height: 600, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(109,40,217,0.05) 0%, transparent 60%)", filter: "blur(40px)" }} />
 
             <motion.div initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -90,9 +114,15 @@ export function LandingTestimonials() {
                 </p>
             </motion.div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div className="testimonials-marquees" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 <Marquee items={testimonials.slice(0, 3)} speed={42} />
                 <Marquee items={[...testimonials].reverse().slice(0, 3)} reverse speed={48} />
+            </div>
+
+            <div className="testimonials-mobile-list">
+                {testimonials.slice(0, 3).map((testimonial) => (
+                    <Card key={testimonial.name} t={testimonial} />
+                ))}
             </div>
         </section>
     )

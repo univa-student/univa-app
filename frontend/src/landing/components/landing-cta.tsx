@@ -7,13 +7,32 @@ import { T } from "./tokens.ts"
 
 export function LandingCta() {
     return (
-        <section style={{
+        <section className="landing-cta-root" style={{
             padding: "140px 24px",
             background: T.dark,
             position: "relative",
             overflow: "hidden",
             textAlign: "center",
         }}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .landing-cta-root {
+                        padding-top: 96px !important;
+                        padding-bottom: 96px !important;
+                    }
+
+                    .landing-cta-action {
+                        width: 100%;
+                    }
+
+                    .landing-cta-action a {
+                        width: 100%;
+                        justify-content: center;
+                        padding-left: 20px !important;
+                        padding-right: 20px !important;
+                    }
+                }
+            `}</style>
             {/* Centered glow */}
             <div className="pointer-events-none absolute" style={{
                 top: "50%", left: "50%", transform: "translate(-50%,-55%)",
@@ -61,7 +80,7 @@ export function LandingCta() {
                     <br />Безкоштовно, без кредитної картки.
                 </p>
 
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} style={{ display: "inline-block" }}>
+                <motion.div className="landing-cta-action" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} style={{ display: "inline-block" }}>
                     <Link to="/dashboard" style={{
                         display: "inline-flex", alignItems: "center", gap: 9,
                         padding: "16px 36px", borderRadius: 14, fontWeight: 650, fontSize: 15.5,

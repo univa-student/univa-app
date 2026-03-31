@@ -43,6 +43,38 @@ const features = [
 export function LandingFeatures() {
     return (
         <section id="можливості" style={{ padding: "130px 24px", maxWidth: T.maxW, margin: "0 auto" }}>
+            <style>{`
+                .features-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 14px;
+                }
+
+                .feature-card--wide {
+                    grid-column: span 2;
+                }
+
+                @media (max-width: 1024px) {
+                    .features-grid {
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                    }
+
+                    .feature-card--wide {
+                        grid-column: span 2;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .features-grid {
+                        grid-template-columns: 1fr;
+                        gap: 12px;
+                    }
+
+                    .feature-card--wide {
+                        grid-column: span 1;
+                    }
+                }
+            `}</style>
             {/* Section header */}
             <motion.div
                 initial={{ opacity: 0, y: 28 }}
@@ -71,7 +103,7 @@ export function LandingFeatures() {
             </motion.div>
 
             {/* Bento grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+            <div className="features-grid">
                 {features.map((f, i) => (
                     <motion.div
                         key={f.title}
@@ -80,8 +112,8 @@ export function LandingFeatures() {
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                         whileHover={{ y: -5, transition: { duration: 0.22 } }}
+                        className={f.wide ? "feature-card--wide" : undefined}
                         style={{
-                            gridColumn: f.wide ? "span 2" : "span 1",
                             padding: f.wide ? "38px 44px" : "32px 30px",
                             borderRadius: 22, border: `1px solid ${T.border}`,
                             background: "#fff",

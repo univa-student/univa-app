@@ -64,7 +64,34 @@ export function LandingHero() {
     const heroOpacity = useTransform(scrollY, [0, 450], [1, 0])
 
     return (
-        <section className="relative overflow-hidden" style={{ minHeight: "94vh", display: "flex", alignItems: "center" }}>
+        <section className="hero-root relative overflow-hidden" style={{ minHeight: "94vh", display: "flex", alignItems: "center" }}>
+            <style>{`
+                .hero-shell { display: flex; align-items: center; gap: 3.5rem; }
+                .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+                .hero-stats { display: flex; gap: 0; justify-content: center; }
+                .hero-scroll-hint { display: flex; }
+
+                @media (max-width: 1024px) {
+                    .hero-root { min-height: auto !important; padding: 40px 0 72px; }
+                    .hero-shell { gap: 2.5rem; }
+                }
+
+                @media (max-width: 768px) {
+                    .hero-root { padding: 28px 0 56px; }
+                    .hero-shell { gap: 2rem; }
+                    .hero-copy { max-width: 100% !important; }
+                    .hero-actions { flex-direction: column; align-items: stretch; width: 100%; }
+                    .hero-actions > div { width: 100%; }
+                    .hero-actions a { width: 100%; justify-content: center; padding-left: 18px !important; padding-right: 18px !important; }
+                    .hero-stats { flex-wrap: wrap; gap: 10px; }
+                    .hero-stat-item { margin-right: 0 !important; padding: 12px 14px !important; border-right: none !important; border: 1px solid ${T.border} !important; border-radius: 14px; min-width: calc(50% - 5px); text-align: center; background: rgba(255,255,255,0.72); }
+                    .hero-scroll-hint { display: none !important; }
+                }
+
+                @media (max-width: 520px) {
+                    .hero-stat-item { min-width: 100%; }
+                }
+            `}</style>
             {/* Atmospheric blobs */}
             <div className="pointer-events-none absolute" style={{ top: "-15%", left: "5%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(109,40,217,0.07) 0%, transparent 65%)", filter: "blur(60px)" }} />
             <div className="pointer-events-none absolute" style={{ top: "15%", right: "0%", width: 550, height: 550, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,70,229,0.06) 0%, transparent 65%)", filter: "blur(50px)" }} />
@@ -79,9 +106,9 @@ export function LandingHero() {
             }} />
 
             <motion.div style={{ y: heroY, opacity: heroOpacity }} className="w-full relative z-10">
-                <div className="mx-auto px-6 lg:px-10 flex flex-col lg:flex-row items-center gap-14 lg:gap-10" style={{ maxWidth: T.maxW }}>
+                <div className="hero-shell mx-auto px-6 lg:px-10 flex flex-col lg:flex-row" style={{ maxWidth: T.maxW }}>
                     {/* Left: Copy */}
-                    <div className="flex-1 max-w-[600px] text-center lg:text-left">
+                    <div className="hero-copy flex-1 max-w-[600px] text-center lg:text-left">
 
                         {/* Badge */}
                         <motion.div
@@ -173,7 +200,7 @@ export function LandingHero() {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: 0.27 }}
-                            className="flex flex-wrap gap-3 justify-center lg:justify-start"
+                            className="hero-actions lg:justify-start"
                         >
                             <MagneticBtn to="/dashboard" variant="primary">
                                 Спробувати безкоштовно <ArrowRightIcon size={15} />
@@ -189,10 +216,10 @@ export function LandingHero() {
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.55 }}
                             style={{ marginTop: 44 }}
-                            className="flex gap-0 justify-center lg:justify-start"
+                            className="hero-stats lg:justify-start"
                         >
                             {statItems.map((s, i) => (
-                                <div key={s.lbl} style={{
+                                <div key={s.lbl} className="hero-stat-item" style={{
                                     paddingRight: 28, marginRight: 28,
                                     borderRight: i < statItems.length - 1 ? `1px solid ${T.border}` : "none",
                                 }}>
@@ -212,7 +239,7 @@ export function LandingHero() {
             <motion.div
                 animate={{ y: [0, 7, 0] }}
                 transition={{ repeat: Infinity, duration: 2.8 }}
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+                className="hero-scroll-hint absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-1"
                 style={{ color: T.faint }}
             >
                 <span style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Далі</span>

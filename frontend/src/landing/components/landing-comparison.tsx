@@ -16,6 +16,52 @@ const rows = [
 export function LandingComparison() {
     return (
         <section style={{ padding: "130px 24px", background: T.bg }}>
+            <style>{`
+                .comparison-header,
+                .comparison-row {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .comparison-mobile-label {
+                    display: none;
+                }
+
+                .comparison-line {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                @media (max-width: 768px) {
+                    .comparison-header {
+                        display: none;
+                    }
+
+                    .comparison-row {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .comparison-cell {
+                        border-right: none !important;
+                        display: block !important;
+                    }
+
+                    .comparison-cell + .comparison-cell {
+                        border-top: 1px solid ${T.border};
+                    }
+
+                    .comparison-mobile-label {
+                        display: inline-block;
+                        margin-bottom: 8px;
+                        font-size: 10px;
+                        font-weight: 700;
+                        letter-spacing: 0.08em;
+                        text-transform: uppercase;
+                    }
+
+                }
+            `}</style>
             <div style={{ maxWidth: 920, margin: "0 auto" }}>
                 <motion.div initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                             style={{ textAlign: "center", marginBottom: 64 }}>
@@ -31,7 +77,7 @@ export function LandingComparison() {
                             style={{ borderRadius: 24, overflow: "hidden", border: `1px solid ${T.border}`, background: "#fff", boxShadow: "0 4px 40px rgba(109,40,217,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
 
                     {/* Header row */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                    <div className="comparison-header">
                         <div style={{ padding: "20px 28px", fontWeight: 700, fontSize: 14, color: T.muted, borderRight: `1px solid ${T.border}`, background: "#f8f8f8", borderBottom: `1px solid ${T.border}`, letterSpacing: "-0.01em" }}>
                             😓 Без Univa
                         </div>
@@ -47,23 +93,29 @@ export function LandingComparison() {
                                     viewport={{ once: true }}
                                     transition={{ delay: i * 0.05 }}
                                     style={{
-                                        display: "grid", gridTemplateColumns: "1fr 1fr",
                                         borderBottom: i < rows.length - 1 ? `1px solid ${T.border}` : "none",
                                     }}
+                                    className="comparison-row"
                                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.accentLight }}
                                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent" }}
                         >
-                            <div style={{ padding: "16px 28px", display: "flex", alignItems: "center", gap: 10, borderRight: `1px solid ${T.border}`, color: T.muted, fontSize: 14.5, letterSpacing: "-0.01em" }}>
-                                <div style={{ width: 20, height: 20, borderRadius: 6, background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                    <XIcon size={11} style={{ color: "#ef4444" }} strokeWidth={2.5} />
+                            <div className="comparison-cell" style={{ padding: "16px 28px", display: "flex", alignItems: "center", gap: 10, borderRight: `1px solid ${T.border}`, color: T.muted, fontSize: 14.5, letterSpacing: "-0.01em" }}>
+                                <div className="comparison-mobile-label" style={{ color: "#ef4444" }}>Без Univa</div>
+                                <div className="comparison-line">
+                                    <div style={{ width: 20, height: 20, borderRadius: 6, background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                        <XIcon size={11} style={{ color: "#ef4444" }} strokeWidth={2.5} />
+                                    </div>
+                                    {row.without}
                                 </div>
-                                {row.without}
                             </div>
-                            <div style={{ padding: "16px 28px", display: "flex", alignItems: "center", gap: 10, color: T.text, fontSize: 14.5, fontWeight: 500, letterSpacing: "-0.01em" }}>
-                                <div style={{ width: 20, height: 20, borderRadius: 6, background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                    <CheckIcon size={11} style={{ color: "#16a34a" }} strokeWidth={2.5} />
+                            <div className="comparison-cell" style={{ padding: "16px 28px", display: "flex", alignItems: "center", gap: 10, color: T.text, fontSize: 14.5, fontWeight: 500, letterSpacing: "-0.01em" }}>
+                                <div className="comparison-mobile-label" style={{ color: T.accent }}>З Univa</div>
+                                <div className="comparison-line">
+                                    <div style={{ width: 20, height: 20, borderRadius: 6, background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                        <CheckIcon size={11} style={{ color: "#16a34a" }} strokeWidth={2.5} />
+                                    </div>
+                                    {row.with}
                                 </div>
-                                {row.with}
                             </div>
                         </motion.div>
                     ))}

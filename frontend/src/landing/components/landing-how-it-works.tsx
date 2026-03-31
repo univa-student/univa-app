@@ -18,6 +18,27 @@ export function LandingHowItWorks() {
             position: "relative",
             overflow: "hidden",
         }}>
+            <style>{`
+                .how-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 20px;
+                    position: relative;
+                }
+
+                @media (max-width: 1024px) {
+                    .how-grid {
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .how-grid {
+                        grid-template-columns: 1fr;
+                        gap: 28px;
+                    }
+                }
+            `}</style>
             {/* Noise overlay */}
             <div className="pointer-events-none absolute inset-0" style={{ opacity: 0.025, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")" }} />
 
@@ -44,7 +65,7 @@ export function LandingHowItWorks() {
                 </motion.div>
 
                 {/* Steps */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, position: "relative" }}>
+                <div className="how-grid">
                     {/* Connecting line */}
                     <div className="hidden lg:block absolute" style={{ top: 52, left: "18%", right: "18%", height: 1, background: "linear-gradient(90deg, transparent, rgba(109,40,217,0.4), rgba(79,70,229,0.4), transparent)" }} />
 

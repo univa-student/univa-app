@@ -59,10 +59,56 @@ export function LandingFooter() {
 
     return (
         <footer style={{ background: "#050309", color: "#fff", position: "relative", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <style>{`
+                .footer-top {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: 48px;
+                    margin-bottom: 64px;
+                }
+
+                .footer-columns {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 52px;
+                }
+
+                @media (max-width: 768px) {
+                    .footer-top {
+                        flex-direction: column;
+                        gap: 32px;
+                        margin-bottom: 40px;
+                    }
+
+                    .footer-brand {
+                        max-width: 100% !important;
+                    }
+
+                    .footer-columns {
+                        width: 100%;
+                        display: grid;
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                        gap: 24px 18px;
+                    }
+
+                    .footer-bottom {
+                        flex-direction: column;
+                        align-items: flex-start;
+                    }
+                }
+
+                @media (max-width: 520px) {
+                    .footer-columns {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            `}</style>
             <div style={{ maxWidth: T.maxW, margin: "0 auto", padding: "72px 24px 0" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: 48, marginBottom: 64 }}>
+                <div className="footer-top">
                     {/* Brand */}
-                    <div style={{ maxWidth: 260 }}>
+                    <div className="footer-brand" style={{ maxWidth: 260 }}>
                         <img src={logoConfig['full-logo-white-no-bg']} alt="Univa" style={{ height: 28, marginBottom: 16, opacity: 0.95 }} />
                         <p style={{ fontSize: 13.5, lineHeight: 1.72, color: T.darkMuted, letterSpacing: "-0.005em" }}>
                             Єдина екосистема для студентів. Розклад, файли, чати, AI — все в одному місці.
@@ -85,7 +131,7 @@ export function LandingFooter() {
                     </div>
 
                     {/* Link columns */}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 52 }}>
+                    <div className="footer-columns">
                         {columns.map(col => (
                             <div key={col.title} style={{ minWidth: 110 }}>
                                 <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 16 }}>
@@ -115,7 +161,7 @@ export function LandingFooter() {
                 </div>
 
                 {/* Bottom */}
-                <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "22px 0", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <div className="footer-bottom" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "22px 0", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                     <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", letterSpacing: "-0.01em" }}>
                         © {new Date().getFullYear()} Univa. Всі права захищені.
                     </div>
