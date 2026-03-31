@@ -217,6 +217,7 @@ Route::group(['middleware' => $authMiddleware, 'prefix' => '/v1'], function () {
     // AI Summaries
     Route::controller(SummarizeFileController::class)->group(function () {
         Route::get('/summaries', 'index');
+        Route::post('/summaries', 'storeMany');
         Route::get('/summaries/{artifact}', 'show');
         Route::delete('/summaries/{artifact}', 'destroy');
         Route::post('/files/{file}/summary', 'store');

@@ -1,3 +1,5 @@
+export type ProfileType = "default" | "univa";
+
 export interface StudentUniversity {
     id: number;
     externalId: string;
@@ -25,6 +27,7 @@ export interface ProfileUser {
 
 export interface StudentProfile {
     id: number | null;
+    profileType: ProfileType;
     profileImage: string | null;
     bio: string | null;
     phone: string | null;
@@ -100,4 +103,17 @@ export interface SaveStudentUniversityPayload {
     specialityName?: string | null;
     groupCode?: string | null;
     course: number;
+}
+
+export interface ProfileViewModel {
+    profile: StudentProfile;
+    isForeignProfile: boolean;
+    isOwnProfile: boolean;
+    userName: string;
+    avatarUrl: string;
+    email: string;
+    about: string;
+    cityLabel: string;
+    telegramUrl: string | null;
+    onlineStatus: boolean | null;
 }

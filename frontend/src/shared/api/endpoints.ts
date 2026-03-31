@@ -226,6 +226,7 @@ export const ENDPOINTS = {
     // ── AI ───────────────────────────────────────────────
     summaries: {
         list: `${API}/summaries`,
+        create: `${API}/summaries`,
         show: (id: number) => `${API}/summaries/${id}`,
         delete: (id: number) => `${API}/summaries/${id}`,
         generate: (fileId: number) =>

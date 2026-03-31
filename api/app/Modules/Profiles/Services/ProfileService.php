@@ -44,6 +44,7 @@ readonly class ProfileService
 
         $profile = new Profile([
             'user_id' => $user->id,
+            'profile_type' => $this->resolveProfileType($user),
             'profile_image' => $user->avatar_path,
         ]);
 
@@ -66,13 +67,24 @@ readonly class ProfileService
     {
         $profile = Profile::query()->firstOrCreate(
             ['user_id' => $user->id],
-            ['profile_image' => $user->avatar_path],
+            [
+                'profile_type' => $this->resolveProfileType($user),
+                'profile_image' => $user->avatar_path,
+            ],
         );
 
+        $updates = [];
+
         if ($profile->profile_image === null && $user->avatar_path !== null) {
-            $profile->forceFill([
-                'profile_image' => $user->avatar_path,
-            ])->save();
+            $updates['profile_image'] = $user->avatar_path;
+        }
+
+        if (($profile->profile_type === null || $profile->profile_type === '') && $this->resolveProfileType($user) !== Profile::TYPE_DEFAULT) {
+            $updates['profile_type'] = $this->resolveProfileType($user);
+        }
+
+        if ($updates !== []) {
+            $profile->forceFill($updates)->save();
         }
 
         return $profile;
@@ -155,5 +167,12 @@ readonly class ProfileService
         }
 
         return ltrim($telegram, '@');
+    }
+
+    private function resolveProfileType(User $user): string
+    {
+        return strcasecmp($user->username, 'univa') === 0
+            ? Profile::TYPE_UNIVA
+            : Profile::TYPE_DEFAULT;
     }
 }

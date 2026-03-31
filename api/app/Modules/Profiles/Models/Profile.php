@@ -12,8 +12,12 @@ class Profile extends Model
 {
     protected $table = 'profiles';
 
+    public const TYPE_DEFAULT = 'default';
+    public const TYPE_UNIVA = 'univa';
+
     protected $fillable = [
         'user_id',
+        'profile_type',
         'profile_image',
         'bio',
         'phone',

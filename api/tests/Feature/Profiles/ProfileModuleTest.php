@@ -33,11 +33,29 @@ class ProfileModuleTest extends TestCase
         $response
             ->assertOk()
             ->assertJsonPath('data.user.id', $user->id)
+            ->assertJsonPath('data.profileType', 'default')
             ->assertJsonPath('data.university', null)
             ->assertJsonPath('data.completion.total', 6);
 
         $this->assertDatabaseHas('profiles', [
             'user_id' => $user->id,
+        ]);
+    }
+
+    public function test_it_marks_univa_profile_with_univa_type(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'univa',
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/v1/me/profile')
+            ->assertOk()
+            ->assertJsonPath('data.profileType', 'univa');
+
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $user->id,
+            'profile_type' => 'univa',
         ]);
     }
 

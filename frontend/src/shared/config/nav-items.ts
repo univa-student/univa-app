@@ -38,7 +38,7 @@ export const navItems: NavItem[] = [
         items: [],
     },
     {
-        title: "РџР»Р°РЅРµСЂ",
+        title: "Планер",
         url: "/dashboard/planner",
         icon: Clock3Icon,
         items: [],
