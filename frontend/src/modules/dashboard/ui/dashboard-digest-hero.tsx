@@ -1,20 +1,10 @@
 import { format } from "date-fns";
 import { uk } from "date-fns/locale";
-import { ArrowRightIcon, BrainCircuitIcon, SparklesIcon } from "lucide-react";
+import { ArrowRightIcon, BrainCircuitIcon, SparklesIcon, ZapIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/shared/shadcn/ui/button";
-import { Badge } from "@/shared/shadcn/ui/badge";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import type { DailyDigestArtifact } from "@/modules/ai/model/types";
-
-function infoChip(label: string, value: string) {
-    return (
-        <div className="rounded-2xl border border-border/70 bg-background/80 px-3 py-2 shadow-sm">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-            <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
-        </div>
-    );
-}
 
 export function DashboardDigestHero({
     digest,
@@ -32,112 +22,132 @@ export function DashboardDigestHero({
     const actions = content?.actionItems?.slice(0, 3) ?? [];
     const focus = content?.focus?.trim() || fallbackFocus;
     const digestDate = content?.meta?.generatedForDate ?? fallbackDate;
-    const lessonCount = content?.meta?.stats?.todayLessonsCount ?? null;
-    const todayDeadlineCount = content?.meta?.stats?.todayDeadlines ?? null;
-    const overdueCount = content?.meta?.stats?.overdueDeadlines ?? null;
-    const storageUsedPercent = content?.meta?.storage?.usedPercent ?? null;
+    const overview = content?.overview?.trim() ?? null;
+
+    const stats = [
+        { label: "Пар", value: content?.meta?.stats?.todayLessonsCount ?? null },
+        { label: "Дедлайнів", value: content?.meta?.stats?.todayDeadlines ?? null },
+        { label: "Прострочено", value: content?.meta?.stats?.overdueDeadlines ?? null },
+        { label: "Сховище", value: content?.meta?.storage?.usedPercent != null ? `${content.meta.storage.usedPercent}%` : null },
+    ];
 
     return (
-        <section className="relative overflow-hidden rounded-[32px] border border-border/70 bg-card p-5 shadow-sm sm:p-6">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.16),transparent_24%)]" />
-            <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,transparent_0,transparent_31px,rgba(148,163,184,0.08)_32px),linear-gradient(to_bottom,transparent_0,transparent_31px,rgba(148,163,184,0.08)_32px)] [background-size:32px_32px]" />
+        <section className="relative overflow-hidden rounded-[28px] border border-border/50 bg-card shadow-sm">
+            {/* Background */}
+            <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -left-8 -top-8 size-48 rounded-full bg-primary/8 blur-3xl" />
+                <div className="absolute -bottom-8 right-8 size-40 rounded-full bg-emerald-500/6 blur-3xl" />
+                <div className="absolute inset-0 opacity-[0.03] [background-image:linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] [background-size:32px_32px]" />
+            </div>
 
-            <div className="relative grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-                <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-3">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1 text-[11px] text-muted-foreground">
-                                <SparklesIcon className="size-3.5" />
-                                AI-дайджест дня
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                                    Фокус на сьогодні
-                                </h2>
-                                <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-                                    Коротке AI-зведення по розкладу, дедлайнах і ресурсах без ручного перегляду всіх модулів.
-                                </p>
-                            </div>
+            <div className="relative p-5 sm:p-6">
+                {/* Header row */}
+                <div className="mb-5 flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-2.5">
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10">
+                            <SparklesIcon className="size-4 text-primary" />
                         </div>
-
-                        <Badge variant="outline" className="rounded-full bg-background/70 px-3 py-1 text-[11px]">
-                            {format(new Date(digestDate), "d MMMM", { locale: uk })}
-                        </Badge>
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-primary/70">
+                                AI-дайджест
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                                {format(new Date(digestDate), "d MMMM", { locale: uk })}
+                            </p>
+                        </div>
                     </div>
+                    <Button variant="ghost" size="sm" asChild className="h-7 gap-1 rounded-xl text-xs">
+                        <Link to="/dashboard/ai">
+                            Відкрити AI
+                            <ArrowRightIcon className="size-3" />
+                        </Link>
+                    </Button>
+                </div>
 
-                    {isLoading ? (
-                        <div className="space-y-3">
-                            <Skeleton className="h-20 rounded-3xl" />
-                            <Skeleton className="h-16 rounded-3xl" />
-                            <Skeleton className="h-12 rounded-3xl" />
+                {isLoading ? (
+                    <div className="space-y-3">
+                        <Skeleton className="h-5 w-3/4 rounded-lg" />
+                        <Skeleton className="h-14 rounded-2xl" />
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            {[...Array(4)].map((_, i) => (
+                                <Skeleton key={i} className="h-14 rounded-2xl" />
+                            ))}
                         </div>
-                    ) : (
-                        <>
-                            <div className="rounded-[28px] border border-border/70 bg-background/85 p-5 shadow-sm">
-                                <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
-                                    <BrainCircuitIcon className="size-4" />
+                    </div>
+                ) : (
+                    <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
+                        {/* Main content */}
+                        <div className="space-y-3">
+                            {/* Focus block */}
+                            <div className="rounded-2xl border border-border/40 bg-muted/20 p-4">
+                                <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+                                    <BrainCircuitIcon className="size-3.5" />
                                     Головний фокус
                                 </div>
-                                <p className="text-lg font-semibold leading-7 text-foreground">{focus}</p>
-                                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                                    {content?.overview?.trim() || "Дайджест ще не згенерований. Після ранкового запуску команди о 06:00 тут з’явиться коротке AI-зведення."}
+                                <p className="text-base font-semibold leading-snug">{focus}</p>
+                                {overview && (
+                                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{overview}</p>
+                                )}
+                            </div>
+
+                            {/* Alerts + Actions */}
+                            {(alerts.length > 0 || actions.length > 0) && (
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    {alerts.length > 0 && (
+                                        <div className="rounded-2xl border border-border/40 bg-muted/10 p-4">
+                                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                Сигнали
+                                            </p>
+                                            <ul className="space-y-1.5">
+                                                {alerts.map((a) => (
+                                                    <li key={a} className="flex items-start gap-2 text-sm">
+                                                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" />
+                                                        {a}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {actions.length > 0 && (
+                                        <div className="rounded-2xl border border-border/40 bg-muted/10 p-4">
+                                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                До виконання
+                                            </p>
+                                            <ul className="space-y-1.5">
+                                                {actions.map((a) => (
+                                                    <li key={a} className="flex items-start gap-2 text-sm">
+                                                        <ZapIcon className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                                                        {a}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Empty state */}
+                            {!content && (
+                                <p className="text-sm text-muted-foreground">
+                                    Дайджест ще не згенерований. Він з'явиться о 06:00 після запуску AI.
                                 </p>
-                            </div>
+                            )}
+                        </div>
 
-                            <div className="grid gap-3 md:grid-cols-2">
-                                <div className="rounded-3xl border border-border/70 bg-background/80 p-4 shadow-sm">
-                                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                                        Сигнали
-                                    </p>
-                                    <div className="mt-3 space-y-2">
-                                        {(alerts.length > 0 ? alerts : ["Критичних сигналів зараз немає."]).map((item) => (
-                                            <div key={item} className="rounded-2xl bg-muted/60 px-3 py-2 text-sm text-foreground">
-                                                {item}
-                                            </div>
-                                        ))}
-                                    </div>
+                        {/* Right side stat chips */}
+                        <div className="flex gap-2 xl:flex-col xl:gap-2.5">
+                            {stats.map(({ label, value }) => (
+                                <div
+                                    key={label}
+                                    className="min-w-[72px] rounded-2xl border border-border/40 bg-muted/20 px-3 py-2.5 text-center xl:min-w-[88px]"
+                                >
+                                    <p className="text-lg font-bold tabular-nums leading-none">{value ?? "—"}</p>
+                                    <p className="mt-1 text-[10px] text-muted-foreground">{label}</p>
                                 </div>
-
-                                <div className="rounded-3xl border border-border/70 bg-background/80 p-4 shadow-sm">
-                                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                                        Дії
-                                    </p>
-                                    <div className="mt-3 space-y-2">
-                                        {(actions.length > 0 ? actions : ["Відкрий дедлайни та перевір найближчі задачі."]).map((item) => (
-                                            <div key={item} className="rounded-2xl bg-muted/60 px-3 py-2 text-sm text-foreground">
-                                                {item}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                                <Button asChild className="rounded-2xl">
-                                    <Link to="/dashboard/deadlines">
-                                        Відкрити дедлайни
-                                        <ArrowRightIcon className="size-4" />
-                                    </Link>
-                                </Button>
-                                <Button variant="outline" asChild className="rounded-2xl bg-background/80">
-                                    <Link to="/dashboard/schedule/calendar">
-                                        Подивитися розклад
-                                    </Link>
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                    {infoChip("Пари", lessonCount !== null ? String(lessonCount) : "—")}
-                    {infoChip("Дедлайни сьогодні", todayDeadlineCount !== null ? String(todayDeadlineCount) : "—")}
-                    {infoChip("Прострочені", overdueCount !== null ? String(overdueCount) : "—")}
-                    {infoChip(
-                        "Сховище",
-                        storageUsedPercent !== null ? `${storageUsedPercent}%` : "—",
-                    )}
-                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </section>
     );

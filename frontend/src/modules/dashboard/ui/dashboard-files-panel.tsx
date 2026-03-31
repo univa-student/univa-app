@@ -1,12 +1,17 @@
 import { formatDistanceToNow } from "date-fns";
 import { uk } from "date-fns/locale";
-import { ArrowRightIcon, FileIcon, FileSpreadsheetIcon, FileTextIcon, FolderOpenIcon, PresentationIcon } from "lucide-react";
+import {
+    ArrowRightIcon,
+    FileIcon,
+    FileSpreadsheetIcon,
+    FileTextIcon,
+    FolderOpenIcon,
+    PresentationIcon,
+} from "lucide-react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader } from "@/shared/shadcn/ui/card";
 import { Button } from "@/shared/shadcn/ui/button";
 import { Skeleton } from "@/shared/shadcn/ui/skeleton";
 import type { FileItem } from "@/modules/files/model/types";
-import { DashboardSectionHeading } from "./dashboard-section-heading";
 
 function fmtSize(bytes: number) {
     if (bytes < 1024) return `${bytes} Б`;
@@ -17,10 +22,25 @@ function fmtSize(bytes: number) {
 
 function fileIcon(mimeType: string | null) {
     if (!mimeType) return FileIcon;
-    if (mimeType.includes("pdf") || mimeType.includes("document") || mimeType.includes("text")) return FileTextIcon;
-    if (mimeType.includes("spreadsheet") || mimeType.includes("excel") || mimeType.includes("csv")) return FileSpreadsheetIcon;
-    if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) return PresentationIcon;
+    if (mimeType.includes("pdf") || mimeType.includes("document") || mimeType.includes("text"))
+        return FileTextIcon;
+    if (mimeType.includes("spreadsheet") || mimeType.includes("excel") || mimeType.includes("csv"))
+        return FileSpreadsheetIcon;
+    if (mimeType.includes("presentation") || mimeType.includes("powerpoint"))
+        return PresentationIcon;
     return FileIcon;
+}
+
+function fileColor(mimeType: string | null): string {
+    if (!mimeType) return "bg-muted/50 text-muted-foreground";
+    if (mimeType.includes("pdf")) return "bg-red-500/10 text-red-500";
+    if (mimeType.includes("spreadsheet") || mimeType.includes("excel") || mimeType.includes("csv"))
+        return "bg-emerald-500/10 text-emerald-500";
+    if (mimeType.includes("presentation") || mimeType.includes("powerpoint"))
+        return "bg-amber-500/10 text-amber-500";
+    if (mimeType.includes("document") || mimeType.includes("text"))
+        return "bg-blue-500/10 text-blue-500";
+    return "bg-muted/50 text-muted-foreground";
 }
 
 export function DashboardFilesPanel({
@@ -31,65 +51,66 @@ export function DashboardFilesPanel({
     isLoading: boolean;
 }) {
     return (
-        <Card className="rounded-[28px] border-border/70 shadow-sm">
-            <CardHeader>
-                <DashboardSectionHeading
-                    eyebrow="Файли"
-                    title="Останні матеріали"
-                    description="Те, з чим ти працював нещодавно."
-                    action={
-                        <Button variant="ghost" size="sm" asChild className="gap-1">
-                            <Link to="/dashboard/files">
-                                Всі файли
-                                <ArrowRightIcon className="size-3.5" />
-                            </Link>
-                        </Button>
-                    }
-                />
-            </CardHeader>
-            <CardContent className="space-y-3">
+        <div className="flex flex-col overflow-hidden rounded-[28px] border border-border/50 bg-card shadow-sm">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border/30 px-5 py-4">
+                <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Файли</p>
+                    <h2 className="text-sm font-semibold">Останні матеріали</h2>
+                </div>
+                <Button variant="ghost" size="sm" asChild className="h-7 gap-1 rounded-xl text-xs">
+                    <Link to="/dashboard/files">
+                        Всі файли
+                        <ArrowRightIcon className="size-3" />
+                    </Link>
+                </Button>
+            </div>
+
+            <div className="flex-1 p-4 space-y-1.5">
                 {isLoading ? (
-                    <>
-                        {Array.from({ length: 4 }).map((_, index) => (
-                            <Skeleton key={index} className="h-18 rounded-3xl" />
+                    <div className="space-y-2.5">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <Skeleton key={i} className="h-14 rounded-2xl" />
                         ))}
-                    </>
+                    </div>
                 ) : files.length === 0 ? (
-                    <div className="rounded-[28px] border border-dashed border-border/70 bg-muted/20 p-6 text-center">
-                        <FolderOpenIcon className="mx-auto size-8 text-muted-foreground/40" />
-                        <p className="mt-3 text-sm font-medium text-foreground">Файлів поки немає</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            Останні матеріали з’являться тут автоматично.
-                        </p>
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <FolderOpenIcon className="size-9 text-muted-foreground/30" />
+                        <p className="mt-3 text-sm font-medium">Файлів поки немає</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Останні матеріали з'являться тут.</p>
                     </div>
                 ) : (
-                    files.slice(0, 5).map((file) => {
+                    files.slice(0, 6).map((file) => {
                         const Icon = fileIcon(file.mimeType);
+                        const color = fileColor(file.mimeType);
 
                         return (
                             <div
                                 key={file.id}
-                                className="rounded-3xl border border-border/70 bg-background px-4 py-3"
+                                className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-muted/30"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-muted">
-                                        <Icon className="size-5 text-muted-foreground" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-medium text-foreground">{file.originalName}</p>
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            {file.subject?.name ?? "Загальне"} · {fmtSize(file.size)}
-                                        </p>
-                                    </div>
-                                    <p className="shrink-0 text-xs text-muted-foreground">
-                                        {formatDistanceToNow(new Date(file.createdAt), { addSuffix: true, locale: uk })}
+                                <div
+                                    className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${color}`}
+                                >
+                                    <Icon className="size-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">{file.originalName}</p>
+                                    <p className="mt-0.5 text-xs text-muted-foreground">
+                                        {file.subject?.name ?? "Загальне"} · {fmtSize(file.size)}
                                     </p>
                                 </div>
+                                <p className="shrink-0 text-xs text-muted-foreground/60">
+                                    {formatDistanceToNow(new Date(file.createdAt), {
+                                        addSuffix: false,
+                                        locale: uk,
+                                    })}
+                                </p>
                             </div>
                         );
                     })
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
